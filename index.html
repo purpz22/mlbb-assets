@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>MLBB Guess Hero</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Rajdhani', sans-serif; background: #0f172a; color: white; overflow-x: hidden; }
+        .glass { background: rgba(30, 41, 59, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .hero-box { width: 220px; height: 220px; border: 4px solid #fbbf24; border-radius: 16px; margin: 0 auto; overflow: hidden; background: black; }
+        .hero-box img { width: 100%; height: 100%; object-fit: contain; }
+        .input-field { background: #1e293b; border: 2px solid #334155; color: white; outline: none; transition: 0.3s; }
+        .input-field:focus { border-color: #fbbf24; }
+        .hidden { display: none !important; }
+        .btn { background: linear-gradient(to bottom, #3b82f6, #1d4ed8); border: 1px solid #60a5fa; color: white; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
+        .btn:active { transform: scale(0.95); }
+        .btn-gold { background: linear-gradient(to bottom, #f59e0b, #b45309); border-color: #fbbf24; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+
+    <!-- LOGIN SCREEN -->
+    <div id="screen-login" class="glass w-full max-w-sm p-6 z-10 text-center">
+        <h1 class="text-4xl font-black italic text-yellow-400 mb-6 drop-shadow-md">LEGENDS GUESS</h1>
+        <p class="text-xs text-gray-400 mb-2 uppercase tracking-widest">Connect Account</p>
+        <div class="flex gap-2 mb-4">
+            <input type="number" id="login-id" placeholder="Game ID" class="input-field w-2/3 p-3 rounded-lg text-lg text-center">
+            <input type="number" id="login-zone" placeholder="Zone" class="input-field w-1/3 p-3 rounded-lg text-lg text-center">
+        </div>
+        <p id="login-msg" class="text-red-400 text-xs mb-4 min-h-[16px]"></p>
+        <button onclick="login()" id="btn-login" class="btn btn-gold w-full p-4 rounded-xl text-xl">CONNECT</button>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="screen-game" class="glass w-full max-w-sm p-6 z-10 hidden relative">
+        <div class="flex justify-between items-center border-b border-white/10 pb-2 mb-4">
+            <div><span class="text-xs text-gray-400 block uppercase">Player</span><span id="player-ign" class="font-bold text-blue-400">Name</span></div>
+            <div class="text-right"><span class="text-xs text-gray-400 block uppercase">Cloud Score</span><span id="player-score" class="font-black text-3xl text-yellow-400">0</span></div>
+        </div>
+        
+        <div class="hero-box mb-4 shake-anim" id="hero-box"><img id="hero-img" src=""></div>
+        
+        <p id="feedback" class="text-center font-bold text-lg h-6 mb-2 text-green-400"></p>
+
+        <form onsubmit="checkGuess(event)" class="flex flex-col gap-2 mb-4">
+            <input type="text" id="guess-input" placeholder="HERO NAME" class="input-field w-full p-3 rounded-xl text-center text-xl uppercase font-bold" autocomplete="off">
+            <button type="submit" class="btn w-full p-3 rounded-xl text-lg">SUBMIT</button>
+        </form>
+
+        <button onclick="showLeaderboard()" class="btn btn-gold w-full p-3 rounded-xl text-sm">🏆 View Global Leaderboard</button>
+    </div>
+
+    <!-- LEADERBOARD & SEARCH SCREEN -->
+    <div id="screen-leaderboard" class="glass w-full max-w-sm p-6 z-20 hidden absolute top-4 bottom-4 flex flex-col">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-black text-yellow-400 italic">TOP 5 PLAYERS</h2>
+            <button onclick="closeLeaderboard()" class="text-xs text-gray-400 uppercase">Close X</button>
+        </div>
+
+        <div class="bg-slate-900 rounded-lg p-2 mb-4 flex-1">
+            <table class="w-full text-left text-sm"><tbody id="lb-body"><tr><td class="text-center text-gray-500 py-4">Loading...</td></tr></tbody></table>
+        </div>
+
+        <div class="border-t border-white/10 pt-4">
+            <p class="text-xs text-gray-400 uppercase mb-2">Search Player Rank by Game ID</p>
+            <div class="flex gap-2">
+                <input type="number" id="search-id" placeholder="Enter Game ID" class="input-field flex-1 p-2 rounded text-center">
+                <button onclick="searchPlayer()" class="btn px-4 rounded">Search</button>
+            </div>
+            <div id="search-result" class="mt-4 text-center bg-slate-800 p-3 rounded hidden border border-blue-500">
+                <p class="text-xs text-gray-400 uppercase">Rank</p>
+                <p id="search-rank" class="text-2xl font-black text-white">#0</p>
+                <p id="search-details" class="text-sm font-bold text-yellow-400 mt-1">IGN - 0 pts</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIREBASE & GAME LOGIC -->
+    <script type="module">
+        // 1. IMPORT FIREBASE
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, getDocs, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // ==========================================
+        // ⚠️ PASTE YOUR FIREBASE CONFIG HERE ⚠️
+        const firebaseConfig = {
+  apiKey: "AIzaSyCPSU7YrNL0M9j0EFUBRHDoufpW9bQlUsI",
+  authDomain: "guesshero-e1180.firebaseapp.com",
+  databaseURL: "https://guesshero-e1180-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "guesshero-e1180",
+  storageBucket: "guesshero-e1180.firebasestorage.app",
+  messagingSenderId: "274899168100",
+  appId: "1:274899168100:web:da9798cf93110516d8e871"
+};
+        // ==========================================
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- GAME DATA ---
+        let heroes = [
+            { name: "Layla", img: "icons/layla.png" },
+            { name: "Zilong", img: "icons/zilong.png" },
+            { name: "Miya", img: "icons/miya.png" }
+            // ADD MORE HEROES HERE
+        ];
+        
+        let currentUser = { id: "", ign: "", score: 0 };
+        let currentHero = null;
+
+        // --- LOGIN & FETCH CLOUD SCORE ---
+        window.login = async function() {
+            const id = document.getElementById('login-id').value.trim();
+            const zone = document.getElementById('login-zone').value.trim();
+            const msg = document.getElementById('login-msg');
+
+            if(!id || !zone) return msg.innerText = "Enter ID and Zone";
+            msg.innerText = "Verifying Account...";
+
+            try {
+                // Verify with MLBB API
+                let res = await fetch(`https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`);
+                let data = await res.json();
+                
+                if(data.success || data.name) {
+                    currentUser.id = id;
+                    currentUser.ign = data.name || data.nickname;
+                    
+                    // Fetch existing score from Firebase
+                    const userDoc = await getDoc(doc(db, "players", id));
+                    if(userDoc.exists()) {
+                        currentUser.score = userDoc.data().score;
+                    } else {
+                        currentUser.score = 0; // New player
+                    }
+
+                    // Start Game
+                    document.getElementById('screen-login').classList.add('hidden');
+                    document.getElementById('screen-game').classList.remove('hidden');
+                    document.getElementById('player-ign').innerText = currentUser.ign;
+                    document.getElementById('player-score').innerText = currentUser.score;
+                    nextHero();
+
+                } else {
+                    msg.innerText = "Invalid Game ID or Zone.";
+                }
+            } catch(e) { msg.innerText = "Network Error."; }
+        }
+
+        // --- GAMEPLAY ---
+        function nextHero() {
+            const r = Math.floor(Math.random() * heroes.length);
+            currentHero = heroes[r];
+            document.getElementById('hero-img').src = currentHero.img;
+            document.getElementById('guess-input').value = "";
+            document.getElementById('guess-input').focus();
+        }
+
+        window.checkGuess = async function(e) {
+            e.preventDefault();
+            const guess = document.getElementById('guess-input').value.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const answer = currentHero.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const fb = document.getElementById('feedback');
+
+            if(guess === answer) {
+                fb.innerText = "CORRECT!"; fb.className = "text-center font-bold text-lg h-6 mb-2 text-green-400";
+                currentUser.score++;
+                document.getElementById('player-score').innerText = currentUser.score;
+                
+                // SAVE TO CLOUD INSTANTLY
+                await setDoc(doc(db, "players", currentUser.id), {
+                    ign: currentUser.ign,
+                    score: currentUser.score,
+                    updatedAt: new Date()
+                }, { merge: true });
+
+                nextHero();
+            } else {
+                fb.innerText = "WRONG! Try again."; fb.className = "text-center font-bold text-lg h-6 mb-2 text-red-500";
+            }
+        }
+
+        // --- LEADERBOARD & SEARCH ---
+        window.showLeaderboard = async function() {
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-leaderboard').classList.remove('hidden');
+            const tbody = document.getElementById('lb-body');
+            tbody.innerHTML = '<tr><td class="text-center text-gray-500 py-4">Loading Top 5...</td></tr>';
+
+            // Fetch Top 5 from Firebase
+            const q = query(collection(db, "players"), orderBy("score", "desc"), limit(5));
+            const querySnapshot = await getDocs(q);
+            
+            tbody.innerHTML = "";
+            let rank = 1;
+            querySnapshot.forEach((doc) => {
+                const p = doc.data();
+                const color = rank === 1 ? "text-yellow-400" : rank === 2 ? "text-gray-300" : rank === 3 ? "text-orange-400" : "text-white";
+                tbody.innerHTML += `
+                    <tr class="border-b border-white/5">
+                        <td class="py-3 font-black ${color}">#${rank}</td>
+                        <td class="py-3 font-bold text-white">${p.ign}</td>
+                        <td class="py-3 font-mono text-yellow-400 text-right">${p.score} pt</td>
+                    </tr>`;
+                rank++;
+            });
+        }
+
+        window.closeLeaderboard = function() {
+            document.getElementById('screen-leaderboard').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+        }
+
+        window.searchPlayer = async function() {
+            const searchId = document.getElementById('search-id').value.trim();
+            if(!searchId) return;
+
+            const resDiv = document.getElementById('search-result');
+            document.getElementById('search-rank').innerText = "Searching...";
+            resDiv.classList.remove('hidden');
+
+            // To find exact rank, we download ordered scores (Fine for small games)
+            const q = query(collection(db, "players"), orderBy("score", "desc"));
+            const querySnapshot = await getDocs(q);
+            
+            let rank = 1;
+            let found = false;
+            querySnapshot.forEach((doc) => {
+                if(doc.id === searchId) {
+                    found = true;
+                    document.getElementById('search-rank').innerText = "#" + rank;
+                    document.getElementById('search-details').innerText = `${doc.data().ign} - ${doc.data().score} pts`;
+                }
+                rank++;
+            });
+
+            if(!found) {
+                document.getElementById('search-rank').innerText = "Not Found";
+                document.getElementById('search-details').innerText = "This ID hasn't played yet.";
+            }
+        }
+    </script>
+</body>
+</html>
