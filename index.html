@@ -112,42 +112,60 @@
 
         // --- LOGIN & FETCH CLOUD SCORE ---
         window.login = async function() {
-            const id = document.getElementById('login-id').value.trim();
-            const zone = document.getElementById('login-zone').value.trim();
-            const msg = document.getElementById('login-msg');
+    const id = document.getElementById('login-id').value.trim();
+    const zone = document.getElementById('login-zone').value.trim();
+    const msg = document.getElementById('login-msg');
 
-            if(!id || !zone) return msg.innerText = "Enter ID and Zone";
-            msg.innerText = "Verifying Account...";
+    if(!id || !zone) return msg.innerText = "Enter ID and Zone";
+    msg.innerText = "Verifying Account...";
 
-            try {
-                // Verify with MLBB API
-                let res = await fetch(`https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`);
-                let data = await res.json();
-                
-                if(data.success || data.name) {
-                    currentUser.id = id;
-                    currentUser.ign = data.name || data.nickname;
-                    
-                    // Fetch existing score from Firebase
-                    const userDoc = await getDoc(doc(db, "players", id));
-                    if(userDoc.exists()) {
-                        currentUser.score = userDoc.data().score;
-                    } else {
-                        currentUser.score = 0; // New player
-                    }
+    try {
+        // FIX: Added 'corsproxy.io' to bypass website security blocks
+        const apiUrl = `https://corsproxy.io/?https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`;
+        
+        let res = await fetch(apiUrl);
+        let data = await res.json();
+        
+        if(data.success || data.name) {
+            currentUser.id = id;
+            currentUser.ign = data.name || data.nickname;
+            
+            // Fetch existing score from Firebase
+            const userDoc = await getDoc(doc(db, "players", id));
+            if(userDoc.exists()) {
+                currentUser.score = userDoc.data().score;
+            } else {
+                currentUser.score = 0; // New player
+            }
 
-                    // Start Game
-                    document.getElementById('screen-login').classList.add('hidden');
-                    document.getElementById('screen-game').classList.remove('hidden');
-                    document.getElementById('player-ign').innerText = currentUser.ign;
-                    document.getElementById('player-score').innerText = currentUser.score;
-                    nextHero();
+            // Start Game
+            document.getElementById('screen-login').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+            document.getElementById('player-ign').innerText = currentUser.ign;
+            document.getElementById('player-score').innerText = currentUser.score;
+            nextHero();
 
-                } else {
-                    msg.innerText = "Invalid Game ID or Zone.";
-                }
-            } catch(e) { msg.innerText = "Network Error."; }
+        } else {
+            msg.innerText = "Invalid Game ID or Zone.";
         }
+    } catch(e) { 
+        // FIX: Shows the EXACT error so you know what is broken
+        msg.innerText = "Error: " + e.message; 
+        
+        // FALLBACK: Allows players to play even if the MLBB API goes offline!
+        if(confirm("The MLBB API is down. Play Offline as Guest?")) {
+            currentUser.id = "Guest_" + id;
+            currentUser.ign = "Guest";
+            currentUser.score = 0;
+            
+            document.getElementById('screen-login').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+            document.getElementById('player-ign').innerText = currentUser.ign;
+            document.getElementById('player-score').innerText = currentUser.score;
+            nextHero();
+        }
+    }
+}
 
         // --- GAMEPLAY ---
         function nextHero() {
