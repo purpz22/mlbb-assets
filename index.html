@@ -29,7 +29,7 @@
 
     <!-- LOGIN SCREEN -->
     <div id="screen-login" class="glass w-full max-w-sm p-6 z-10 text-center">
-        <h1 class="text-4xl font-black italic text-yellow-400 mb-6 drop-shadow-md">LEGENDS GUESS</h1>
+        <h1 class="text-4xl font-black italic text-yellow-400 mb-6 drop-shadow-md">GUESS THE HERO</h1>
         <div class="flex gap-2 mb-4">
             <input type="number" id="login-id" placeholder="Game ID" class="input-field w-2/3 p-3 rounded-lg text-lg text-center">
             <input type="number" id="login-zone" placeholder="Zone" class="input-field w-1/3 p-3 rounded-lg text-lg text-center">
@@ -194,7 +194,7 @@
                 
                 currentUser.id = id;
                 currentUser.ign = data.name || data.nickname;
-                msg.innerText = "Loading Cloud Score...";
+                msg.innerText = "Loading Score...";
 
                 // 2. Get Score from Firebase
                 const userDoc = await getDoc(doc(db, "players", id));
