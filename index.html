@@ -17,13 +17,18 @@
         .btn { background: linear-gradient(to bottom, #3b82f6, #1d4ed8); border: 1px solid #60a5fa; color: white; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
         .btn:active { transform: scale(0.95); }
         .btn-gold { background: linear-gradient(to bottom, #f59e0b, #b45309); border-color: #fbbf24; }
+        
+        /* Timer styles */
+        #timer-bar {
+            transition: width 0.2s linear, background-color 0.4s;
+        }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-4">
 
     <!-- LOGIN SCREEN -->
     <div id="screen-login" class="glass w-full max-w-sm p-6 z-10 text-center">
-        <h1 class="text-4xl font-black italic text-yellow-400 mb-6 drop-shadow-md">LEGENDS GUESS</h1>
+        <h1 class="text-4xl font-black italic text-yellow-400 mb-6 drop-shadow-md">GUESS THE HERO</h1>
         <p class="text-xs text-gray-400 mb-2 uppercase tracking-widest">Connect Account</p>
         <div class="flex gap-2 mb-4">
             <input type="number" id="login-id" placeholder="Game ID" class="input-field w-2/3 p-3 rounded-lg text-lg text-center">
@@ -42,7 +47,18 @@
         
         <div class="hero-box mb-4 shake-anim" id="hero-box"><img id="hero-img" src=""></div>
         
-        <p id="feedback" class="text-center font-bold text-lg h-6 mb-2 text-green-400"></p>
+        <!-- TIMER (brought back) -->
+        <div class="mb-6 px-2">
+            <div class="flex justify-between text-xs font-medium text-gray-400 mb-1 tracking-widest">
+                <span>TIME LEFT</span>
+                <span id="timer-text" class="font-mono text-2xl font-black text-yellow-400">25s</span>
+            </div>
+            <div class="h-3 bg-slate-700 rounded-full overflow-hidden">
+                <div id="timer-bar" class="h-full bg-yellow-400 rounded-full w-full"></div>
+            </div>
+        </div>
+
+        <p id="feedback" class="text-center font-bold text-lg h-8 mb-3 text-green-400"></p>
 
         <form onsubmit="checkGuess(event)" class="flex flex-col gap-2 mb-4">
             <input type="text" id="guess-input" placeholder="HERO NAME" class="input-field w-full p-3 rounded-xl text-center text-xl uppercase font-bold" autocomplete="off">
@@ -52,7 +68,7 @@
         <button onclick="showLeaderboard()" class="btn btn-gold w-full p-3 rounded-xl text-sm">🏆 View Global Leaderboard</button>
     </div>
 
-    <!-- LEADERBOARD & SEARCH SCREEN -->
+    <!-- LEADERBOARD & SEARCH SCREEN (unchanged) -->
     <div id="screen-leaderboard" class="glass w-full max-w-sm p-6 z-20 hidden absolute top-4 bottom-4 flex flex-col">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-2xl font-black text-yellow-400 italic">TOP 5 PLAYERS</h2>
@@ -101,78 +117,168 @@
 
         // --- GAME DATA ---
         let heroes = [
-            { name: "Layla", img: "icons/layla.png" },
-            { name: "Zilong", img: "icons/zilong.png" },
-            { name: "Miya", img: "icons/miya.png" }
-            // ADD MORE HEROES HERE
+            { name: "Aamon" },
+            { name: "Layla" },
+            { name: "Zilong" },
+            { name: "Miya" },
+            { name: "Alucard" },
+            { name: "Fanny" },
+            { name: "Chou" },
+            { name: "Gusion" },
+            { name: "Lancelot" },
+            { name: "Ling" },
+            { name: "Hayabusa" },
+            { name: "Karina" },
+            { name: "Saber" },
+            { name: "Tigreal" },
+            { name: "Franco" },
+            { name: "Balmond" },
+            { name: "Bane" },
+            { name: "Clint" },
+            { name: "Bruno" },
+            { name: "Rafaela" },
+            // ADD ALL YOUR OTHER HEROES HERE (just the name)
+            // Example: { name: "Valir" }, { name: "Odette" }, ...
         ];
         
         let currentUser = { id: "", ign: "", score: 0 };
         let currentHero = null;
+        let timerInterval = null;
+        const MAX_TIME = 15;   // ← you can change this
 
-        // --- LOGIN & FETCH CLOUD SCORE ---
-        window.login = async function() {
-    const id = document.getElementById('login-id').value.trim();
-    const zone = document.getElementById('login-zone').value.trim();
-    const msg = document.getElementById('login-msg');
-
-    if(!id || !zone) return msg.innerText = "Enter ID and Zone";
-    msg.innerText = "Verifying Account...";
-
-    try {
-        // FIX: Added 'corsproxy.io' to bypass website security blocks
-        const apiUrl = `https://corsproxy.io/?https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`;
-        
-        let res = await fetch(apiUrl);
-        let data = await res.json();
-        
-        if(data.success || data.name) {
-            currentUser.id = id;
-            currentUser.ign = data.name || data.nickname;
+        // --- IMAGE LOADER (handles .png .webp .jpg + your naming: icon / 1st / ss / ult etc.) ---
+        function loadRandomHeroImage(heroName) {
+            const base = heroName.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const variants = ['icon', '1st', '2nd', 'ult', 'ss', 'passive']; // exactly the files you made
+            let variant = variants[Math.floor(Math.random() * variants.length)];
             
-            // Fetch existing score from Firebase
-            const userDoc = await getDoc(doc(db, "players", id));
-            if(userDoc.exists()) {
-                currentUser.score = userDoc.data().score;
-            } else {
-                currentUser.score = 0; // New player
+            const extensions = ['.png', '.webp', '.jpg', '.jpeg'];
+            let extIndex = 0;
+            
+            const img = document.getElementById('hero-img');
+            
+            function tryNext() {
+                if (extIndex >= extensions.length) {
+                    // fallback to "icon" if the random variant doesn't exist
+                    variant = 'icon';
+                    extIndex = 0;
+                }
+                
+                const src = `icons/${base}-${variant}${extensions[extIndex]}`;
+                img.src = src;
+                
+                img.onerror = () => {
+                    extIndex++;
+                    tryNext();
+                };
+                
+                img.onload = () => {
+                    img.onerror = null; // clear error handler on success
+                };
             }
-
-            // Start Game
-            document.getElementById('screen-login').classList.add('hidden');
-            document.getElementById('screen-game').classList.remove('hidden');
-            document.getElementById('player-ign').innerText = currentUser.ign;
-            document.getElementById('player-score').innerText = currentUser.score;
-            nextHero();
-
-        } else {
-            msg.innerText = "Invalid Game ID or Zone.";
-        }
-    } catch(e) { 
-        // FIX: Shows the EXACT error so you know what is broken
-        msg.innerText = "Error: " + e.message; 
-        
-        // FALLBACK: Allows players to play even if the MLBB API goes offline!
-        if(confirm("The MLBB API is down. Play Offline as Guest?")) {
-            currentUser.id = "Guest_" + id;
-            currentUser.ign = "Guest";
-            currentUser.score = 0;
             
-            document.getElementById('screen-login').classList.add('hidden');
-            document.getElementById('screen-game').classList.remove('hidden');
-            document.getElementById('player-ign').innerText = currentUser.ign;
-            document.getElementById('player-score').innerText = currentUser.score;
-            nextHero();
+            tryNext();
         }
-    }
-}
+
+        // --- TIMER ---
+        function startTimer() {
+            let timeLeft = MAX_TIME;
+            const bar = document.getElementById('timer-bar');
+            const text = document.getElementById('timer-text');
+            
+            clearInterval(timerInterval);
+            bar.style.width = '100%';
+            bar.style.backgroundColor = '#fbbf24';
+            text.textContent = MAX_TIME + 's';
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                const percent = (timeLeft / MAX_TIME) * 100;
+                bar.style.width = percent + '%';
+                
+                if (timeLeft <= 7) bar.style.backgroundColor = '#ef4444';
+                text.textContent = timeLeft + 's';
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timeUp();
+                }
+            }, 1000);
+        }
+
+        function timeUp() {
+            const fb = document.getElementById('feedback');
+            fb.innerHTML = `TIME'S UP!<br><span class="text-yellow-400 text-2xl">${currentHero.name}</span>`;
+            fb.className = "text-center font-bold text-xl h-14 mb-3 text-orange-400";
+            
+            setTimeout(() => {
+                fb.innerText = '';
+                nextHero();
+            }, 2200);
+        }
+
+        // --- LOGIN & FETCH CLOUD SCORE (unchanged) ---
+        window.login = async function() {
+            const id = document.getElementById('login-id').value.trim();
+            const zone = document.getElementById('login-zone').value.trim();
+            const msg = document.getElementById('login-msg');
+
+            if(!id || !zone) return msg.innerText = "Enter ID and Zone";
+            msg.innerText = "Verifying Account...";
+
+            try {
+                const apiUrl = `https://corsproxy.io/?https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`;
+                
+                let res = await fetch(apiUrl);
+                let data = await res.json();
+                
+                if(data.success || data.name) {
+                    currentUser.id = id;
+                    currentUser.ign = data.name || data.nickname;
+                    
+                    const userDoc = await getDoc(doc(db, "players", id));
+                    if(userDoc.exists()) {
+                        currentUser.score = userDoc.data().score;
+                    } else {
+                        currentUser.score = 0;
+                    }
+
+                    document.getElementById('screen-login').classList.add('hidden');
+                    document.getElementById('screen-game').classList.remove('hidden');
+                    document.getElementById('player-ign').innerText = currentUser.ign;
+                    document.getElementById('player-score').innerText = currentUser.score;
+                    nextHero();
+
+                } else {
+                    msg.innerText = "Invalid Game ID or Zone.";
+                }
+            } catch(e) { 
+                msg.innerText = "Error: " + e.message; 
+                
+                if(confirm("The MLBB API is down. Play Offline as Guest?")) {
+                    currentUser.id = "Guest_" + id;
+                    currentUser.ign = "Guest";
+                    currentUser.score = 0;
+                    
+                    document.getElementById('screen-login').classList.add('hidden');
+                    document.getElementById('screen-game').classList.remove('hidden');
+                    document.getElementById('player-ign').innerText = currentUser.ign;
+                    document.getElementById('player-score').innerText = currentUser.score;
+                    nextHero();
+                }
+            }
+        }
 
         // --- GAMEPLAY ---
         function nextHero() {
             const r = Math.floor(Math.random() * heroes.length);
             currentHero = heroes[r];
-            document.getElementById('hero-img').src = currentHero.img;
+            
             document.getElementById('guess-input').value = "";
+            document.getElementById('feedback').innerText = "";
+            
+            loadRandomHeroImage(currentHero.name);   // uses your exact file names + any extension
+            startTimer();
             document.getElementById('guess-input').focus();
         }
 
@@ -183,31 +289,34 @@
             const fb = document.getElementById('feedback');
 
             if(guess === answer) {
-                fb.innerText = "CORRECT!"; fb.className = "text-center font-bold text-lg h-6 mb-2 text-green-400";
+                clearInterval(timerInterval);   // stop timer on correct guess
+                
+                fb.innerText = "CORRECT!";
+                fb.className = "text-center font-bold text-2xl h-8 mb-3 text-green-400";
+                
                 currentUser.score++;
                 document.getElementById('player-score').innerText = currentUser.score;
                 
-                // SAVE TO CLOUD INSTANTLY
                 await setDoc(doc(db, "players", currentUser.id), {
                     ign: currentUser.ign,
                     score: currentUser.score,
                     updatedAt: new Date()
                 }, { merge: true });
 
-                nextHero();
+                setTimeout(nextHero, 800);
             } else {
-                fb.innerText = "WRONG! Try again."; fb.className = "text-center font-bold text-lg h-6 mb-2 text-red-500";
+                fb.innerText = "WRONG! Try again.";
+                fb.className = "text-center font-bold text-lg h-8 mb-3 text-red-500";
             }
         }
 
-        // --- LEADERBOARD & SEARCH ---
+        // --- LEADERBOARD & SEARCH (unchanged) ---
         window.showLeaderboard = async function() {
             document.getElementById('screen-game').classList.add('hidden');
             document.getElementById('screen-leaderboard').classList.remove('hidden');
             const tbody = document.getElementById('lb-body');
             tbody.innerHTML = '<tr><td class="text-center text-gray-500 py-4">Loading Top 5...</td></tr>';
 
-            // Fetch Top 5 from Firebase
             const q = query(collection(db, "players"), orderBy("score", "desc"), limit(5));
             const querySnapshot = await getDocs(q);
             
@@ -239,7 +348,6 @@
             document.getElementById('search-rank').innerText = "Searching...";
             resDiv.classList.remove('hidden');
 
-            // To find exact rank, we download ordered scores (Fine for small games)
             const q = query(collection(db, "players"), orderBy("score", "desc"));
             const querySnapshot = await getDocs(q);
             
