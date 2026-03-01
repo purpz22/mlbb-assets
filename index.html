@@ -83,7 +83,7 @@
     <!-- LOGIN SCREEN -->
     <div id="screen-login" class="w-full max-w-sm px-6 flex flex-col items-center justify-center z-10 w-full h-full gpu-layer">
         
-        <div class="mb-12 text-center relative w-full flex flex-col items-center">
+        <div class="mb-10 text-center relative w-full flex flex-col items-center">
             <div class="absolute inset-0 bg-indigo-500/20 blur-[50px] rounded-full w-48 h-48 mx-auto -z-10 mix-blend-screen"></div>
             <h1 class="text-6xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-cyan-300 to-indigo-500 drop-shadow-[0_0_15px_rgba(56,189,248,0.3)] leading-[0.85] mb-2">
                 GUESS
@@ -95,12 +95,13 @@
         </div>
 
         <form id="form-login" class="w-full flex flex-col gap-4">
-            <div class="flex gap-3 w-full">
-                <input type="number" id="login-id" placeholder="Game ID" class="flex-1 h-16 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-2xl px-5 text-xl text-center font-bold text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all shadow-inner" required>
-                <input type="number" id="login-zone" placeholder="Zone" class="w-24 h-16 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-2xl px-2 text-xl text-center font-bold text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all shadow-inner" required>
+            <!-- Inputs stacked vertically -->
+            <div class="flex flex-col gap-3 w-full">
+                <input type="number" id="login-id" placeholder="Game ID (e.g. 12345678)" class="w-full h-16 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-2xl px-5 text-xl text-center font-bold text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all shadow-inner" required>
+                <input type="number" id="login-zone" placeholder="Zone ID (e.g. 1234)" class="w-full h-16 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-2xl px-5 text-xl text-center font-bold text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all shadow-inner" required>
             </div>
             
-            <p id="login-msg" class="text-red-400 text-sm h-5 font-bold text-center tracking-wide"></p>
+            <p id="login-msg" class="text-cyan-400 text-sm h-5 font-bold text-center tracking-wide"></p>
             
             <button type="submit" id="btn-login" class="w-full h-16 mt-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 text-white font-black text-xl rounded-2xl shadow-[0_10px_30px_-10px_rgba(99,102,241,0.7)] active:scale-95 active:shadow-none transition-all duration-200 flex items-center justify-center uppercase tracking-widest border border-indigo-400/30">
                 CONNECT
@@ -159,7 +160,7 @@
         </div>
 
         <!-- Controls Area -->
-        <div class="w-full shrink-0 flex flex-col gap-3 pb-safe">
+        <div class="w-full shrink-0 flex flex-col gap-3 pb-safe items-center">
             <form id="form-guess" class="flex flex-col gap-3 w-full">
                 <input type="text" id="guess-input" placeholder="ENTER HERO" class="w-full h-16 bg-slate-900/80 backdrop-blur-md border-2 border-slate-700 rounded-full px-6 text-2xl text-center font-black text-cyan-300 placeholder-slate-600 uppercase tracking-[0.15em] focus:outline-none focus:border-indigo-500 focus:bg-slate-800 transition-all shadow-inner" autocomplete="off" autocorrect="off" spellcheck="false">
                 <button type="submit" id="btn-submit" class="w-full h-16 bg-white text-slate-950 font-black text-xl rounded-full uppercase tracking-[0.2em] shadow-[0_8px_20px_rgba(255,255,255,0.2)] active:scale-95 active:shadow-none transition-all duration-200 flex items-center justify-center">
@@ -172,6 +173,11 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
                 Open Leaderboard
+            </button>
+            
+            <!-- Small Sign Out Button -->
+            <button type="button" id="btn-logout" class="h-8 px-4 text-[10px] text-slate-500 font-black uppercase tracking-[0.15em] active:text-rose-500 transition-colors mt-1">
+                Switch Account
             </button>
         </div>
     </div>
@@ -310,6 +316,24 @@
         document.getElementById('form-search').addEventListener('submit', searchPlayer);
         els.heroImg.addEventListener('error', handleImageError);
 
+        // Auto Login Execution
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedId = localStorage.getItem('mlbb_id');
+            const savedZone = localStorage.getItem('mlbb_zone');
+            if (savedId && savedZone) {
+                document.getElementById('login-id').value = savedId;
+                document.getElementById('login-zone').value = savedZone;
+                document.getElementById('btn-login').click();
+            }
+        });
+
+        // Logout Execution
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            localStorage.removeItem('mlbb_id');
+            localStorage.removeItem('mlbb_zone');
+            location.reload();
+        });
+
         // Android Hardware Back Button Handling (History API Hook)
         window.addEventListener('popstate', (event) => {
             if (els.screenLeaderboard.classList.contains('hidden') === false) {
@@ -322,6 +346,7 @@
             e.preventDefault();
             if (!navigator.onLine) {
                 els.loginMsg.innerText = "No internet connection.";
+                els.loginMsg.className = "text-rose-400 text-sm h-5 font-bold text-center tracking-wide";
                 return;
             }
 
@@ -331,10 +356,12 @@
             // Input Validation
             if (!/^\d+$/.test(id) || !/^\d+$/.test(zone)) {
                 els.loginMsg.innerText = "Invalid ID/Zone format.";
+                els.loginMsg.className = "text-rose-400 text-sm h-5 font-bold text-center tracking-wide";
                 return;
             }
 
             els.loginMsg.innerText = "Verifying Account...";
+            els.loginMsg.className = "text-cyan-400 text-sm h-5 font-bold text-center tracking-wide animate-pulse";
             document.getElementById('btn-login').disabled = true;
 
             try {
@@ -348,6 +375,11 @@
                 
                 currentUser.id = id;
                 currentUser.ign = data.name || data.nickname;
+                
+                // Save credentials to bypass next time
+                localStorage.setItem('mlbb_id', id);
+                localStorage.setItem('mlbb_zone', zone);
+
                 els.loginMsg.innerText = "Loading Score...";
 
                 // Fetch Firebase profile
@@ -361,6 +393,10 @@
                 nextHero();
             } catch(e) { 
                 els.loginMsg.innerText = "Error: " + e.message; 
+                els.loginMsg.className = "text-rose-400 text-sm h-5 font-bold text-center tracking-wide";
+                // Clear bad local storage data
+                localStorage.removeItem('mlbb_id');
+                localStorage.removeItem('mlbb_zone');
             } finally {
                 document.getElementById('btn-login').disabled = false;
             }
@@ -417,6 +453,8 @@
             isGameActive = false;
             els.feedback.innerText = `Time's Up! It was ${currentHero.name}`;
             els.feedback.className = "text-center font-bold text-xl h-7 mb-2 text-rose-500 tracking-wide";
+            els.heroBox.classList.add('animate-error');
+            setTimeout(() => { els.heroBox.classList.remove('animate-error'); }, 400);
             lockGame(3000);
         }
 
@@ -439,14 +477,15 @@
                 currentUser.score++;
                 els.playerScore.innerText = currentUser.score;
                 
-                // Trigger Confetti
+                // Trigger Confetti making sure z-index is high enough
                 if (window.confetti) {
                     confetti({
-                        particleCount: 120,
+                        particleCount: 150,
                         spread: 80,
-                        origin: { y: 0.6 },
+                        origin: { y: 0.5 },
                         colors: ['#22d3ee', '#818cf8', '#f8fafc', '#a78bfa'], // cyan, indigo, white, purple
-                        disableForReducedMotion: true
+                        disableForReducedMotion: true,
+                        zIndex: 9999
                     });
                 }
 
