@@ -85,7 +85,7 @@
     <div id="screen-login" class="absolute inset-0 w-full max-w-sm mx-auto px-6 flex flex-col items-center justify-center z-10 transition-all duration-300">
         
         <!-- Logo Area -->
-        <div class="flex flex-col items-center justify-center mb-10 relative w-full">
+        <div class="flex flex-col items-center justify-center mb-8 relative w-full">
             <div class="absolute inset-0 bg-indigo-500/20 blur-[60px] rounded-full w-32 h-32 mx-auto -z-10 mix-blend-screen pointer-events-none"></div>
             <h1 class="text-[3.5rem] font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-cyan-400 to-indigo-400 drop-shadow-lg leading-none">
                 GUESS
@@ -94,6 +94,11 @@
                 THE HERO
             </h2>
             <div class="h-1 w-12 bg-indigo-500 rounded-full mt-4 shadow-[0_0_15px_rgba(99,102,241,0.8)]"></div>
+            
+            <!-- Prize Announcement on Login -->
+            <p class="mt-4 text-[11px] font-black text-cyan-300 uppercase tracking-[0.15em] text-center px-4 py-2 leading-relaxed bg-slate-900/60 rounded-full border border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
+                🏆 Top 1 Player Will win 1 <span class="text-white">EPIC skin</span> of their choice
+            </p>
         </div>
 
         <!-- Premium Login Card -->
@@ -199,7 +204,7 @@
     <div id="screen-leaderboard" class="fixed inset-0 bg-slate-950/95 backdrop-blur-3xl z-50 hidden flex-col gpu-layer">
         <div class="flex-1 w-full max-w-md mx-auto flex flex-col h-full px-5 py-6">
             
-            <div class="flex justify-between items-center mb-6 pt-4 shrink-0">
+            <div class="flex justify-between items-center mb-4 pt-4 shrink-0">
                 <div class="flex flex-col">
                     <span class="text-[10px] text-cyan-500 font-black tracking-widest uppercase">Global</span>
                     <h2 class="text-3xl font-black text-white italic tracking-tighter leading-none mt-1">TOP 5</h2>
@@ -209,6 +214,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
+            </div>
+
+            <!-- Prize Announcement on Leaderboard -->
+            <div class="mb-4 shrink-0 bg-gradient-to-r from-indigo-500/20 to-cyan-500/20 border border-indigo-500/30 rounded-xl p-3 text-center shadow-inner">
+                <p class="text-[11px] font-bold text-indigo-100 uppercase tracking-widest leading-relaxed">
+                    🏆 Top 1 Player Will win 1 <span class="text-cyan-400 font-black drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]">EPIC skin</span> of their choice!
+                </p>
             </div>
 
             <div class="flex-1 overflow-y-auto overscroll-contain mb-4 relative pb-4">
@@ -223,9 +235,10 @@
                 <div class="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
                 
                 <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] mb-3 text-center">Locate Player Rank</p>
-                <form id="form-search" class="flex gap-2">
-                    <input type="number" id="search-id" placeholder="Game ID" class="flex-1 h-14 bg-slate-950 border border-slate-800 rounded-2xl px-4 text-center font-bold text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors shadow-inner" required>
-                    <button type="submit" class="h-14 px-6 bg-indigo-600 text-white font-black text-sm uppercase tracking-widest rounded-2xl active:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-500/30">
+                <!-- Updated Search Form Layout: Button below Game ID, fully centered/stretched -->
+                <form id="form-search" class="flex flex-col gap-3">
+                    <input type="number" id="search-id" placeholder="Game ID" class="w-full h-14 bg-slate-950 border border-slate-800 rounded-2xl px-4 text-center font-bold text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors shadow-inner" required>
+                    <button type="submit" class="w-full h-14 bg-indigo-600 text-white font-black text-sm uppercase tracking-widest rounded-2xl active:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-500/30 flex items-center justify-center">
                         FIND
                     </button>
                 </form>
