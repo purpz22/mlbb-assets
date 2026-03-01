@@ -6,7 +6,8 @@
     <meta name="theme-color" content="#020617">
     <title>MLBB Guess Hero</title>
     
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://www.gstatic.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https: http:; connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app https://api.isan.eu.org https://corsproxy.io wss://*.firebaseio.com https://identitytoolkit.googleapis.com;">
+    <!-- CSP updated to allow canvas-confetti execution seamlessly -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://www.gstatic.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https: http:; connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app https://api.isan.eu.org https://corsproxy.io wss://*.firebaseio.com https://identitytoolkit.googleapis.com; worker-src 'self' blob:;">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,8 +15,9 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5350189369134605" crossorigin="anonymous"></script>
-    <!-- Canvas Confetti for the correct answer celebration -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <!-- Reliable Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
     <style>
         :root {
@@ -81,10 +83,13 @@
 <body class="flex flex-col items-center justify-center w-full h-full relative">
 
     <!-- LOGIN SCREEN -->
-    <div id="screen-login" class="w-full max-w-sm px-6 flex flex-col items-center justify-center z-10 w-full h-full gpu-layer">
+    <!-- Added overflow-y-auto so if the Android keyboard opens, it centers perfectly without squishing -->
+    <div id="screen-login" class="w-full max-w-sm px-6 h-full flex flex-col items-center justify-center z-10 gpu-layer overflow-y-auto relative">
         
-        <div class="mb-10 text-center relative w-full flex flex-col items-center">
-            <div class="absolute inset-0 bg-indigo-500/20 blur-[50px] rounded-full w-48 h-48 mx-auto -z-10 mix-blend-screen"></div>
+        <div class="mb-10 text-center relative w-full flex flex-col items-center shrink-0 mt-8">
+            <!-- Background Glow -->
+            <div class="absolute inset-0 bg-indigo-500/20 blur-[50px] rounded-full w-48 h-48 mx-auto -z-10 mix-blend-screen pointer-events-none"></div>
+            
             <h1 class="text-6xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-cyan-300 to-indigo-500 drop-shadow-[0_0_15px_rgba(56,189,248,0.3)] leading-[0.85] mb-2">
                 GUESS
             </h1>
@@ -94,26 +99,26 @@
             <div class="h-1 w-12 bg-indigo-500 rounded-full mt-4 shadow-[0_0_10px_rgba(99,102,241,0.8)]"></div>
         </div>
 
-        <form id="form-login" class="w-full flex flex-col gap-4">
-            <!-- Inputs stacked vertically -->
+        <form id="form-login" class="w-full flex flex-col gap-4 shrink-0 pb-8">
+            <!-- Inputs explicitly stacked vertically (up and down) -->
             <div class="flex flex-col gap-3 w-full">
-                <input type="number" id="login-id" placeholder="Game ID (e.g. 12345678)" class="w-full h-16 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-2xl px-5 text-xl text-center font-bold text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all shadow-inner" required>
-                <input type="number" id="login-zone" placeholder="Zone ID (e.g. 1234)" class="w-full h-16 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-2xl px-5 text-xl text-center font-bold text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all shadow-inner" required>
+                <input type="number" id="login-id" placeholder="Game ID (e.g. 12345678)" class="w-full h-14 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-2xl px-5 text-xl text-center font-bold text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all shadow-inner" required>
+                <input type="number" id="login-zone" placeholder="Zone ID (e.g. 1234)" class="w-full h-14 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-2xl px-5 text-xl text-center font-bold text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all shadow-inner" required>
             </div>
             
-            <p id="login-msg" class="text-cyan-400 text-sm h-5 font-bold text-center tracking-wide"></p>
+            <p id="login-msg" class="text-cyan-400 text-sm h-5 font-bold text-center tracking-wide flex items-center justify-center"></p>
             
-            <button type="submit" id="btn-login" class="w-full h-16 mt-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 text-white font-black text-xl rounded-2xl shadow-[0_10px_30px_-10px_rgba(99,102,241,0.7)] active:scale-95 active:shadow-none transition-all duration-200 flex items-center justify-center uppercase tracking-widest border border-indigo-400/30">
+            <button type="submit" id="btn-login" class="w-full h-14 mt-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 text-white font-black text-xl rounded-2xl shadow-[0_10px_30px_-10px_rgba(99,102,241,0.7)] active:scale-95 active:shadow-none transition-all duration-200 flex items-center justify-center uppercase tracking-widest border border-indigo-400/30">
                 CONNECT
             </button>
         </form>
     </div>
 
     <!-- GAME SCREEN -->
-    <div id="screen-game" class="w-full max-w-sm h-full px-5 py-6 flex flex-col z-10 hidden relative gpu-layer">
+    <div id="screen-game" class="w-full max-w-sm h-full px-5 py-6 flex flex-col z-10 hidden relative gpu-layer overflow-y-auto">
         
         <!-- Player Stats Floating Pill -->
-        <div class="flex justify-between items-center bg-slate-900/40 border border-slate-700/50 rounded-full px-6 py-3 backdrop-blur-xl shadow-lg mb-8 shrink-0 mt-2">
+        <div class="flex justify-between items-center bg-slate-900/40 border border-slate-700/50 rounded-full px-6 py-3 backdrop-blur-xl shadow-lg mb-6 shrink-0 mt-2">
             <div class="flex flex-col">
                 <span class="text-[9px] text-cyan-400 font-black tracking-[0.2em] uppercase mb-0.5 opacity-80">Player</span>
                 <span id="player-ign" class="font-bold text-white text-lg leading-none truncate max-w-[130px]">Name</span>
@@ -126,7 +131,7 @@
         </div>
 
         <!-- Main Game Area -->
-        <div class="flex-1 flex flex-col items-center justify-center relative w-full pb-2">
+        <div class="flex-1 flex flex-col items-center justify-center relative w-full pb-2 shrink-0 min-h-[300px]">
             
             <!-- Timer Setup -->
             <div class="w-full flex justify-between items-end mb-2 px-2">
@@ -136,17 +141,17 @@
                 <span id="timer-text" class="text-cyan-300 font-black text-lg leading-none tracking-wider">15s</span>
             </div>
             
-            <div class="w-full h-2 bg-slate-900 border border-slate-800 rounded-full overflow-hidden mb-10 shadow-inner relative gpu-layer">
+            <div class="w-full h-2 bg-slate-900 border border-slate-800 rounded-full overflow-hidden mb-8 shadow-inner relative gpu-layer">
                 <div id="timer-bar" class="h-full bg-cyan-400 rounded-full origin-left w-full shadow-[0_0_12px_rgba(34,211,238,0.8)]"></div>
             </div>
             
             <!-- Hero Showcase (Strictly Circular) -->
-            <div class="relative w-64 h-64 flex items-center justify-center mb-8 isolate shrink-0">
+            <div class="relative w-56 h-56 flex items-center justify-center mb-6 isolate shrink-0">
                 <!-- Dual Glowing Rings -->
                 <div class="absolute inset-0 bg-gradient-to-tr from-cyan-500 to-indigo-500 rounded-full blur-[40px] opacity-30 -z-10 animate-pulse"></div>
                 
                 <!-- Main Container strictly enforcing image rules -->
-                <div class="hero-box w-[220px] h-[220px] rounded-full p-1.5 bg-gradient-to-b from-slate-700 to-slate-900 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-300 relative flex items-center justify-center" id="hero-box">
+                <div class="hero-box w-[200px] h-[200px] rounded-full p-1.5 bg-gradient-to-b from-slate-700 to-slate-900 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-300 relative flex items-center justify-center" id="hero-box">
                     <div class="w-full h-full rounded-full overflow-hidden bg-slate-950 flex items-center justify-center relative z-10 border border-slate-800/80">
                         <img id="hero-img" src="" alt="Hero" class="w-full h-full object-cover scale-[1.02]">
                     </div>
@@ -156,20 +161,20 @@
             </div>
             
             <!-- Feedback Text (JS changes text color, pre-styled base) -->
-            <p id="feedback" class="text-center font-bold text-xl h-7 mb-2 tracking-wide"></p>
+            <p id="feedback" class="text-center font-bold text-xl h-7 tracking-wide flex items-center justify-center"></p>
         </div>
 
         <!-- Controls Area -->
-        <div class="w-full shrink-0 flex flex-col gap-3 pb-safe items-center">
+        <div class="w-full shrink-0 flex flex-col gap-3 pb-4 items-center">
             <form id="form-guess" class="flex flex-col gap-3 w-full">
-                <input type="text" id="guess-input" placeholder="ENTER HERO" class="w-full h-16 bg-slate-900/80 backdrop-blur-md border-2 border-slate-700 rounded-full px-6 text-2xl text-center font-black text-cyan-300 placeholder-slate-600 uppercase tracking-[0.15em] focus:outline-none focus:border-indigo-500 focus:bg-slate-800 transition-all shadow-inner" autocomplete="off" autocorrect="off" spellcheck="false">
-                <button type="submit" id="btn-submit" class="w-full h-16 bg-white text-slate-950 font-black text-xl rounded-full uppercase tracking-[0.2em] shadow-[0_8px_20px_rgba(255,255,255,0.2)] active:scale-95 active:shadow-none transition-all duration-200 flex items-center justify-center">
+                <input type="text" id="guess-input" placeholder="ENTER HERO" class="w-full h-14 bg-slate-900/80 backdrop-blur-md border-2 border-slate-700 rounded-full px-6 text-2xl text-center font-black text-cyan-300 placeholder-slate-600 uppercase tracking-[0.15em] focus:outline-none focus:border-indigo-500 focus:bg-slate-800 transition-all shadow-inner" autocomplete="off" autocorrect="off" spellcheck="false">
+                <button type="submit" id="btn-submit" class="w-full h-14 bg-white text-slate-950 font-black text-xl rounded-full uppercase tracking-[0.2em] shadow-[0_8px_20px_rgba(255,255,255,0.2)] active:scale-95 active:shadow-none transition-all duration-200 flex items-center justify-center">
                     SUBMIT
                 </button>
             </form>
 
-            <button id="btn-show-leaderboard" class="h-14 w-full flex items-center justify-center bg-slate-800/60 backdrop-blur-sm border border-slate-700/80 rounded-full text-cyan-400 font-bold text-sm uppercase tracking-[0.15em] active:bg-slate-700 active:text-cyan-300 transition-all mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <button id="btn-show-leaderboard" class="h-12 w-full flex items-center justify-center bg-slate-800/60 backdrop-blur-sm border border-slate-700/80 rounded-full text-cyan-400 font-bold text-xs uppercase tracking-[0.15em] active:bg-slate-700 active:text-cyan-300 transition-all mt-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
                 Open Leaderboard
@@ -323,6 +328,7 @@
             if (savedId && savedZone) {
                 document.getElementById('login-id').value = savedId;
                 document.getElementById('login-zone').value = savedZone;
+                // Automatically click login if data exists
                 document.getElementById('btn-login').click();
             }
         });
@@ -346,7 +352,7 @@
             e.preventDefault();
             if (!navigator.onLine) {
                 els.loginMsg.innerText = "No internet connection.";
-                els.loginMsg.className = "text-rose-400 text-sm h-5 font-bold text-center tracking-wide";
+                els.loginMsg.className = "text-rose-400 text-sm h-5 font-bold text-center tracking-wide flex items-center justify-center";
                 return;
             }
 
@@ -356,17 +362,17 @@
             // Input Validation
             if (!/^\d+$/.test(id) || !/^\d+$/.test(zone)) {
                 els.loginMsg.innerText = "Invalid ID/Zone format.";
-                els.loginMsg.className = "text-rose-400 text-sm h-5 font-bold text-center tracking-wide";
+                els.loginMsg.className = "text-rose-400 text-sm h-5 font-bold text-center tracking-wide flex items-center justify-center";
                 return;
             }
 
             els.loginMsg.innerText = "Verifying Account...";
-            els.loginMsg.className = "text-cyan-400 text-sm h-5 font-bold text-center tracking-wide animate-pulse";
+            els.loginMsg.className = "text-cyan-400 text-sm h-5 font-bold text-center tracking-wide flex items-center justify-center animate-pulse";
             document.getElementById('btn-login').disabled = true;
 
             try {
                 // WARNING: Architecture flaw. Replace corsproxy.io with a dedicated Cloud Function
-                const res = await fetch(`https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`);
+                const res = await fetch(`https://corsproxy.io/?https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`);
                 const data = await res.json();
                 
                 if (!data.success && !data.name && !data.nickname) {
@@ -393,7 +399,7 @@
                 nextHero();
             } catch(e) { 
                 els.loginMsg.innerText = "Error: " + e.message; 
-                els.loginMsg.className = "text-rose-400 text-sm h-5 font-bold text-center tracking-wide";
+                els.loginMsg.className = "text-rose-400 text-sm h-5 font-bold text-center tracking-wide flex items-center justify-center";
                 // Clear bad local storage data
                 localStorage.removeItem('mlbb_id');
                 localStorage.removeItem('mlbb_zone');
@@ -452,7 +458,7 @@
         function timeIsUp() {
             isGameActive = false;
             els.feedback.innerText = `Time's Up! It was ${currentHero.name}`;
-            els.feedback.className = "text-center font-bold text-xl h-7 mb-2 text-rose-500 tracking-wide";
+            els.feedback.className = "text-center font-bold text-xl h-7 tracking-wide flex items-center justify-center text-rose-500";
             els.heroBox.classList.add('animate-error');
             setTimeout(() => { els.heroBox.classList.remove('animate-error'); }, 400);
             lockGame(3000);
@@ -472,19 +478,18 @@
                 els.timerBar.style.transition = 'none'; // Freeze timer visual
                 
                 els.feedback.innerText = "CORRECT!"; 
-                els.feedback.className = "text-center font-black text-xl h-7 mb-2 text-cyan-400 tracking-[0.2em] drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]";
+                els.feedback.className = "text-center font-black text-xl h-7 text-cyan-400 tracking-[0.2em] drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] flex items-center justify-center";
                 
                 currentUser.score++;
                 els.playerScore.innerText = currentUser.score;
                 
-                // Trigger Confetti making sure z-index is high enough
+                // Fire Canvas Confetti Effect
                 if (window.confetti) {
-                    confetti({
+                    window.confetti({
                         particleCount: 150,
-                        spread: 80,
+                        spread: 70,
                         origin: { y: 0.5 },
-                        colors: ['#22d3ee', '#818cf8', '#f8fafc', '#a78bfa'], // cyan, indigo, white, purple
-                        disableForReducedMotion: true,
+                        colors: ['#22d3ee', '#818cf8', '#f8fafc', '#a78bfa'],
                         zIndex: 9999
                     });
                 }
@@ -494,7 +499,7 @@
             } else {
                 els.guessInput.value = "";
                 els.feedback.innerText = "WRONG! Try again."; 
-                els.feedback.className = "text-center font-bold text-xl h-7 mb-2 text-rose-500 tracking-wide";
+                els.feedback.className = "text-center font-bold text-xl h-7 tracking-wide flex items-center justify-center text-rose-500";
 
                 // Trigger shake and red flash error animation
                 els.heroBox.classList.add('animate-error');
