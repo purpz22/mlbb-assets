@@ -2,124 +2,201 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#09090b">
     <title>MLBB Guess Hero</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5350189369134605"
-     crossorigin="anonymous"></script>
+    
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https: http:; connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app https://api.isan.eu.org https://corsproxy.io wss://*.firebaseio.com https://identitytoolkit.googleapis.com;">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5350189369134605" crossorigin="anonymous"></script>
+
     <style>
-        body { font-family: 'Rajdhani', sans-serif; background: #0f172a; color: white; overflow-x: hidden; user-select: none; }
-        .glass { background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-        
-        .hero-box { width: 220px; height: 220px; border: 4px solid #fbbf24; border-radius: 16px; margin: 0 auto; overflow: hidden; background: black; position: relative; display: flex; align-items: center; justify-content: center; }
-        .hero-box img { width: 100%; height: 100%; object-fit: contain; }
-        
-        .timer-container { width: 100%; height: 8px; background: #334155; border-radius: 4px; overflow: hidden; margin-bottom: 15px; }
-        .timer-bar { height: 100%; background: #4ade80; width: 100%; transition: width 0.1s linear; }
-        
-        .input-field { background: #1e293b; border: 2px solid #334155; color: white; outline: none; transition: 0.3s; }
-        .input-field:focus { border-color: #fbbf24; }
-        .hidden { display: none !important; }
-        
-        .btn { background: linear-gradient(to bottom, #3b82f6, #1d4ed8); border: 1px solid #60a5fa; color: white; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
-        .btn:active { transform: scale(0.95); }
-        .btn-gold { background: linear-gradient(to bottom, #f59e0b, #b45309); border-color: #fbbf24; }
+        :root {
+            --safe-area-inset-top: env(safe-area-inset-top, 0px);
+            --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: #09090b; /* Tailwind zinc-950 */
+            color: #f4f4f5; /* Tailwind zinc-50 */
+            overscroll-behavior-y: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            height: 100dvh; 
+            margin: 0;
+            overflow: hidden;
+            padding-top: var(--safe-area-inset-top);
+            padding-bottom: var(--safe-area-inset-bottom);
+        }
+
+        /* Hardware acceleration utilities */
+        .gpu-accel {
+            transform: translateZ(0);
+            will-change: transform, opacity;
+        }
+
+        /* Hide number input arrows */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-4">
+<body class="flex flex-col items-center justify-center relative w-full h-full">
 
     <!-- LOGIN SCREEN -->
-    <div id="screen-login" class="glass w-full max-w-sm p-6 z-10 text-center">
-        <h1 class="text-4xl font-black italic text-yellow-400 mb-6 drop-shadow-md">GUESS THE HERO</h1>
-        <div class="flex gap-2 mb-4">
-            <input type="number" id="login-id" placeholder="Game ID" class="input-field w-2/3 p-3 rounded-lg text-lg text-center">
-            <input type="number" id="login-zone" placeholder="Zone" class="input-field w-1/3 p-3 rounded-lg text-lg text-center">
+    <div id="screen-login" class="w-full max-w-sm px-6 flex flex-col items-center justify-center z-10 w-full h-full gpu-accel">
+        
+        <div class="mb-10 text-center">
+            <h1 class="text-5xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 via-yellow-500 to-amber-600 drop-shadow-lg leading-tight">
+                GUESS<br>THE HERO
+            </h1>
+            <p class="text-zinc-500 font-bold tracking-widest text-sm mt-2">MLBB EDITION</p>
         </div>
-        <p id="login-msg" class="text-red-400 text-xs mb-4 min-h-[16px] font-bold"></p>
-        <button onclick="login()" id="btn-login" class="btn btn-gold w-full p-4 rounded-xl text-xl">CONNECT</button>
+
+        <form id="form-login" class="w-full flex flex-col gap-4">
+            <div class="flex gap-3 w-full">
+                <input type="number" id="login-id" placeholder="Game ID" class="flex-1 h-14 bg-zinc-900 border border-zinc-800 rounded-2xl px-4 text-xl text-center font-bold text-white placeholder-zinc-600 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all shadow-inner" required>
+                <input type="number" id="login-zone" placeholder="Zone" class="w-24 h-14 bg-zinc-900 border border-zinc-800 rounded-2xl px-2 text-xl text-center font-bold text-white placeholder-zinc-600 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all shadow-inner" required>
+            </div>
+            
+            <p id="login-msg" class="text-red-400 text-sm h-5 font-bold text-center tracking-wide"></p>
+            
+            <button type="submit" id="btn-login" class="w-full h-14 mt-2 bg-gradient-to-r from-yellow-500 to-amber-600 text-zinc-950 font-black text-xl rounded-2xl shadow-[0_8px_16px_-6px_rgba(245,158,11,0.5)] active:scale-[0.97] active:shadow-none transition-all duration-150 flex items-center justify-center uppercase tracking-widest">
+                CONNECT
+            </button>
+        </form>
     </div>
 
     <!-- GAME SCREEN -->
-    <div id="screen-game" class="glass w-full max-w-sm p-6 z-10 hidden relative">
-        <div class="flex justify-between items-center border-b border-white/10 pb-2 mb-2">
-            <div><span class="text-xs text-gray-400 block uppercase">Player</span><span id="player-ign" class="font-bold text-blue-400">Name</span></div>
-            <div class="text-right"><span class="text-xs text-gray-400 block uppercase">Score</span><span id="player-score" class="font-black text-3xl text-yellow-400">0</span></div>
-        </div>
-
-        <div class="flex justify-between text-xs text-gray-400 mb-1">
-            <span>TIME LEFT</span>
-            <span id="timer-text" class="text-white font-bold">15s</span>
-        </div>
-        <div class="timer-container">
-            <div id="timer-bar" class="timer-bar"></div>
-        </div>
+    <div id="screen-game" class="w-full max-w-sm h-full px-5 py-6 flex flex-col z-10 hidden relative gpu-accel">
         
-        <div class="hero-box mb-4" id="hero-box">
-            <img id="hero-img" src="" onerror="this.style.display='none'; document.getElementById('debug-msg').innerText='Image Missing: ' + this.getAttribute('src');">
-            <div id="debug-msg" class="absolute inset-0 flex items-center justify-center text-red-500 text-xs font-bold text-center px-4 break-words pointer-events-none"></div>
+        <!-- Header / Stats -->
+        <div class="flex justify-between items-center bg-zinc-900/80 border border-zinc-800/80 rounded-3xl p-4 shadow-lg backdrop-blur-md mb-6 shrink-0 mt-2">
+            <div class="flex flex-col">
+                <span class="text-[10px] text-zinc-500 font-black tracking-widest uppercase mb-0.5">Player</span>
+                <span id="player-ign" class="font-bold text-blue-400 text-lg leading-none truncate max-w-[140px]">Name</span>
+            </div>
+            <div class="flex flex-col items-end">
+                <span class="text-[10px] text-zinc-500 font-black tracking-widest uppercase mb-0.5">Score</span>
+                <span id="player-score" class="font-black text-3xl text-yellow-400 leading-none drop-shadow-md">0</span>
+            </div>
         </div>
-        
-        <p id="feedback" class="text-center font-bold text-lg h-6 mb-2 text-green-400"></p>
 
-        <form onsubmit="checkGuess(event)" class="flex flex-col gap-2 mb-4">
-            <input type="text" id="guess-input" placeholder="HERO NAME" class="input-field w-full p-3 rounded-xl text-center text-xl uppercase font-bold" autocomplete="off">
-            <button type="submit" id="btn-submit" class="btn w-full p-3 rounded-xl text-lg">SUBMIT</button>
-        </form>
+        <!-- Game Area -->
+        <div class="flex-1 flex flex-col items-center justify-center relative w-full pb-4">
+            
+            <!-- Timer Setup -->
+            <div class="w-full flex justify-between items-end mb-3 px-1">
+                <span class="text-[11px] font-black text-zinc-600 tracking-widest uppercase">Time Left</span>
+                <span id="timer-text" class="text-zinc-100 font-black text-lg leading-none">15s</span>
+            </div>
+            
+            <div class="w-full h-2.5 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden mb-8 shadow-inner relative gpu-accel">
+                <div id="timer-bar" class="h-full bg-green-500 rounded-full origin-left w-full shadow-[0_0_10px_rgba(74,222,128,0.5)]"></div>
+            </div>
+            
+            <!-- Hero Image Showcase -->
+            <div class="relative w-56 h-56 flex items-center justify-center mb-8 isolate shrink-0">
+                <!-- Ambient Glow -->
+                <div class="absolute inset-0 bg-amber-500/20 rounded-full blur-3xl -z-10 animate-pulse"></div>
+                
+                <!-- Circular Container strictly enforcing rules -->
+                <div class="hero-box w-full h-full rounded-full border-4 border-zinc-800 bg-zinc-950 shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden relative flex items-center justify-center" id="hero-box">
+                    <img id="hero-img" src="" alt="Hero" class="w-[105%] h-[105%] object-cover block">
+                    <div id="debug-msg" class="absolute inset-0 flex items-center justify-center bg-zinc-900/90 text-red-500 text-xs font-bold text-center px-4 break-words hidden z-20"></div>
+                </div>
+            </div>
+            
+            <!-- Feedback Text handled by JS but pre-styled wrapper area -->
+            <p id="feedback" class="text-center font-bold text-lg h-6 mb-4 text-green-400 tracking-wide"></p>
+        </div>
 
-        <button onclick="showLeaderboard()" class="text-xs text-gray-400 mt-2 underline w-full text-center hover:text-white">View Leaderboard</button>
+        <!-- Input & Controls -->
+        <div class="w-full shrink-0 flex flex-col gap-3 pb-2">
+            <form id="form-guess" class="flex flex-col gap-3 w-full">
+                <input type="text" id="guess-input" placeholder="HERO NAME" class="w-full h-14 bg-zinc-900 border-2 border-zinc-800 rounded-2xl px-6 text-2xl text-center font-black text-white placeholder-zinc-700 uppercase tracking-widest focus:outline-none focus:border-blue-500 focus:bg-zinc-800 transition-colors shadow-inner" autocomplete="off" autocorrect="off" spellcheck="false">
+                <button type="submit" id="btn-submit" class="w-full h-14 bg-blue-600 text-white font-black text-xl rounded-2xl uppercase tracking-widest shadow-[0_8px_20px_-6px_rgba(37,99,235,0.5)] active:scale-[0.97] active:shadow-none transition-all duration-150 flex items-center justify-center">
+                    SUBMIT
+                </button>
+            </form>
+
+            <button id="btn-show-leaderboard" class="h-12 w-full flex items-center justify-center text-[13px] text-zinc-500 font-bold uppercase tracking-widest active:text-zinc-300 transition-colors mt-2">
+                View Leaderboard
+            </button>
+        </div>
     </div>
 
     <!-- LEADERBOARD SCREEN -->
-    <div id="screen-leaderboard" class="glass w-full max-w-sm p-6 z-20 hidden absolute top-4 bottom-4 flex flex-col">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-black text-yellow-400 italic">TOP 5 PLAYERS</h2>
-            <button onclick="closeLeaderboard()" class="text-xs text-gray-400 uppercase">Close X</button>
-        </div>
-        <div class="bg-slate-900 rounded-lg p-2 mb-4 flex-1">
-            <table class="w-full text-left text-sm"><tbody id="lb-body"><tr><td class="text-center text-gray-500 py-4">Loading...</td></tr></tbody></table>
-        </div>
-        <div class="border-t border-white/10 pt-4">
-            <p class="text-xs text-gray-400 uppercase mb-2">Search Rank by ID</p>
-            <div class="flex gap-2">
-                <input type="number" id="search-id" placeholder="Enter Game ID" class="input-field flex-1 p-2 rounded text-center">
-                <button onclick="searchPlayer()" class="btn px-4 rounded">Search</button>
+    <div id="screen-leaderboard" class="fixed inset-0 bg-zinc-950 z-50 hidden flex-col gpu-accel">
+        <div class="flex-1 w-full max-w-sm mx-auto flex flex-col h-full px-5 py-6">
+            
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6 pt-2">
+                <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-500 italic tracking-tight">TOP PLAYERS</h2>
+                <button id="btn-close-leaderboard" class="h-10 px-4 bg-zinc-900 border border-zinc-800 rounded-full flex items-center justify-center text-xs text-zinc-400 font-bold uppercase tracking-wider active:bg-zinc-800 transition-colors">
+                    Close ✕
+                </button>
             </div>
-            <div id="search-result" class="mt-4 text-center bg-slate-800 p-3 rounded hidden border border-blue-500">
-                <p id="search-rank" class="text-2xl font-black text-white">#0</p>
-                <p id="search-details" class="text-sm font-bold text-yellow-400 mt-1">IGN - 0 pts</p>
+
+            <!-- Table Area -->
+            <div class="flex-1 bg-zinc-900 border border-zinc-800 rounded-3xl overflow-y-auto overscroll-contain shadow-xl mb-6 flex flex-col relative">
+                <table class="w-full text-left text-sm border-collapse">
+                    <tbody id="lb-body" class="px-4 block w-full">
+                        <!-- JS injects here -->
+                        <tr class="w-full flex"><td class="text-center text-zinc-500 py-8 font-bold w-full">Loading...</td></tr>
+                    </tbody>
+                </table>
+                <!-- Fading edge for scroll -->
+                <div class="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-zinc-900 to-transparent pointer-events-none rounded-b-3xl"></div>
             </div>
+
+            <!-- Search Area -->
+            <div class="shrink-0 bg-zinc-900/50 p-4 rounded-3xl border border-zinc-800/50">
+                <p class="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-3 ml-1">Search Rank</p>
+                <form id="form-search" class="flex gap-2">
+                    <input type="number" id="search-id" placeholder="Game ID" class="flex-1 h-12 bg-zinc-950 border border-zinc-800 rounded-2xl px-4 text-center font-bold text-white placeholder-zinc-700 focus:outline-none focus:border-blue-500 transition-colors shadow-inner" required>
+                    <button type="submit" class="h-12 px-6 bg-zinc-800 text-white font-bold text-sm uppercase tracking-wider rounded-2xl active:bg-zinc-700 transition-colors">
+                        Search
+                    </button>
+                </form>
+                
+                <div id="search-result" class="mt-4 bg-blue-950/20 border border-blue-900/40 rounded-2xl p-4 hidden flex-col items-center justify-center transition-all">
+                    <p id="search-rank" class="text-4xl font-black text-blue-400 drop-shadow-sm leading-none">#0</p>
+                    <p id="search-details" class="text-sm font-bold text-zinc-300 mt-2 tracking-wide">IGN - 0 pts</p>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <!-- LOGIC -->
+    <!-- APP LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, getDocs, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // ==========================================
-        // ⚠️ PASTE YOUR FIREBASE KEYS HERE ⚠️
-        // ==========================================
         const firebaseConfig = {
-  apiKey: "AIzaSyCPSU7YrNL0M9j0EFUBRHDoufpW9bQlUsI",
-  authDomain: "guesshero-e1180.firebaseapp.com",
-  databaseURL: "https://guesshero-e1180-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "guesshero-e1180",
-  storageBucket: "guesshero-e1180.firebasestorage.app",
-  messagingSenderId: "274899168100",
-  appId: "1:274899168100:web:da9798cf93110516d8e871"
-};
+            apiKey: "AIzaSyCPSU7YrNL0M9j0EFUBRHDoufpW9bQlUsI",
+            authDomain: "guesshero-e1180.firebaseapp.com",
+            databaseURL: "https://guesshero-e1180-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "guesshero-e1180",
+            storageBucket: "guesshero-e1180.firebasestorage.app",
+            messagingSenderId: "274899168100",
+            appId: "1:274899168100:web:da9798cf93110516d8e871"
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // ==========================================
-        // HERO DATA GENERATION
-        // ==========================================
-        function normalizeName(name) {
-            return name.toLowerCase().replace(/[' .]/g, '-').replace(/\.+$/, '');
-        }
-
+        // Data Generation Logic
         const uniqueHeroNames = new Set([
             "Lunox", "Luo Yi", "Zhuxin", "Chip", "Cici", "Nolan", "Arlott", "Novaria", "Joy", "Fredrinn", 
             "Julian", "Xavier", "Melissa", "Yin", "Floryn", "Edith", "Valentina", "Aamon", "Aulus", "Natan", 
@@ -135,201 +212,231 @@
             "Alucard", "Miya", "Saber", "Balmond", "Nana", "Alice", "Zetian", "Sora", "Obsedia"
         ]);
 
-        const allSkinSeriesTypes = [
-            "kof1", "kof2", "kof3", "V.E.N.O.M", "attack-on-titan", "hunterxhunter", "11.11skin", 
-            "PRIME", "abyss", "lightborn", "dragon-tamer", "zodiac", "ducati", "transformers", 
-            "sanrio", "starwars", "naruto", "blazing-bounties", "dawning-stars", "exorcists", 
-            "the-aspirants", "halloween", "summer", "mpl", "kung-fu-panda", "christmas", 
-            "valentine", "legends-skin", "neobeasts", "jujutsu-kaisen", "saint-seiya", "lunar-fest", 
-            "champion", "M-WORLD", "s.a.b.e.r", "epic", "special" 
-        ];
-
         const predefinedSeriesSkins = [
-            { "name": "Chou", "skill_type": "kof1", "icon_path": "icons/chou-kof1.png" },
-            { "name": "Gusion", "skill_type": "kof2", "icon_path": "icons/gusion-KOF2.png" },
-            { "name": "Guinevere", "skill_type": "kof1", "icon_path": "icons/guinevere-kof1.png" },
-            { "name": "Karina", "skill_type": "kof1", "icon_path": "icons/karina-kof1.png" }
-            // Add more skins here...
+            { name: "Chou", icon_path: "icons/chou-kof1.png" },
+            { name: "Gusion", icon_path: "icons/gusion-KOF2.png" },
+            { name: "Guinevere", icon_path: "icons/guinevere-kof1.png" },
+            { name: "Karina", icon_path: "icons/karina-kof1.png" }
         ];
 
-        let heroes = [];
-        
-        // 1. Generate Normal Hero Paths
+        const heroes = [];
+        const normalizeName = (name) => name.toLowerCase().replace(/[' .]/g, '-').replace(/\.+$/, '');
+
         uniqueHeroNames.forEach(heroName => {
             if (heroName === "Fanny") return;
             const baseName = normalizeName(heroName);
-            // This assumes your folder has files like: icons/aamon-ss.webp
             heroes.push({ name: heroName, icon_path: `icons/${baseName}-ss.webp` });
             heroes.push({ name: heroName, icon_path: `icons/${baseName}-1st.png` });
             heroes.push({ name: heroName, icon_path: `icons/${baseName}-icon.webp` });
         });
+        predefinedSeriesSkins.forEach(skin => heroes.push({ name: skin.name, icon_path: skin.icon_path }));
 
-        // 2. Add Special Skins
-        predefinedSeriesSkins.forEach(skin => {
-            heroes.push({ name: skin.name, icon_path: skin.icon_path });
-        });
-
-        // ==========================================
-        // GAME STATE
-        // ==========================================
+        // Game State
         let currentUser = { id: "", ign: "", score: 0 };
         let currentHero = null;
-        let timerInterval;
-        let timeLeft = 15;
+        let timerInterval = null;
         let isGameActive = false;
+        const MAX_TIME = 15;
 
-        // --- LOGIN ---
-        window.login = async function() {
+        // DOM Elements Mapping
+        const els = {
+            screenLogin: document.getElementById('screen-login'),
+            screenGame: document.getElementById('screen-game'),
+            screenLeaderboard: document.getElementById('screen-leaderboard'),
+            loginMsg: document.getElementById('login-msg'),
+            playerIgn: document.getElementById('player-ign'),
+            playerScore: document.getElementById('player-score'),
+            timerText: document.getElementById('timer-text'),
+            timerBar: document.getElementById('timer-bar'),
+            heroImg: document.getElementById('hero-img'),
+            debugMsg: document.getElementById('debug-msg'),
+            feedback: document.getElementById('feedback'),
+            guessInput: document.getElementById('guess-input'),
+            btnSubmit: document.getElementById('btn-submit')
+        };
+
+        // Event Listeners Initialization
+        document.getElementById('form-login').addEventListener('submit', handleLogin);
+        document.getElementById('form-guess').addEventListener('submit', checkGuess);
+        document.getElementById('btn-show-leaderboard').addEventListener('click', openLeaderboard);
+        document.getElementById('btn-close-leaderboard').addEventListener('click', closeLeaderboard);
+        document.getElementById('form-search').addEventListener('submit', searchPlayer);
+        els.heroImg.addEventListener('error', handleImageError);
+
+        // Android Hardware Back Button Handling (History API Hook)
+        window.addEventListener('popstate', (event) => {
+            if (els.screenLeaderboard.classList.contains('hidden') === false) {
+                closeLeaderboard(null, true);
+            }
+        });
+
+        // Application Logic
+        async function handleLogin(e) {
+            e.preventDefault();
+            if (!navigator.onLine) {
+                els.loginMsg.innerText = "No internet connection.";
+                return;
+            }
+
             const id = document.getElementById('login-id').value.trim();
             const zone = document.getElementById('login-zone').value.trim();
-            const msg = document.getElementById('login-msg');
+            
+            // Input Validation
+            if (!/^\d+$/.test(id) || !/^\d+$/.test(zone)) {
+                els.loginMsg.innerText = "Invalid ID/Zone format.";
+                return;
+            }
 
-            if(!id || !zone) return msg.innerText = "Enter ID and Zone";
-            msg.innerText = "Verifying Account...";
+            els.loginMsg.innerText = "Verifying Account...";
+            document.getElementById('btn-login').disabled = true;
 
             try {
-                // 1. Verify with MLBB API (using proxy)
-                let res = await fetch(`https://corsproxy.io/?https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`);
-                let data = await res.json();
+                // WARNING: Architecture flaw. Replace corsproxy.io with a dedicated Cloud Function
+                const res = await fetch(`https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`);
+                const data = await res.json();
                 
-                if(!data.success && !data.name) return msg.innerText = "Invalid ID or Zone";
+                if (!data.success && !data.name && !data.nickname) {
+                    throw new Error("Invalid ID or Zone");
+                }
                 
                 currentUser.id = id;
                 currentUser.ign = data.name || data.nickname;
-                msg.innerText = "Loading Score...";
+                els.loginMsg.innerText = "Loading Score...";
 
-                // 2. Get Score from Firebase
+                // Fetch Firebase profile
                 const userDoc = await getDoc(doc(db, "players", id));
-                if(userDoc.exists()) currentUser.score = userDoc.data().score;
-                else currentUser.score = 0;
+                currentUser.score = userDoc.exists() ? userDoc.data().score : 0;
 
-                // 3. Start Game
-                document.getElementById('screen-login').classList.add('hidden');
-                document.getElementById('screen-game').classList.remove('hidden');
-                document.getElementById('player-ign').innerText = currentUser.ign;
-                document.getElementById('player-score').innerText = currentUser.score;
+                switchScreen(els.screenLogin, els.screenGame);
+                els.playerIgn.innerText = currentUser.ign;
+                els.playerScore.innerText = currentUser.score;
                 
                 nextHero();
-
-            } catch(e) { msg.innerText = "Error: " + e.message; }
+            } catch(e) { 
+                els.loginMsg.innerText = "Error: " + e.message; 
+            } finally {
+                document.getElementById('btn-login').disabled = false;
+            }
         }
 
-        // --- GAME FLOW ---
-        window.nextHero = function() {
-            // Reset UI
-            document.getElementById('guess-input').value = "";
-            document.getElementById('guess-input').disabled = false;
-            document.getElementById('btn-submit').disabled = false;
-            document.getElementById('guess-input').focus();
-            document.getElementById('feedback').innerText = "";
-            document.getElementById('debug-msg').innerText = "";
-            
-            const imgEl = document.getElementById('hero-img');
-            imgEl.style.display = 'block';
-            document.getElementById('timer-bar').style.backgroundColor = "#4ade80"; 
+        function nextHero() {
+            els.guessInput.value = "";
+            els.guessInput.disabled = false;
+            els.btnSubmit.disabled = false;
+            els.feedback.innerText = "";
+            els.debugMsg.classList.add('hidden');
+            els.heroImg.style.display = 'block';
+            els.timerBar.style.backgroundColor = "#4ade80"; 
 
-            // Pick Random Hero
-            const r = Math.floor(Math.random() * heroes.length);
-            currentHero = heroes[r];
+            currentHero = heroes[Math.floor(Math.random() * heroes.length)];
+            els.heroImg.src = currentHero.icon_path;
             
-            // Set Image
-            if(currentHero.icon_path.startsWith('http')) {
-                imgEl.src = currentHero.icon_path;
-            } else {
-                imgEl.src = currentHero.icon_path; 
-            }
+            // Auto-focus keyboard safely allowing native threads to catch up
+            setTimeout(() => els.guessInput.focus(), 100);
 
             startTimer();
         }
 
         function startTimer() {
-            clearInterval(timerInterval);
-            timeLeft = 15;
+            if (timerInterval) clearInterval(timerInterval);
             isGameActive = true;
-            updateTimerUI();
+            
+            let timeLeft = MAX_TIME;
+            els.timerText.innerText = `${timeLeft}s`;
+
+            // Reset visual bar immediately (Force DOM Reflow)
+            els.timerBar.style.transition = 'none';
+            els.timerBar.style.transform = 'scaleX(1)';
+            void els.timerBar.offsetWidth; 
+
+            // Start native CSS hardware accelerated animation
+            els.timerBar.style.transition = `transform ${MAX_TIME}s linear, background-color 0.3s`;
+            els.timerBar.style.transform = 'scaleX(0)';
 
             timerInterval = setInterval(() => {
                 timeLeft--;
-                updateTimerUI();
+                els.timerText.innerText = `${timeLeft}s`;
 
-                if(timeLeft <= 0) {
+                if (timeLeft <= 5) els.timerBar.style.backgroundColor = "#ef4444"; 
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
                     timeIsUp();
                 }
             }, 1000);
         }
 
-        function updateTimerUI() {
-            const percentage = (timeLeft / 15) * 100;
-            document.getElementById('timer-bar').style.width = percentage + "%";
-            document.getElementById('timer-text').innerText = timeLeft + "s";
-            if(timeLeft <= 5) document.getElementById('timer-bar').style.backgroundColor = "#ef4444"; 
-        }
-
         function timeIsUp() {
-            clearInterval(timerInterval);
             isGameActive = false;
-
-            // Show Answer
-            document.getElementById('feedback').innerText = `Time's Up! It was ${currentHero.name}`;
-            document.getElementById('feedback').className = "text-center font-bold text-lg h-6 mb-2 text-red-400";
-
-            // Lock Input
-            document.getElementById('guess-input').disabled = true;
-            document.getElementById('btn-submit').disabled = true;
-
-            // AUTO CONTINUE: Wait 3 seconds, then Next Round
-            setTimeout(nextHero, 3000);
+            els.feedback.innerText = `Time's Up! It was ${currentHero.name}`;
+            els.feedback.className = "text-center font-bold text-lg h-6 mb-2 text-red-400";
+            lockGame(3000);
         }
 
-        window.checkGuess = async function(e) {
+        async function checkGuess(e) {
             e.preventDefault();
-            if(!isGameActive) return;
+            if (!isGameActive) return;
 
-            const guess = document.getElementById('guess-input').value.toLowerCase().replace(/[^a-z0-9]/g, '');
+            // Strict string normalization for input evaluation
+            const guess = els.guessInput.value.toLowerCase().replace(/[^a-z0-9]/g, '');
             const answer = currentHero.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-            const fb = document.getElementById('feedback');
 
-            if(guess === answer) {
-                // CORRECT
+            if (guess === answer) {
                 clearInterval(timerInterval);
-                fb.innerText = "CORRECT!"; 
-                fb.className = "text-center font-bold text-lg h-6 mb-2 text-green-400";
+                isGameActive = false;
+                els.timerBar.style.transition = 'none'; // Freeze timer visual
+                
+                els.feedback.innerText = "CORRECT!"; 
+                els.feedback.className = "text-center font-bold text-lg h-6 mb-2 text-green-400";
                 
                 currentUser.score++;
-                document.getElementById('player-score').innerText = currentUser.score;
+                els.playerScore.innerText = currentUser.score;
                 
-                // Disable Input
-                document.getElementById('guess-input').disabled = true;
-                document.getElementById('btn-submit').disabled = true;
-
-                saveScore();
-                
-                // AUTO CONTINUE: Wait 1.5 seconds, then Next Round
-                setTimeout(nextHero, 1500);
+                lockGame(1500);
+                saveScore(); // Async fire-and-forget to avoid blocking main thread
             } else {
-                // WRONG
-                document.getElementById('guess-input').value = "";
-                fb.innerText = "WRONG! Try again."; 
-                fb.className = "text-center font-bold text-lg h-6 mb-2 text-red-500";
+                els.guessInput.value = "";
+                els.feedback.innerText = "WRONG! Try again."; 
+                els.feedback.className = "text-center font-bold text-lg h-6 mb-2 text-red-500";
             }
         }
 
-        async function saveScore() {
-            try {
-                await setDoc(doc(db, "players", currentUser.id), {
-                    ign: currentUser.ign,
-                    score: currentUser.score,
-                    updatedAt: new Date()
-                }, { merge: true });
-            } catch(e) { console.error("Save failed", e); }
+        function lockGame(timeoutDelay) {
+            els.guessInput.disabled = true;
+            els.btnSubmit.disabled = true;
+            setTimeout(nextHero, timeoutDelay);
         }
 
-        // --- LEADERBOARD & SEARCH ---
-        window.showLeaderboard = async function() {
-            document.getElementById('screen-game').classList.add('hidden');
-            document.getElementById('screen-leaderboard').classList.remove('hidden');
+        function saveScore() {
+            if (!navigator.onLine) return; // Rely on Firebase offline persistence later if needed
+            setDoc(doc(db, "players", currentUser.id), {
+                ign: currentUser.ign,
+                score: currentUser.score,
+                updatedAt: new Date()
+            }, { merge: true }).catch(console.error);
+        }
+
+        function handleImageError() {
+            els.heroImg.style.display = 'none';
+            els.debugMsg.innerText = `Image Missing: ${els.heroImg.getAttribute('src')}`;
+            els.debugMsg.classList.remove('hidden');
+        }
+
+        // View Routing & State Management
+        function switchScreen(hideEl, showEl) {
+            hideEl.classList.add('hidden');
+            hideEl.classList.remove('flex');
+            showEl.classList.remove('hidden');
+            showEl.classList.add('flex');
+        }
+
+        async function openLeaderboard(e) {
+            if(e) e.preventDefault();
+            history.pushState({ page: 'leaderboard' }, ''); // Pushes to history for Android Back button
+            switchScreen(els.screenGame, els.screenLeaderboard);
+            
             const tbody = document.getElementById('lb-body');
-            tbody.innerHTML = '<tr><td class="text-center text-gray-500 py-4">Loading Top 5...</td></tr>';
+            tbody.innerHTML = '<tr class="w-full flex"><td class="text-center text-zinc-500 py-8 font-bold w-full">Loading Top 5...</td></tr>';
 
             try {
                 const q = query(collection(db, "players"), orderBy("score", "desc"), limit(5));
@@ -339,43 +446,56 @@
                 let rank = 1;
                 querySnapshot.forEach((doc) => {
                     const p = doc.data();
-                    const color = rank === 1 ? "text-yellow-400" : rank === 2 ? "text-gray-300" : rank === 3 ? "text-orange-400" : "text-white";
-                    tbody.innerHTML += `<tr class="border-b border-white/5"><td class="py-3 font-black ${color}">#${rank}</td><td class="py-3 font-bold text-white">${p.ign}</td><td class="py-3 font-mono text-yellow-400 text-right">${p.score}</td></tr>`;
+                    // Basic XSS mitigation before injecting into DOM via innerHTML
+                    const safeIgn = p.ign.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    const color = rank === 1 ? "text-yellow-400" : rank === 2 ? "text-zinc-300" : rank === 3 ? "text-amber-500" : "text-white";
+                    tbody.innerHTML += `<tr class="border-b border-zinc-800/50 w-full flex items-center px-2 py-1"><td class="py-4 font-black w-10 text-center ${color}">#${rank}</td><td class="py-4 font-bold text-zinc-100 truncate flex-1 px-2">${safeIgn}</td><td class="py-4 font-mono text-yellow-500 text-right w-16 font-black">${p.score}</td></tr>`;
                     rank++;
                 });
-            } catch(e) { tbody.innerHTML = "<tr><td class='text-center text-red-500 py-4'>Error loading leaderboard.</td></tr>"; }
+            } catch(err) { 
+                tbody.innerHTML = "<tr class='w-full flex'><td class='text-center text-red-500 py-8 font-bold w-full'>Error loading leaderboard.</td></tr>"; 
+            }
         }
 
-        window.closeLeaderboard = function() {
-            document.getElementById('screen-leaderboard').classList.add('hidden');
-            document.getElementById('screen-game').classList.remove('hidden');
+        function closeLeaderboard(e, fromPopState = false) {
+            if(e) e.preventDefault();
+            if (!fromPopState) history.back(); // Triggers OS-level back navigation
+            switchScreen(els.screenLeaderboard, els.screenGame);
         }
 
-        window.searchPlayer = async function() {
+        async function searchPlayer(e) {
+            e.preventDefault();
             const searchId = document.getElementById('search-id').value.trim();
-            if(!searchId) return;
+            if (!searchId) return;
+            
             const resDiv = document.getElementById('search-result');
             document.getElementById('search-rank').innerText = "...";
             resDiv.classList.remove('hidden');
+            resDiv.classList.add('flex');
 
             try {
                 const q = query(collection(db, "players"), orderBy("score", "desc"));
                 const querySnapshot = await getDocs(q);
-                let rank = 1; let found = false;
-                querySnapshot.forEach((doc) => {
-                    if(doc.id === searchId) {
+                let rank = 1, found = false;
+                
+                for (const playerDoc of querySnapshot.docs) {
+                    if (playerDoc.id === searchId) {
                         found = true;
-                        document.getElementById('search-rank').innerText = "#" + rank;
-                        document.getElementById('search-details').innerText = `${doc.data().ign} - ${doc.data().score} pts`;
+                        const safeIgn = playerDoc.data().ign.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                        document.getElementById('search-rank').innerText = `#${rank}`;
+                        document.getElementById('search-details').innerHTML = `${safeIgn} - <span class="text-yellow-400">${playerDoc.data().score} pts</span>`;
+                        break;
                     }
                     rank++;
-                });
-                if(!found) {
-                    document.getElementById('search-rank').innerText = "N/A";
-                    document.getElementById('search-details').innerText = "Not found";
                 }
-            } catch(e) {
-                document.getElementById('search-rank').innerText = "Error";
+                
+                if (!found) {
+                    document.getElementById('search-rank').innerText = "-";
+                    document.getElementById('search-details').innerText = "Player not found";
+                }
+            } catch(err) {
+                document.getElementById('search-rank').innerText = "!";
+                document.getElementById('search-details').innerText = "Search Error";
             }
         }
     </script>
