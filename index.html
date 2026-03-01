@@ -6,7 +6,16 @@
     <meta name="theme-color" content="#020617">
     <title>MLBB Guess Hero</title>
     
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https: http:; connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app https://api.isan.eu.org https://corsproxy.io wss://*.firebaseio.com https://identitytoolkit.googleapis.com;">
+    <!-- CSP: Allows TikTok, Firebase, Google Fonts/Ads, Tailwind -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self'; 
+        script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://www.gstatic.com https://www.tiktok.com https://*.tiktok.com https://*.tiktokcdn.com https://*.ttwstatic.com; 
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.tiktok.com; 
+        font-src https://fonts.gstatic.com; 
+        img-src 'self' data: https: http: https://*.tiktokcdn.com https://*.ibyteimg.com; 
+        connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app https://api.isan.eu.org https://corsproxy.io wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://www.tiktok.com https://*.tiktok.com https://*.tiktokcdn.com https://*.ttwstatic.com; 
+        frame-src https://www.tiktok.com https://*.tiktok.com;
+    ">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,7 +45,6 @@
             background-color: #020617; /* Base dark */
         }
 
-        /* Adjusted gradient to center the light behind the UI */
         .ambient-bg {
             position: fixed;
             inset: 0;
@@ -45,25 +53,21 @@
             pointer-events: none;
         }
 
-        /* Hide number input spinners for native feel */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
             -webkit-appearance: none; 
             margin: 0; 
         }
 
-        /* Smooth hardware acceleration */
         .gpu-layer {
             transform: translateZ(0);
             will-change: transform, opacity;
         }
 
-        /* Custom scrollbar for leaderboard */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
 
-        /* Error shake and red flash animation */
         @keyframes error-shake {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-12px); }
@@ -75,17 +79,26 @@
             border-color: #e11d48 !important;
             transition: none !important;
         }
+
+        /* Hide scrollbar for Chrome, Safari and Opera in login screen */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
     </style>
 </head>
 <body class="w-full h-1080 relative">
 
     <div class="ambient-bg"></div>
 
-    <!-- LOGIN SCREEN - Absolutely positioned to guarantee perfect center -->
-    <div id="screen-login" class="absolute inset-0 w-full max-w-sm mx-auto px-6 flex flex-col items-center justify-center z-10 transition-all duration-300">
+    <!-- LOGIN SCREEN -->
+    <div id="screen-login" class="absolute inset-0 w-full max-w-sm mx-auto px-6 flex flex-col items-center z-10 transition-all duration-300 overflow-y-auto py-10 no-scrollbar gap-8">
         
         <!-- Logo Area -->
-        <div class="flex flex-col items-center justify-center mb-8 relative w-full">
+        <div class="flex flex-col items-center justify-center relative w-full shrink-0 pt-6">
             <div class="absolute inset-0 bg-indigo-500/20 blur-[60px] rounded-full w-32 h-32 mx-auto -z-10 mix-blend-screen pointer-events-none"></div>
             <h1 class="text-[3.5rem] font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-cyan-400 to-indigo-400 drop-shadow-lg leading-none">
                 GUESS
@@ -95,46 +108,57 @@
             </h2>
             <div class="h-1 w-12 bg-indigo-500 rounded-full mt-4 shadow-[0_0_15px_rgba(99,102,241,0.8)]"></div>
             
-            <!-- Prize Announcement on Login -->
             <p class="mt-4 text-[11px] font-black text-cyan-300 uppercase tracking-[0.15em] text-center px-4 py-2 leading-relaxed bg-slate-900/60 rounded-full border border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
                 🏆 Top 1 Player Will win 1 <span class="text-white">EPIC skin</span> of their choice
             </p>
         </div>
 
         <!-- Premium Login Card -->
-        <div class="w-full bg-slate-900/60 backdrop-blur-xl p-6 rounded-[2rem] border border-slate-700/50 shadow-2xl flex flex-col gap-4 relative overflow-hidden shrink-0">
-            <!-- Card subtle highlight -->
+        <div class="w-full bg-slate-900/60 backdrop-blur-xl p-6 rounded-[2rem] border border-slate-700/50 shadow-2xl flex flex-col gap-4 relative shrink-0">
             <div class="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent"></div>
 
             <form id="form-login" class="w-full flex flex-col gap-5">
                 
-                <!-- ID Input -->
                 <div class="flex flex-col gap-1.5 w-full">
                     <label class="text-[10px] text-indigo-300 font-black uppercase tracking-widest ml-2 opacity-80">MLBB ID</label>
                     <input type="number" id="login-id" placeholder="ex: 332701234" class="w-full h-14 bg-slate-950/80 border border-slate-700/80 rounded-2xl px-5 text-xl text-center font-bold text-white placeholder-slate-600 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all shadow-inner" required>
                 </div>
 
-                <!-- Zone Input -->
                 <div class="flex flex-col gap-1.5 w-full">
                     <label class="text-[10px] text-indigo-300 font-black uppercase tracking-widest ml-2 opacity-80">Server ID</label>
                     <input type="number" id="login-zone" placeholder="ex: 1234" class="w-full h-14 bg-slate-950/80 border border-slate-700/80 rounded-2xl px-5 text-xl text-center font-bold text-white placeholder-slate-600 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all shadow-inner" required>
                 </div>
                 
-                <!-- Feedback Message -->
                 <p id="login-msg" class="text-cyan-400 text-sm h-4 font-bold text-center tracking-wide flex items-center justify-center"></p>
                 
-                <!-- Submit Button -->
                 <button type="submit" id="btn-login" class="w-full h-14 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white font-black text-xl rounded-2xl shadow-[0_8px_20px_-6px_rgba(99,102,241,0.6)] active:scale-[0.97] active:shadow-none transition-all duration-200 flex items-center justify-center uppercase tracking-widest border border-indigo-400/30">
                     CONNECT
                 </button>
             </form>
         </div>
+
+        <!-- TIKTOK EMBED (SEPARATED) -->
+        <div class="w-1080 shrink-0 flex flex-col items-center justify-center gap-0">
+            <div class="w-full flex justify-center bg-white/5 rounded-xl overflow-hidden min-h-[300px] border border-white/10 shadow-lg">
+                <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@znapurple" data-unique-id="znapurple" data-embed-type="creator" style="max-width: 100%; min-width: 288px; margin: 0;"> 
+                    <section> <a target="_blank" href="https://www.tiktok.com/@znapurple?refer=creator_embed">@znapurple</a> </section> 
+                </blockquote> 
+                <script async src="https://www.tiktok.com/embed.js"></script>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="w-full text-center pb-8 shrink-0">
+            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] opacity-60">
+                &copy; Guess The Hero 2026
+            </p>
+        </div>
+
     </div>
 
     <!-- GAME SCREEN -->
     <div id="screen-game" class="absolute inset-0 w-full max-w-sm mx-auto px-5 py-6 flex flex-col z-10 hidden gpu-layer">
         
-        <!-- Player Stats Floating Pill -->
         <div class="flex justify-between items-center bg-slate-900/40 border border-slate-700/50 rounded-full px-6 py-3 backdrop-blur-xl shadow-lg mb-6 shrink-0 mt-2">
             <div class="flex flex-col">
                 <span class="text-[9px] text-cyan-400 font-black tracking-[0.2em] uppercase mb-0.5 opacity-80">Player</span>
@@ -147,10 +171,8 @@
             </div>
         </div>
 
-        <!-- Main Game Area -->
         <div class="flex-1 flex flex-col items-center justify-center relative w-full pb-2 shrink-0 min-h-[300px]">
             
-            <!-- Timer Setup -->
             <div class="w-full flex justify-between items-end mb-2 px-2">
                 <span class="text-[10px] font-black text-slate-500 tracking-widest uppercase flex items-center gap-1">
                     <div class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></div> TIME REMAINING
@@ -162,7 +184,6 @@
                 <div id="timer-bar" class="h-full bg-cyan-400 rounded-full origin-left w-full shadow-[0_0_12px_rgba(34,211,238,0.8)]"></div>
             </div>
             
-            <!-- Hero Showcase (Strictly Circular) -->
             <div class="relative w-56 h-56 flex items-center justify-center mb-6 isolate shrink-0">
                 <div class="absolute inset-0 bg-gradient-to-tr from-cyan-500 to-indigo-500 rounded-full blur-[40px] opacity-30 -z-10 animate-pulse"></div>
                 
@@ -177,7 +198,6 @@
             <p id="feedback" class="text-center font-bold text-xl h-7 tracking-wide flex items-center justify-center"></p>
         </div>
 
-        <!-- Controls Area -->
         <div class="w-full shrink-0 flex flex-col gap-3 pb-4 items-center">
             <form id="form-guess" class="flex flex-col gap-3 w-full">
                 <input type="text" id="guess-input" placeholder="ENTER HERO" class="w-full h-14 bg-slate-900/80 backdrop-blur-md border-2 border-slate-700 rounded-full px-6 text-2xl text-center font-black text-cyan-300 placeholder-slate-600 uppercase tracking-[0.15em] focus:outline-none focus:border-indigo-500 focus:bg-slate-800 transition-all shadow-inner" autocomplete="off" autocorrect="off" spellcheck="false">
@@ -193,7 +213,6 @@
                 Open Leaderboard
             </button>
             
-            <!-- Switch Account Button -->
             <button type="button" id="btn-logout" class="h-8 px-4 text-[10px] text-slate-500 font-black uppercase tracking-[0.15em] active:text-rose-500 transition-colors mt-1">
                 Switch Account
             </button>
@@ -216,7 +235,6 @@
                 </button>
             </div>
 
-            <!-- Prize Announcement on Leaderboard -->
             <div class="mb-4 shrink-0 bg-gradient-to-r from-indigo-500/20 to-cyan-500/20 border border-indigo-500/30 rounded-xl p-3 text-center shadow-inner">
                 <p class="text-[11px] font-bold text-indigo-100 uppercase tracking-widest leading-relaxed">
                     🏆 Top 1 Player Will win 1 <span class="text-cyan-400 font-black drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]">EPIC skin</span> of their choice!
@@ -235,7 +253,6 @@
                 <div class="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
                 
                 <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] mb-3 text-center">Find your rank</p>
-                <!-- Updated Search Form Layout: Button below Game ID, fully centered/stretched -->
                 <form id="form-search" class="flex flex-col gap-3">
                     <input type="number" id="search-id" placeholder="Type here.." class="w-full h-14 bg-slate-950 border border-slate-800 rounded-2xl px-4 text-center font-bold text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors shadow-inner" required>
                     <button type="submit" class="w-full h-14 bg-indigo-600 text-white font-black text-sm uppercase tracking-widest rounded-2xl active:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-500/30 flex items-center justify-center">
