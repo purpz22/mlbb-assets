@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#09090b">
+    <meta name="theme-color" content="#020617">
     <title>MLBB Guess Hero</title>
     
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https: http:; connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app https://api.isan.eu.org https://corsproxy.io wss://*.firebaseio.com https://identitytoolkit.googleapis.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://www.gstatic.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https: http:; connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app https://api.isan.eu.org https://corsproxy.io wss://*.firebaseio.com https://identitytoolkit.googleapis.com;">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,6 +14,8 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5350189369134605" crossorigin="anonymous"></script>
+    <!-- Canvas Confetti for the correct answer celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
         :root {
@@ -23,8 +25,9 @@
 
         body {
             font-family: 'Rajdhani', sans-serif;
-            background-color: #09090b; /* Tailwind zinc-950 */
-            color: #f4f4f5; /* Tailwind zinc-50 */
+            background-color: #020617; /* Slate 950 - Deep dark */
+            background-image: radial-gradient(circle at top, #1e1b4b 0%, #020617 60%);
+            color: #f8fafc;
             overscroll-behavior-y: none;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
@@ -36,142 +39,185 @@
             padding-bottom: var(--safe-area-inset-bottom);
         }
 
-        /* Hardware acceleration utilities */
-        .gpu-accel {
-            transform: translateZ(0);
-            will-change: transform, opacity;
-        }
-
-        /* Hide number input arrows */
+        /* Hide number input spinners for native feel */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
             -webkit-appearance: none; 
             margin: 0; 
         }
+
+        /* Smooth hardware acceleration */
+        .gpu-layer {
+            transform: translateZ(0);
+            will-change: transform, opacity;
+        }
+
+        /* Custom scrollbar for leaderboard */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+
+        /* Error shake and red flash animation */
+        @keyframes error-shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-12px); }
+            40%, 80% { transform: translateX(12px); }
+        }
+        .animate-error {
+            animation: error-shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+            box-shadow: 0 0 60px rgba(225, 29, 72, 0.8), inset 0 0 20px rgba(225, 29, 72, 0.5) !important;
+            border-color: #e11d48 !important;
+            transition: none !important;
+        }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center relative w-full h-full">
+<body class="flex flex-col items-center justify-center w-full h-full relative">
 
     <!-- LOGIN SCREEN -->
-    <div id="screen-login" class="w-full max-w-sm px-6 flex flex-col items-center justify-center z-10 w-full h-full gpu-accel">
+    <div id="screen-login" class="w-full max-w-sm px-6 flex flex-col items-center justify-center z-10 w-full h-full gpu-layer">
         
-        <div class="mb-10 text-center">
-            <h1 class="text-5xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 via-yellow-500 to-amber-600 drop-shadow-lg leading-tight">
-                GUESS<br>THE HERO
+        <div class="mb-12 text-center relative w-full flex flex-col items-center">
+            <div class="absolute inset-0 bg-indigo-500/20 blur-[50px] rounded-full w-48 h-48 mx-auto -z-10 mix-blend-screen"></div>
+            <h1 class="text-6xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-cyan-300 to-indigo-500 drop-shadow-[0_0_15px_rgba(56,189,248,0.3)] leading-[0.85] mb-2">
+                GUESS
             </h1>
-            <p class="text-zinc-500 font-bold tracking-widest text-sm mt-2">MLBB EDITION</p>
+            <h2 class="text-4xl font-black italic tracking-tighter text-white drop-shadow-lg leading-none mb-1">
+                THE HERO
+            </h2>
+            <div class="h-1 w-12 bg-indigo-500 rounded-full mt-4 shadow-[0_0_10px_rgba(99,102,241,0.8)]"></div>
         </div>
 
         <form id="form-login" class="w-full flex flex-col gap-4">
             <div class="flex gap-3 w-full">
-                <input type="number" id="login-id" placeholder="Game ID" class="flex-1 h-14 bg-zinc-900 border border-zinc-800 rounded-2xl px-4 text-xl text-center font-bold text-white placeholder-zinc-600 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all shadow-inner" required>
-                <input type="number" id="login-zone" placeholder="Zone" class="w-24 h-14 bg-zinc-900 border border-zinc-800 rounded-2xl px-2 text-xl text-center font-bold text-white placeholder-zinc-600 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all shadow-inner" required>
+                <input type="number" id="login-id" placeholder="Game ID" class="flex-1 h-16 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-2xl px-5 text-xl text-center font-bold text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all shadow-inner" required>
+                <input type="number" id="login-zone" placeholder="Zone" class="w-24 h-16 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-2xl px-2 text-xl text-center font-bold text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all shadow-inner" required>
             </div>
             
             <p id="login-msg" class="text-red-400 text-sm h-5 font-bold text-center tracking-wide"></p>
             
-            <button type="submit" id="btn-login" class="w-full h-14 mt-2 bg-gradient-to-r from-yellow-500 to-amber-600 text-zinc-950 font-black text-xl rounded-2xl shadow-[0_8px_16px_-6px_rgba(245,158,11,0.5)] active:scale-[0.97] active:shadow-none transition-all duration-150 flex items-center justify-center uppercase tracking-widest">
+            <button type="submit" id="btn-login" class="w-full h-16 mt-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 text-white font-black text-xl rounded-2xl shadow-[0_10px_30px_-10px_rgba(99,102,241,0.7)] active:scale-95 active:shadow-none transition-all duration-200 flex items-center justify-center uppercase tracking-widest border border-indigo-400/30">
                 CONNECT
             </button>
         </form>
     </div>
 
     <!-- GAME SCREEN -->
-    <div id="screen-game" class="w-full max-w-sm h-full px-5 py-6 flex flex-col z-10 hidden relative gpu-accel">
+    <div id="screen-game" class="w-full max-w-sm h-full px-5 py-6 flex flex-col z-10 hidden relative gpu-layer">
         
-        <!-- Header / Stats -->
-        <div class="flex justify-between items-center bg-zinc-900/80 border border-zinc-800/80 rounded-3xl p-4 shadow-lg backdrop-blur-md mb-6 shrink-0 mt-2">
+        <!-- Player Stats Floating Pill -->
+        <div class="flex justify-between items-center bg-slate-900/40 border border-slate-700/50 rounded-full px-6 py-3 backdrop-blur-xl shadow-lg mb-8 shrink-0 mt-2">
             <div class="flex flex-col">
-                <span class="text-[10px] text-zinc-500 font-black tracking-widest uppercase mb-0.5">Player</span>
-                <span id="player-ign" class="font-bold text-blue-400 text-lg leading-none truncate max-w-[140px]">Name</span>
+                <span class="text-[9px] text-cyan-400 font-black tracking-[0.2em] uppercase mb-0.5 opacity-80">Player</span>
+                <span id="player-ign" class="font-bold text-white text-lg leading-none truncate max-w-[130px]">Name</span>
             </div>
+            <div class="h-8 w-[1px] bg-slate-700/50"></div>
             <div class="flex flex-col items-end">
-                <span class="text-[10px] text-zinc-500 font-black tracking-widest uppercase mb-0.5">Score</span>
-                <span id="player-score" class="font-black text-3xl text-yellow-400 leading-none drop-shadow-md">0</span>
+                <span class="text-[9px] text-indigo-400 font-black tracking-[0.2em] uppercase mb-0.5 opacity-80">Score</span>
+                <span id="player-score" class="font-black text-2xl text-white leading-none drop-shadow-md">0</span>
             </div>
         </div>
 
-        <!-- Game Area -->
-        <div class="flex-1 flex flex-col items-center justify-center relative w-full pb-4">
+        <!-- Main Game Area -->
+        <div class="flex-1 flex flex-col items-center justify-center relative w-full pb-2">
             
             <!-- Timer Setup -->
-            <div class="w-full flex justify-between items-end mb-3 px-1">
-                <span class="text-[11px] font-black text-zinc-600 tracking-widest uppercase">Time Left</span>
-                <span id="timer-text" class="text-zinc-100 font-black text-lg leading-none">15s</span>
+            <div class="w-full flex justify-between items-end mb-2 px-2">
+                <span class="text-[10px] font-black text-slate-500 tracking-widest uppercase flex items-center gap-1">
+                    <div class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></div> TIME REMAINING
+                </span>
+                <span id="timer-text" class="text-cyan-300 font-black text-lg leading-none tracking-wider">15s</span>
             </div>
             
-            <div class="w-full h-2.5 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden mb-8 shadow-inner relative gpu-accel">
-                <div id="timer-bar" class="h-full bg-green-500 rounded-full origin-left w-full shadow-[0_0_10px_rgba(74,222,128,0.5)]"></div>
+            <div class="w-full h-2 bg-slate-900 border border-slate-800 rounded-full overflow-hidden mb-10 shadow-inner relative gpu-layer">
+                <div id="timer-bar" class="h-full bg-cyan-400 rounded-full origin-left w-full shadow-[0_0_12px_rgba(34,211,238,0.8)]"></div>
             </div>
             
-            <!-- Hero Image Showcase -->
-            <div class="relative w-56 h-56 flex items-center justify-center mb-8 isolate shrink-0">
-                <!-- Ambient Glow -->
-                <div class="absolute inset-0 bg-amber-500/20 rounded-full blur-3xl -z-10 animate-pulse"></div>
+            <!-- Hero Showcase (Strictly Circular) -->
+            <div class="relative w-64 h-64 flex items-center justify-center mb-8 isolate shrink-0">
+                <!-- Dual Glowing Rings -->
+                <div class="absolute inset-0 bg-gradient-to-tr from-cyan-500 to-indigo-500 rounded-full blur-[40px] opacity-30 -z-10 animate-pulse"></div>
                 
-                <!-- Circular Container strictly enforcing rules -->
-                <div class="hero-box w-full h-full rounded-full border-4 border-zinc-800 bg-zinc-950 shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden relative flex items-center justify-center" id="hero-box">
-                    <img id="hero-img" src="" alt="Hero" class="w-[105%] h-[105%] object-cover block">
-                    <div id="debug-msg" class="absolute inset-0 flex items-center justify-center bg-zinc-900/90 text-red-500 text-xs font-bold text-center px-4 break-words hidden z-20"></div>
+                <!-- Main Container strictly enforcing image rules -->
+                <div class="hero-box w-[220px] h-[220px] rounded-full p-1.5 bg-gradient-to-b from-slate-700 to-slate-900 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-300 relative flex items-center justify-center" id="hero-box">
+                    <div class="w-full h-full rounded-full overflow-hidden bg-slate-950 flex items-center justify-center relative z-10 border border-slate-800/80">
+                        <img id="hero-img" src="" alt="Hero" class="w-full h-full object-cover scale-[1.02]">
+                    </div>
+                    <!-- Debug text absolutely positioned on top if needed -->
+                    <div id="debug-msg" class="absolute inset-0 flex items-center justify-center bg-slate-900/95 text-red-500 text-xs font-bold text-center px-4 break-words hidden z-20 rounded-full"></div>
                 </div>
             </div>
             
-            <!-- Feedback Text handled by JS but pre-styled wrapper area -->
-            <p id="feedback" class="text-center font-bold text-lg h-6 mb-4 text-green-400 tracking-wide"></p>
+            <!-- Feedback Text (JS changes text color, pre-styled base) -->
+            <p id="feedback" class="text-center font-bold text-xl h-7 mb-2 tracking-wide"></p>
         </div>
 
-        <!-- Input & Controls -->
-        <div class="w-full shrink-0 flex flex-col gap-3 pb-2">
+        <!-- Controls Area -->
+        <div class="w-full shrink-0 flex flex-col gap-3 pb-safe">
             <form id="form-guess" class="flex flex-col gap-3 w-full">
-                <input type="text" id="guess-input" placeholder="HERO NAME" class="w-full h-14 bg-zinc-900 border-2 border-zinc-800 rounded-2xl px-6 text-2xl text-center font-black text-white placeholder-zinc-700 uppercase tracking-widest focus:outline-none focus:border-blue-500 focus:bg-zinc-800 transition-colors shadow-inner" autocomplete="off" autocorrect="off" spellcheck="false">
-                <button type="submit" id="btn-submit" class="w-full h-14 bg-blue-600 text-white font-black text-xl rounded-2xl uppercase tracking-widest shadow-[0_8px_20px_-6px_rgba(37,99,235,0.5)] active:scale-[0.97] active:shadow-none transition-all duration-150 flex items-center justify-center">
+                <input type="text" id="guess-input" placeholder="ENTER HERO" class="w-full h-16 bg-slate-900/80 backdrop-blur-md border-2 border-slate-700 rounded-full px-6 text-2xl text-center font-black text-cyan-300 placeholder-slate-600 uppercase tracking-[0.15em] focus:outline-none focus:border-indigo-500 focus:bg-slate-800 transition-all shadow-inner" autocomplete="off" autocorrect="off" spellcheck="false">
+                <button type="submit" id="btn-submit" class="w-full h-16 bg-white text-slate-950 font-black text-xl rounded-full uppercase tracking-[0.2em] shadow-[0_8px_20px_rgba(255,255,255,0.2)] active:scale-95 active:shadow-none transition-all duration-200 flex items-center justify-center">
                     SUBMIT
                 </button>
             </form>
 
-            <button id="btn-show-leaderboard" class="h-12 w-full flex items-center justify-center text-[13px] text-zinc-500 font-bold uppercase tracking-widest active:text-zinc-300 transition-colors mt-2">
-                View Leaderboard
+            <button id="btn-show-leaderboard" class="h-14 w-full flex items-center justify-center bg-slate-800/60 backdrop-blur-sm border border-slate-700/80 rounded-full text-cyan-400 font-bold text-sm uppercase tracking-[0.15em] active:bg-slate-700 active:text-cyan-300 transition-all mt-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                Open Leaderboard
             </button>
         </div>
     </div>
 
     <!-- LEADERBOARD SCREEN -->
-    <div id="screen-leaderboard" class="fixed inset-0 bg-zinc-950 z-50 hidden flex-col gpu-accel">
-        <div class="flex-1 w-full max-w-sm mx-auto flex flex-col h-full px-5 py-6">
+    <div id="screen-leaderboard" class="fixed inset-0 bg-slate-950/95 backdrop-blur-3xl z-50 hidden flex-col gpu-layer">
+        <div class="flex-1 w-full max-w-md mx-auto flex flex-col h-full px-5 py-6">
             
             <!-- Header -->
-            <div class="flex justify-between items-center mb-6 pt-2">
-                <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-500 italic tracking-tight">TOP PLAYERS</h2>
-                <button id="btn-close-leaderboard" class="h-10 px-4 bg-zinc-900 border border-zinc-800 rounded-full flex items-center justify-center text-xs text-zinc-400 font-bold uppercase tracking-wider active:bg-zinc-800 transition-colors">
-                    Close ✕
+            <div class="flex justify-between items-center mb-6 pt-4 shrink-0">
+                <div class="flex flex-col">
+                    <span class="text-[10px] text-cyan-500 font-black tracking-widest uppercase">Global</span>
+                    <h2 class="text-3xl font-black text-white italic tracking-tighter leading-none mt-1">TOP 5</h2>
+                </div>
+                <button id="btn-close-leaderboard" class="h-10 w-10 bg-slate-800 border border-slate-700 rounded-full flex items-center justify-center text-slate-400 active:scale-90 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                 </button>
             </div>
 
-            <!-- Table Area -->
-            <div class="flex-1 bg-zinc-900 border border-zinc-800 rounded-3xl overflow-y-auto overscroll-contain shadow-xl mb-6 flex flex-col relative">
-                <table class="w-full text-left text-sm border-collapse">
-                    <tbody id="lb-body" class="px-4 block w-full">
-                        <!-- JS injects here -->
-                        <tr class="w-full flex"><td class="text-center text-zinc-500 py-8 font-bold w-full">Loading...</td></tr>
+            <!-- Table Card Area -->
+            <div class="flex-1 overflow-y-auto overscroll-contain mb-4 relative pb-4">
+                <table class="w-full text-left border-collapse">
+                    <tbody id="lb-body" class="block w-full">
+                        <tr class="w-full"><td class="text-center text-slate-500 py-10 font-bold w-full text-sm tracking-widest uppercase">Loading Data...</td></tr>
                     </tbody>
                 </table>
-                <!-- Fading edge for scroll -->
-                <div class="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-zinc-900 to-transparent pointer-events-none rounded-b-3xl"></div>
             </div>
 
-            <!-- Search Area -->
-            <div class="shrink-0 bg-zinc-900/50 p-4 rounded-3xl border border-zinc-800/50">
-                <p class="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-3 ml-1">Search Rank</p>
+            <!-- Search Area Bottom Sheet Style -->
+            <div class="shrink-0 bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl relative overflow-hidden">
+                <!-- Glossy accent -->
+                <div class="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
+                
+                <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] mb-3 text-center">Locate Player Rank</p>
                 <form id="form-search" class="flex gap-2">
-                    <input type="number" id="search-id" placeholder="Game ID" class="flex-1 h-12 bg-zinc-950 border border-zinc-800 rounded-2xl px-4 text-center font-bold text-white placeholder-zinc-700 focus:outline-none focus:border-blue-500 transition-colors shadow-inner" required>
-                    <button type="submit" class="h-12 px-6 bg-zinc-800 text-white font-bold text-sm uppercase tracking-wider rounded-2xl active:bg-zinc-700 transition-colors">
-                        Search
+                    <input type="number" id="search-id" placeholder="Game ID" class="flex-1 h-14 bg-slate-950 border border-slate-800 rounded-2xl px-4 text-center font-bold text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors shadow-inner" required>
+                    <button type="submit" class="h-14 px-6 bg-indigo-600 text-white font-black text-sm uppercase tracking-widest rounded-2xl active:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-500/30">
+                        FIND
                     </button>
                 </form>
                 
-                <div id="search-result" class="mt-4 bg-blue-950/20 border border-blue-900/40 rounded-2xl p-4 hidden flex-col items-center justify-center transition-all">
-                    <p id="search-rank" class="text-4xl font-black text-blue-400 drop-shadow-sm leading-none">#0</p>
-                    <p id="search-details" class="text-sm font-bold text-zinc-300 mt-2 tracking-wide">IGN - 0 pts</p>
+                <div id="search-result" class="mt-4 bg-slate-950 border border-slate-800 rounded-2xl p-4 hidden flex-col items-center justify-center transition-all">
+                    <p id="search-rank" class="text-4xl font-black text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)] leading-none">#0</p>
+                    <p id="search-details" class="text-sm font-bold text-slate-300 mt-2 tracking-wide">IGN - 0 pts</p>
                 </div>
             </div>
 
@@ -252,7 +298,8 @@
             debugMsg: document.getElementById('debug-msg'),
             feedback: document.getElementById('feedback'),
             guessInput: document.getElementById('guess-input'),
-            btnSubmit: document.getElementById('btn-submit')
+            btnSubmit: document.getElementById('btn-submit'),
+            heroBox: document.getElementById('hero-box')
         };
 
         // Event Listeners Initialization
@@ -326,7 +373,7 @@
             els.feedback.innerText = "";
             els.debugMsg.classList.add('hidden');
             els.heroImg.style.display = 'block';
-            els.timerBar.style.backgroundColor = "#4ade80"; 
+            els.timerBar.style.backgroundColor = "#22d3ee"; // Adjusted to match cyan theme
 
             currentHero = heroes[Math.floor(Math.random() * heroes.length)];
             els.heroImg.src = currentHero.icon_path;
@@ -357,7 +404,7 @@
                 timeLeft--;
                 els.timerText.innerText = `${timeLeft}s`;
 
-                if (timeLeft <= 5) els.timerBar.style.backgroundColor = "#ef4444"; 
+                if (timeLeft <= 5) els.timerBar.style.backgroundColor = "#f43f5e"; // Rose-500
 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
@@ -369,7 +416,7 @@
         function timeIsUp() {
             isGameActive = false;
             els.feedback.innerText = `Time's Up! It was ${currentHero.name}`;
-            els.feedback.className = "text-center font-bold text-lg h-6 mb-2 text-red-400";
+            els.feedback.className = "text-center font-bold text-xl h-7 mb-2 text-rose-500 tracking-wide";
             lockGame(3000);
         }
 
@@ -387,17 +434,34 @@
                 els.timerBar.style.transition = 'none'; // Freeze timer visual
                 
                 els.feedback.innerText = "CORRECT!"; 
-                els.feedback.className = "text-center font-bold text-lg h-6 mb-2 text-green-400";
+                els.feedback.className = "text-center font-black text-xl h-7 mb-2 text-cyan-400 tracking-[0.2em] drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]";
                 
                 currentUser.score++;
                 els.playerScore.innerText = currentUser.score;
                 
+                // Trigger Confetti
+                if (window.confetti) {
+                    confetti({
+                        particleCount: 120,
+                        spread: 80,
+                        origin: { y: 0.6 },
+                        colors: ['#22d3ee', '#818cf8', '#f8fafc', '#a78bfa'], // cyan, indigo, white, purple
+                        disableForReducedMotion: true
+                    });
+                }
+
                 lockGame(1500);
                 saveScore(); // Async fire-and-forget to avoid blocking main thread
             } else {
                 els.guessInput.value = "";
                 els.feedback.innerText = "WRONG! Try again."; 
-                els.feedback.className = "text-center font-bold text-lg h-6 mb-2 text-red-500";
+                els.feedback.className = "text-center font-bold text-xl h-7 mb-2 text-rose-500 tracking-wide";
+
+                // Trigger shake and red flash error animation
+                els.heroBox.classList.add('animate-error');
+                setTimeout(() => {
+                    els.heroBox.classList.remove('animate-error');
+                }, 400);
             }
         }
 
@@ -436,7 +500,7 @@
             switchScreen(els.screenGame, els.screenLeaderboard);
             
             const tbody = document.getElementById('lb-body');
-            tbody.innerHTML = '<tr class="w-full flex"><td class="text-center text-zinc-500 py-8 font-bold w-full">Loading Top 5...</td></tr>';
+            tbody.innerHTML = '<tr class="w-full"><td class="text-center text-slate-500 py-10 font-bold w-full text-sm tracking-widest uppercase animate-pulse">Loading Top 5...</td></tr>';
 
             try {
                 const q = query(collection(db, "players"), orderBy("score", "desc"), limit(5));
@@ -448,12 +512,17 @@
                     const p = doc.data();
                     // Basic XSS mitigation before injecting into DOM via innerHTML
                     const safeIgn = p.ign.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                    const color = rank === 1 ? "text-yellow-400" : rank === 2 ? "text-zinc-300" : rank === 3 ? "text-amber-500" : "text-white";
-                    tbody.innerHTML += `<tr class="border-b border-zinc-800/50 w-full flex items-center px-2 py-1"><td class="py-4 font-black w-10 text-center ${color}">#${rank}</td><td class="py-4 font-bold text-zinc-100 truncate flex-1 px-2">${safeIgn}</td><td class="py-4 font-mono text-yellow-500 text-right w-16 font-black">${p.score}</td></tr>`;
+                    const color = rank === 1 ? "text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.6)]" : rank === 2 ? "text-slate-200" : rank === 3 ? "text-indigo-400" : "text-slate-500";
+                    tbody.innerHTML += `
+                        <tr class="w-full flex items-center bg-slate-900/60 border border-slate-800 rounded-2xl mb-2 px-4 py-3 shadow-sm">
+                            <td class="font-black text-xl w-10 text-center ${color}">#${rank}</td>
+                            <td class="font-bold text-white truncate flex-1 px-3 tracking-wide">${safeIgn}</td>
+                            <td class="font-black text-white text-right w-16 text-lg tracking-wider">${p.score}</td>
+                        </tr>`;
                     rank++;
                 });
             } catch(err) { 
-                tbody.innerHTML = "<tr class='w-full flex'><td class='text-center text-red-500 py-8 font-bold w-full'>Error loading leaderboard.</td></tr>"; 
+                tbody.innerHTML = "<tr class='w-full'><td class='text-center text-red-500 py-10 font-bold w-full text-sm tracking-widest uppercase'>Error loading leaderboard.</td></tr>"; 
             }
         }
 
@@ -483,7 +552,7 @@
                         found = true;
                         const safeIgn = playerDoc.data().ign.replace(/</g, "&lt;").replace(/>/g, "&gt;");
                         document.getElementById('search-rank').innerText = `#${rank}`;
-                        document.getElementById('search-details').innerHTML = `${safeIgn} - <span class="text-yellow-400">${playerDoc.data().score} pts</span>`;
+                        document.getElementById('search-details').innerHTML = `${safeIgn} <span class="text-slate-500 mx-1">•</span> <span class="text-white">${playerDoc.data().score} pts</span>`;
                         break;
                     }
                     rank++;
