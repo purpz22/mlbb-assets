@@ -226,7 +226,7 @@
             <div class="flex justify-between items-center mb-4 pt-4 shrink-0">
                 <div class="flex flex-col">
                     <span class="text-[10px] text-cyan-500 font-black tracking-widest uppercase">Global</span>
-                    <h2 class="text-3xl font-black text-white italic tracking-tighter leading-none mt-1">TOP 5</h2>
+                    <h2 class="text-3xl font-black text-white italic tracking-tighter leading-none mt-1">TOP 100</h2>
                 </div>
                 <button id="btn-close-leaderboard" class="h-10 w-10 bg-slate-800 border border-slate-700 rounded-full flex items-center justify-center text-slate-400 active:scale-90 transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
@@ -604,10 +604,10 @@
             switchScreen(els.screenGame, els.screenLeaderboard);
             
             const tbody = document.getElementById('lb-body');
-            tbody.innerHTML = '<tr class="w-full"><td class="text-center text-slate-500 py-10 font-bold w-full text-sm tracking-widest uppercase animate-pulse">Loading Top 5...</td></tr>';
+            tbody.innerHTML = '<tr class="w-full"><td class="text-center text-slate-500 py-10 font-bold w-full text-sm tracking-widest uppercase animate-pulse">Loading Top 100...</td></tr>';
 
             try {
-                const q = query(collection(db, "players"), orderBy("score", "desc"), limit(5));
+                const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
                 const querySnapshot = await getDocs(q);
                 
                 tbody.innerHTML = "";
