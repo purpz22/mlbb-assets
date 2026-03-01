@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - MLBB Guess</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Rajdhani', sans-serif; background-color: #020617; color: white; }
+    </style>
+</head>
+<body class="p-6">
+
+    <!-- Simple Login Cover -->
+    <div id="admin-login" class="fixed inset-0 bg-slate-950 z-50 flex flex-col items-center justify-center gap-4">
+        <h1 class="text-3xl font-black text-cyan-400">ADMIN ACCESS</h1>
+        <input type="password" id="admin-pass" placeholder="Enter Password" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500">
+        <button id="btn-login" class="bg-indigo-600 px-8 py-3 rounded-xl font-bold uppercase hover:bg-indigo-500">Login</button>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="admin-dashboard" class="hidden max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Header -->
+        <div class="col-span-full border-b border-slate-800 pb-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-500">CONTROL CENTER</h1>
+                <p class="text-slate-400 text-sm tracking-widest uppercase">MLBB Guess Hero Backend</p>
+            </div>
+            <div class="flex gap-4 items-center">
+                <div class="bg-slate-900 px-4 py-2 rounded-lg border border-slate-800 text-center">
+                    <span class="block text-xs text-slate-500 uppercase">Online Players (last 5m)</span>
+                    <span id="stat-online" class="text-2xl font-black text-green-400">0</span>
+                </div>
+                <div class="bg-slate-900 px-4 py-2 rounded-lg border border-slate-800 text-center">
+                    <span class="block text-xs text-slate-500 uppercase">Total Players</span>
+                    <span id="stat-total" class="text-2xl font-black text-cyan-400">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Controls -->
+        <div class="col-span-1 flex flex-col gap-6">
+            
+            <!-- Global Commands -->
+            <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
+                <h2 class="text-xl font-bold mb-4 text-rose-400 border-b border-slate-700 pb-2">Global Commands</h2>
+                <button id="btn-refresh" class="w-full bg-rose-600 hover:bg-rose-500 py-3 rounded-xl font-bold uppercase tracking-widest transition-all">
+                    Force Refresh All Users
+                </button>
+                <p class="text-xs text-slate-500 mt-2 text-center">Instantly reloads the page for everyone.</p>
+            </div>
+
+            <!-- DRAMATIC BROADCAST (NEW) -->
+            <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 relative overflow-hidden">
+                <div class="absolute inset-0 bg-rose-500/5 pointer-events-none"></div>
+                <h2 class="text-xl font-bold mb-4 text-rose-500 border-b border-slate-700 pb-2 relative z-10">Dramatic Announcement</h2>
+                <textarea id="broadcast-msg" rows="2" placeholder="Type message (e.g. FREE SKINS!)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white mb-3 focus:outline-none focus:border-rose-500 resize-none relative z-10"></textarea>
+                <button id="btn-broadcast" class="w-full bg-rose-600 hover:bg-rose-500 py-3 rounded-xl font-black uppercase tracking-[0.2em] transition-all shadow-[0_0_15px_rgba(225,29,72,0.4)] active:scale-95 relative z-10">
+                    SEND BOOM!
+                </button>
+            </div>
+
+            <!-- Mini Events -->
+            <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
+                <h2 class="text-xl font-bold mb-4 text-amber-400 border-b border-slate-700 pb-2">Mini Events</h2>
+                
+                <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl mb-3">
+                    <span class="font-bold">Double Points (2x)</span>
+                    <button id="toggle-x2" class="px-4 py-1 rounded bg-slate-600 font-bold text-sm">OFF</button>
+                </div>
+                
+                <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl">
+                    <span class="font-bold">Show First Letter</span>
+                    <button id="toggle-letter" class="px-4 py-1 rounded bg-slate-600 font-bold text-sm">OFF</button>
+                </div>
+            </div>
+
+            <!-- Music Player -->
+            <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
+                <h2 class="text-xl font-bold mb-4 text-indigo-400 border-b border-slate-700 pb-2">Broadcast Music</h2>
+                <input type="text" id="music-url" placeholder="Direct MP3 URL" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white mb-3">
+                <div class="flex gap-2">
+                    <button id="btn-play-music" class="flex-1 bg-indigo-600 hover:bg-indigo-500 py-2 rounded-xl font-bold uppercase transition-all">Play</button>
+                    <button id="btn-stop-music" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-xl font-bold uppercase transition-all">Stop</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Player Management -->
+        <div class="col-span-1 md:col-span-2 bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col h-[800px]">
+            <h2 class="text-xl font-bold mb-4 text-cyan-400 border-b border-slate-700 pb-2">Player Management</h2>
+            <input type="text" id="search-player" placeholder="Search IGN or ID..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white mb-4 focus:border-cyan-500 focus:outline-none">
+            
+            <div class="flex-1 overflow-y-auto pr-2">
+                <table class="w-full text-left">
+                    <thead class="text-xs uppercase text-slate-500 sticky top-0 bg-slate-900">
+                        <tr>
+                            <th class="py-2">ID</th>
+                            <th class="py-2">IGN</th>
+                            <th class="py-2">Score</th>
+                            <th class="py-2 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="player-list" class="divide-y divide-slate-800/50">
+                        <!-- Players injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, deleteDoc, collection, query, onSnapshot, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyCPSU7YrNL0M9j0EFUBRHDoufpW9bQlUsI",
+            authDomain: "guesshero-e1180.firebaseapp.com",
+            projectId: "guesshero-e1180",
+            databaseURL: "https://guesshero-e1180-default-rtdb.asia-southeast1.firebasedatabase.app",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Security
+        document.getElementById('btn-login').addEventListener('click', () => {
+            if(document.getElementById('admin-pass').value === 'admin123') {
+                document.getElementById('admin-login').classList.add('hidden');
+                document.getElementById('admin-dashboard').classList.remove('hidden');
+                initAdmin();
+            } else {
+                alert("Wrong Password");
+            }
+        });
+
+        // Current Server State
+        let serverState = {
+            doublePoints: false,
+            firstLetter: false
+        };
+
+        function initAdmin() {
+            // Listen to Players
+            const q = query(collection(db, "players"));
+            onSnapshot(q, (snapshot) => {
+                const list = document.getElementById('player-list');
+                list.innerHTML = "";
+                let total = 0;
+                let online = 0;
+                const fiveMinsAgo = Date.now() - (5 * 60 * 1000);
+
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const id = docSnap.id;
+                    total++;
+                    if(data.updatedAt && data.updatedAt.toMillis() > fiveMinsAgo) online++;
+                    const isBanned = data.isBanned ? true : false;
+
+                    list.innerHTML += `
+                        <tr class="hover:bg-slate-800/50 transition-colors ${isBanned ? 'opacity-50' : ''}">
+                            <td class="py-3 text-xs text-slate-400">${id}</td>
+                            <td class="py-3 font-bold text-white">${data.ign} ${isBanned ? '<span class="text-red-500 text-[10px] ml-1">BANNED</span>' : ''}</td>
+                            <td class="py-3 text-cyan-400 font-black">${data.score}</td>
+                            <td class="py-3 flex gap-2 justify-end">
+                                <button onclick="window.resetPlayer('${id}')" class="bg-amber-600/20 text-amber-500 px-3 py-1 rounded text-xs hover:bg-amber-600/40">0 Pts</button>
+                                ${isBanned 
+                                    ? `<button onclick="window.banPlayer('${id}', false)" class="bg-green-600/20 text-green-500 px-3 py-1 rounded text-xs hover:bg-green-600/40">Unban</button>`
+                                    : `<button onclick="window.banPlayer('${id}', true)" class="bg-rose-600/20 text-rose-500 px-3 py-1 rounded text-xs hover:bg-rose-600/40">Ban</button>`
+                                }
+                                <button onclick="window.deletePlayer('${id}')" class="bg-red-900 text-white px-3 py-1 rounded text-xs hover:bg-red-800">Del</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                document.getElementById('stat-total').innerText = total;
+                document.getElementById('stat-online').innerText = online;
+            });
+
+            // Listen to Server State
+            onSnapshot(doc(db, "server", "state"), (docSnap) => {
+                if(docSnap.exists()) {
+                    serverState = docSnap.data();
+                    const btnX2 = document.getElementById('toggle-x2');
+                    btnX2.innerText = serverState.doublePoints ? "ON" : "OFF";
+                    btnX2.className = serverState.doublePoints ? "px-4 py-1 rounded font-bold text-sm bg-green-500 text-white" : "px-4 py-1 rounded font-bold text-sm bg-slate-600";
+                    const btnLetter = document.getElementById('toggle-letter');
+                    btnLetter.innerText = serverState.firstLetter ? "ON" : "OFF";
+                    btnLetter.className = serverState.firstLetter ? "px-4 py-1 rounded font-bold text-sm bg-green-500 text-white" : "px-4 py-1 rounded font-bold text-sm bg-slate-600";
+                }
+            });
+        }
+
+        // --- COMMANDS ---
+        
+        // 1. Refresh
+        document.getElementById('btn-refresh').addEventListener('click', () => {
+            if(confirm("Force refresh all users?")) {
+                setDoc(doc(db, "server", "state"), { refreshTrigger: serverTimestamp() }, { merge: true });
+            }
+        });
+
+        // 2. Broadcast (BOOM)
+        document.getElementById('btn-broadcast').addEventListener('click', () => {
+            const msg = document.getElementById('broadcast-msg').value.trim();
+            if(!msg) return alert("Type a message first!");
+            
+            setDoc(doc(db, "server", "state"), { 
+                broadcastMsg: msg, 
+                broadcastTrigger: serverTimestamp() 
+            }, { merge: true });
+
+            document.getElementById('broadcast-msg').value = "";
+            
+            const btn = document.getElementById('btn-broadcast');
+            const oldText = btn.innerText;
+            btn.innerText = "SENT!";
+            setTimeout(() => btn.innerText = oldText, 2000);
+        });
+
+        // 3. Mini Events
+        document.getElementById('toggle-x2').addEventListener('click', () => {
+            setDoc(doc(db, "server", "state"), { doublePoints: !serverState.doublePoints }, { merge: true });
+        });
+        document.getElementById('toggle-letter').addEventListener('click', () => {
+            setDoc(doc(db, "server", "state"), { firstLetter: !serverState.firstLetter }, { merge: true });
+        });
+
+        // 4. Music
+        document.getElementById('btn-play-music').addEventListener('click', () => {
+            const url = document.getElementById('music-url').value;
+            if(!url) return alert("Enter MP3 URL first");
+            setDoc(doc(db, "server", "state"), { musicUrl: url, musicTrigger: serverTimestamp() }, { merge: true });
+        });
+        document.getElementById('btn-stop-music').addEventListener('click', () => {
+            setDoc(doc(db, "server", "state"), { musicUrl: "" }, { merge: true });
+            document.getElementById('music-url').value = "";
+        });
+
+        // --- PLAYER ACTIONS ---
+        window.resetPlayer = (id) => { if(confirm("Reset score to 0?")) updateDoc(doc(db, "players", id), { score: 0 }); }
+        window.banPlayer = (id, status) => { updateDoc(doc(db, "players", id), { isBanned: status }); }
+        window.deletePlayer = (id) => { if(confirm("Permanently delete player?")) deleteDoc(doc(db, "players", id)); }
+
+        // Search Filter
+        document.getElementById('search-player').addEventListener('input', (e) => {
+            const filter = e.target.value.toLowerCase();
+            document.querySelectorAll('#player-list tr').forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none';
+            });
+        });
+
+    </script>
+</body>
+</html>
