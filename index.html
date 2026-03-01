@@ -6,8 +6,7 @@
     <meta name="theme-color" content="#020617">
     <title>MLBB Guess Hero</title>
     
-    <!-- CSP updated to allow canvas-confetti execution seamlessly -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://www.gstatic.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https: http:; connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app https://api.isan.eu.org https://corsproxy.io wss://*.firebaseio.com https://identitytoolkit.googleapis.com; worker-src 'self' blob:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https: http:; connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app https://api.isan.eu.org https://corsproxy.io wss://*.firebaseio.com https://identitytoolkit.googleapis.com;">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,9 +14,6 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5350189369134605" crossorigin="anonymous"></script>
-    
-    <!-- Reliable Canvas Confetti CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
     <style>
         :root {
@@ -27,8 +23,6 @@
 
         body {
             font-family: 'Rajdhani', sans-serif;
-            background-color: #020617; /* Slate 950 - Deep dark */
-            background-image: radial-gradient(circle at top, #1e1b4b 0%, #020617 60%);
             color: #f8fafc;
             overscroll-behavior-y: none;
             user-select: none;
@@ -39,6 +33,16 @@
             overflow: hidden;
             padding-top: var(--safe-area-inset-top);
             padding-bottom: var(--safe-area-inset-bottom);
+            background-color: #020617; /* Base dark */
+        }
+
+        /* Adjusted gradient to center the light behind the UI */
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle at 50% 45%, #1e1b4b 0%, #020617 75%);
+            z-index: -40;
+            pointer-events: none;
         }
 
         /* Hide number input spinners for native feel */
@@ -55,16 +59,9 @@
         }
 
         /* Custom scrollbar for leaderboard */
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 10px;
-        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
 
         /* Error shake and red flash animation */
         @keyframes error-shake {
@@ -80,42 +77,57 @@
         }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center w-full h-full relative">
+<body class="w-full h-1080 relative">
 
-    <!-- LOGIN SCREEN -->
-    <!-- Added overflow-y-auto so if the Android keyboard opens, it centers perfectly without squishing -->
-    <div id="screen-login" class="w-full max-w-sm px-6 h-full flex flex-col items-center justify-center z-10 gpu-layer overflow-y-auto relative">
+    <div class="ambient-bg"></div>
+
+    <!-- LOGIN SCREEN - Absolutely positioned to guarantee perfect center -->
+    <div id="screen-login" class="absolute inset-0 w-full max-w-sm mx-auto px-6 flex flex-col items-center justify-center z-10 transition-all duration-300">
         
-        <div class="mb-10 text-center relative w-full flex flex-col items-center shrink-0 mt-8">
-            <!-- Background Glow -->
-            <div class="absolute inset-0 bg-indigo-500/20 blur-[50px] rounded-full w-48 h-48 mx-auto -z-10 mix-blend-screen pointer-events-none"></div>
-            
-            <h1 class="text-6xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-cyan-300 to-indigo-500 drop-shadow-[0_0_15px_rgba(56,189,248,0.3)] leading-[0.85] mb-2">
+        <!-- Logo Area -->
+        <div class="flex flex-col items-center justify-center mb-10 relative w-full">
+            <div class="absolute inset-0 bg-indigo-500/20 blur-[60px] rounded-full w-32 h-32 mx-auto -z-10 mix-blend-screen pointer-events-none"></div>
+            <h1 class="text-[3.5rem] font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-cyan-400 to-indigo-400 drop-shadow-lg leading-none">
                 GUESS
             </h1>
-            <h2 class="text-4xl font-black italic tracking-tighter text-white drop-shadow-lg leading-none mb-1">
+            <h2 class="text-3xl font-black italic tracking-widest text-white leading-none mt-1">
                 THE HERO
             </h2>
-            <div class="h-1 w-12 bg-indigo-500 rounded-full mt-4 shadow-[0_0_10px_rgba(99,102,241,0.8)]"></div>
+            <div class="h-1 w-12 bg-indigo-500 rounded-full mt-4 shadow-[0_0_15px_rgba(99,102,241,0.8)]"></div>
         </div>
 
-        <form id="form-login" class="w-full flex flex-col gap-4 shrink-0 pb-8">
-            <!-- Inputs explicitly stacked vertically (up and down) -->
-            <div class="flex flex-col gap-3 w-full">
-                <input type="number" id="login-id" placeholder="Game ID (e.g. 12345678)" class="w-full h-14 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-2xl px-5 text-xl text-center font-bold text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all shadow-inner" required>
-                <input type="number" id="login-zone" placeholder="Zone ID (e.g. 1234)" class="w-full h-14 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-2xl px-5 text-xl text-center font-bold text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all shadow-inner" required>
-            </div>
-            
-            <p id="login-msg" class="text-cyan-400 text-sm h-5 font-bold text-center tracking-wide flex items-center justify-center"></p>
-            
-            <button type="submit" id="btn-login" class="w-full h-14 mt-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 text-white font-black text-xl rounded-2xl shadow-[0_10px_30px_-10px_rgba(99,102,241,0.7)] active:scale-95 active:shadow-none transition-all duration-200 flex items-center justify-center uppercase tracking-widest border border-indigo-400/30">
-                CONNECT
-            </button>
-        </form>
+        <!-- Premium Login Card -->
+        <div class="w-full bg-slate-900/60 backdrop-blur-xl p-6 rounded-[2rem] border border-slate-700/50 shadow-2xl flex flex-col gap-4 relative overflow-hidden shrink-0">
+            <!-- Card subtle highlight -->
+            <div class="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent"></div>
+
+            <form id="form-login" class="w-full flex flex-col gap-5">
+                
+                <!-- ID Input -->
+                <div class="flex flex-col gap-1.5 w-full">
+                    <label class="text-[10px] text-indigo-300 font-black uppercase tracking-widest ml-2 opacity-80">Game ID</label>
+                    <input type="number" id="login-id" placeholder="e.g. 12345678" class="w-full h-14 bg-slate-950/80 border border-slate-700/80 rounded-2xl px-5 text-xl text-center font-bold text-white placeholder-slate-600 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all shadow-inner" required>
+                </div>
+
+                <!-- Zone Input -->
+                <div class="flex flex-col gap-1.5 w-full">
+                    <label class="text-[10px] text-indigo-300 font-black uppercase tracking-widest ml-2 opacity-80">Zone ID</label>
+                    <input type="number" id="login-zone" placeholder="e.g. 1234" class="w-full h-14 bg-slate-950/80 border border-slate-700/80 rounded-2xl px-5 text-xl text-center font-bold text-white placeholder-slate-600 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all shadow-inner" required>
+                </div>
+                
+                <!-- Feedback Message -->
+                <p id="login-msg" class="text-cyan-400 text-sm h-4 font-bold text-center tracking-wide flex items-center justify-center"></p>
+                
+                <!-- Submit Button -->
+                <button type="submit" id="btn-login" class="w-full h-14 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white font-black text-xl rounded-2xl shadow-[0_8px_20px_-6px_rgba(99,102,241,0.6)] active:scale-[0.97] active:shadow-none transition-all duration-200 flex items-center justify-center uppercase tracking-widest border border-indigo-400/30">
+                    CONNECT
+                </button>
+            </form>
+        </div>
     </div>
 
     <!-- GAME SCREEN -->
-    <div id="screen-game" class="w-full max-w-sm h-full px-5 py-6 flex flex-col z-10 hidden relative gpu-layer overflow-y-auto">
+    <div id="screen-game" class="absolute inset-0 w-full max-w-sm mx-auto px-5 py-6 flex flex-col z-10 hidden gpu-layer">
         
         <!-- Player Stats Floating Pill -->
         <div class="flex justify-between items-center bg-slate-900/40 border border-slate-700/50 rounded-full px-6 py-3 backdrop-blur-xl shadow-lg mb-6 shrink-0 mt-2">
@@ -147,20 +159,16 @@
             
             <!-- Hero Showcase (Strictly Circular) -->
             <div class="relative w-56 h-56 flex items-center justify-center mb-6 isolate shrink-0">
-                <!-- Dual Glowing Rings -->
                 <div class="absolute inset-0 bg-gradient-to-tr from-cyan-500 to-indigo-500 rounded-full blur-[40px] opacity-30 -z-10 animate-pulse"></div>
                 
-                <!-- Main Container strictly enforcing image rules -->
                 <div class="hero-box w-[200px] h-[200px] rounded-full p-1.5 bg-gradient-to-b from-slate-700 to-slate-900 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-300 relative flex items-center justify-center" id="hero-box">
                     <div class="w-full h-full rounded-full overflow-hidden bg-slate-950 flex items-center justify-center relative z-10 border border-slate-800/80">
                         <img id="hero-img" src="" alt="Hero" class="w-full h-full object-cover scale-[1.02]">
                     </div>
-                    <!-- Debug text absolutely positioned on top if needed -->
                     <div id="debug-msg" class="absolute inset-0 flex items-center justify-center bg-slate-900/95 text-red-500 text-xs font-bold text-center px-4 break-words hidden z-20 rounded-full"></div>
                 </div>
             </div>
             
-            <!-- Feedback Text (JS changes text color, pre-styled base) -->
             <p id="feedback" class="text-center font-bold text-xl h-7 tracking-wide flex items-center justify-center"></p>
         </div>
 
@@ -168,7 +176,7 @@
         <div class="w-full shrink-0 flex flex-col gap-3 pb-4 items-center">
             <form id="form-guess" class="flex flex-col gap-3 w-full">
                 <input type="text" id="guess-input" placeholder="ENTER HERO" class="w-full h-14 bg-slate-900/80 backdrop-blur-md border-2 border-slate-700 rounded-full px-6 text-2xl text-center font-black text-cyan-300 placeholder-slate-600 uppercase tracking-[0.15em] focus:outline-none focus:border-indigo-500 focus:bg-slate-800 transition-all shadow-inner" autocomplete="off" autocorrect="off" spellcheck="false">
-                <button type="submit" id="btn-submit" class="w-full h-14 bg-white text-slate-950 font-black text-xl rounded-full uppercase tracking-[0.2em] shadow-[0_8px_20px_rgba(255,255,255,0.2)] active:scale-95 active:shadow-none transition-all duration-200 flex items-center justify-center">
+                <button type="submit" id="btn-submit" class="w-full h-14 bg-white text-slate-950 font-black text-xl rounded-full uppercase tracking-[0.2em] shadow-[0_8px_20px_rgba(255,255,255,0.2)] active:scale-[0.97] active:shadow-none transition-all duration-200 flex items-center justify-center">
                     SUBMIT
                 </button>
             </form>
@@ -180,7 +188,7 @@
                 Open Leaderboard
             </button>
             
-            <!-- Small Sign Out Button -->
+            <!-- Switch Account Button -->
             <button type="button" id="btn-logout" class="h-8 px-4 text-[10px] text-slate-500 font-black uppercase tracking-[0.15em] active:text-rose-500 transition-colors mt-1">
                 Switch Account
             </button>
@@ -191,7 +199,6 @@
     <div id="screen-leaderboard" class="fixed inset-0 bg-slate-950/95 backdrop-blur-3xl z-50 hidden flex-col gpu-layer">
         <div class="flex-1 w-full max-w-md mx-auto flex flex-col h-full px-5 py-6">
             
-            <!-- Header -->
             <div class="flex justify-between items-center mb-6 pt-4 shrink-0">
                 <div class="flex flex-col">
                     <span class="text-[10px] text-cyan-500 font-black tracking-widest uppercase">Global</span>
@@ -204,7 +211,6 @@
                 </button>
             </div>
 
-            <!-- Table Card Area -->
             <div class="flex-1 overflow-y-auto overscroll-contain mb-4 relative pb-4">
                 <table class="w-full text-left border-collapse">
                     <tbody id="lb-body" class="block w-full">
@@ -213,9 +219,7 @@
                 </table>
             </div>
 
-            <!-- Search Area Bottom Sheet Style -->
             <div class="shrink-0 bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl relative overflow-hidden">
-                <!-- Glossy accent -->
                 <div class="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
                 
                 <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] mb-3 text-center">Locate Player Rank</p>
@@ -313,6 +317,52 @@
             heroBox: document.getElementById('hero-box')
         };
 
+        // Custom fail-proof Confetti Generator
+        function fireCustomConfetti() {
+            const colors = ['#22d3ee', '#818cf8', '#f8fafc', '#a78bfa', '#fbbf24', '#f472b6'];
+            for (let i = 0; i < 60; i++) {
+                const conf = document.createElement('div');
+                conf.style.position = 'fixed';
+                conf.style.width = Math.random() * 8 + 6 + 'px';
+                conf.style.height = Math.random() * 8 + 6 + 'px';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.left = '50%';
+                conf.style.top = '50%';
+                conf.style.zIndex = '9999';
+                conf.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                conf.style.pointerEvents = 'none';
+                document.body.appendChild(conf);
+
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = Math.random() * 15 + 5;
+                const vx = Math.cos(angle) * velocity;
+                let vy = Math.sin(angle) * velocity - 8;
+                let x = window.innerWidth / 2;
+                let y = window.innerHeight / 2;
+                let rot = 0;
+                let rotSpeed = Math.random() * 20 - 10;
+                let opacity = 1;
+
+                const animate = () => {
+                    x += vx;
+                    vy += 0.5; // Gravity
+                    y += vy;
+                    rot += rotSpeed;
+                    opacity -= 0.015;
+
+                    conf.style.transform = `translate(${x - window.innerWidth/2}px, ${y - window.innerHeight/2}px) rotate(${rot}deg)`;
+                    conf.style.opacity = opacity;
+
+                    if (opacity > 0) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        conf.remove();
+                    }
+                };
+                requestAnimationFrame(animate);
+            }
+        }
+
         // Event Listeners Initialization
         document.getElementById('form-login').addEventListener('submit', handleLogin);
         document.getElementById('form-guess').addEventListener('submit', checkGuess);
@@ -328,7 +378,6 @@
             if (savedId && savedZone) {
                 document.getElementById('login-id').value = savedId;
                 document.getElementById('login-zone').value = savedZone;
-                // Automatically click login if data exists
                 document.getElementById('btn-login').click();
             }
         });
@@ -340,7 +389,7 @@
             location.reload();
         });
 
-        // Android Hardware Back Button Handling (History API Hook)
+        // Android Hardware Back Button Handling
         window.addEventListener('popstate', (event) => {
             if (els.screenLeaderboard.classList.contains('hidden') === false) {
                 closeLeaderboard(null, true);
@@ -352,26 +401,24 @@
             e.preventDefault();
             if (!navigator.onLine) {
                 els.loginMsg.innerText = "No internet connection.";
-                els.loginMsg.className = "text-rose-400 text-sm h-5 font-bold text-center tracking-wide flex items-center justify-center";
+                els.loginMsg.className = "text-rose-400 text-sm h-4 font-bold text-center tracking-wide flex items-center justify-center";
                 return;
             }
 
             const id = document.getElementById('login-id').value.trim();
             const zone = document.getElementById('login-zone').value.trim();
             
-            // Input Validation
             if (!/^\d+$/.test(id) || !/^\d+$/.test(zone)) {
-                els.loginMsg.innerText = "Invalid ID/Zone format.";
-                els.loginMsg.className = "text-rose-400 text-sm h-5 font-bold text-center tracking-wide flex items-center justify-center";
+                els.loginMsg.innerText = "Invalid format.";
+                els.loginMsg.className = "text-rose-400 text-sm h-4 font-bold text-center tracking-wide flex items-center justify-center";
                 return;
             }
 
-            els.loginMsg.innerText = "Verifying Account...";
-            els.loginMsg.className = "text-cyan-400 text-sm h-5 font-bold text-center tracking-wide flex items-center justify-center animate-pulse";
+            els.loginMsg.innerText = "Verifying...";
+            els.loginMsg.className = "text-cyan-400 text-sm h-4 font-bold text-center tracking-wide flex items-center justify-center animate-pulse";
             document.getElementById('btn-login').disabled = true;
 
             try {
-                // WARNING: Architecture flaw. Replace corsproxy.io with a dedicated Cloud Function
                 const res = await fetch(`https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`);
                 const data = await res.json();
                 
@@ -382,13 +429,11 @@
                 currentUser.id = id;
                 currentUser.ign = data.name || data.nickname;
                 
-                // Save credentials to bypass next time
                 localStorage.setItem('mlbb_id', id);
                 localStorage.setItem('mlbb_zone', zone);
 
-                els.loginMsg.innerText = "Loading Score...";
+                els.loginMsg.innerText = "Loading...";
 
-                // Fetch Firebase profile
                 const userDoc = await getDoc(doc(db, "players", id));
                 currentUser.score = userDoc.exists() ? userDoc.data().score : 0;
 
@@ -398,9 +443,8 @@
                 
                 nextHero();
             } catch(e) { 
-                els.loginMsg.innerText = "Error: " + e.message; 
-                els.loginMsg.className = "text-rose-400 text-sm h-5 font-bold text-center tracking-wide flex items-center justify-center";
-                // Clear bad local storage data
+                els.loginMsg.innerText = "Account verification failed."; 
+                els.loginMsg.className = "text-rose-400 text-sm h-4 font-bold text-center tracking-wide flex items-center justify-center";
                 localStorage.removeItem('mlbb_id');
                 localStorage.removeItem('mlbb_zone');
             } finally {
@@ -415,12 +459,11 @@
             els.feedback.innerText = "";
             els.debugMsg.classList.add('hidden');
             els.heroImg.style.display = 'block';
-            els.timerBar.style.backgroundColor = "#22d3ee"; // Adjusted to match cyan theme
+            els.timerBar.style.backgroundColor = "#22d3ee"; 
 
             currentHero = heroes[Math.floor(Math.random() * heroes.length)];
             els.heroImg.src = currentHero.icon_path;
             
-            // Auto-focus keyboard safely allowing native threads to catch up
             setTimeout(() => els.guessInput.focus(), 100);
 
             startTimer();
@@ -433,12 +476,10 @@
             let timeLeft = MAX_TIME;
             els.timerText.innerText = `${timeLeft}s`;
 
-            // Reset visual bar immediately (Force DOM Reflow)
             els.timerBar.style.transition = 'none';
             els.timerBar.style.transform = 'scaleX(1)';
             void els.timerBar.offsetWidth; 
 
-            // Start native CSS hardware accelerated animation
             els.timerBar.style.transition = `transform ${MAX_TIME}s linear, background-color 0.3s`;
             els.timerBar.style.transform = 'scaleX(0)';
 
@@ -446,7 +487,7 @@
                 timeLeft--;
                 els.timerText.innerText = `${timeLeft}s`;
 
-                if (timeLeft <= 5) els.timerBar.style.backgroundColor = "#f43f5e"; // Rose-500
+                if (timeLeft <= 5) els.timerBar.style.backgroundColor = "#f43f5e"; 
 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
@@ -468,14 +509,13 @@
             e.preventDefault();
             if (!isGameActive) return;
 
-            // Strict string normalization for input evaluation
             const guess = els.guessInput.value.toLowerCase().replace(/[^a-z0-9]/g, '');
             const answer = currentHero.name.toLowerCase().replace(/[^a-z0-9]/g, '');
 
             if (guess === answer) {
                 clearInterval(timerInterval);
                 isGameActive = false;
-                els.timerBar.style.transition = 'none'; // Freeze timer visual
+                els.timerBar.style.transition = 'none'; 
                 
                 els.feedback.innerText = "CORRECT!"; 
                 els.feedback.className = "text-center font-black text-xl h-7 text-cyan-400 tracking-[0.2em] drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] flex items-center justify-center";
@@ -483,25 +523,16 @@
                 currentUser.score++;
                 els.playerScore.innerText = currentUser.score;
                 
-                // Fire Canvas Confetti Effect
-                if (window.confetti) {
-                    window.confetti({
-                        particleCount: 150,
-                        spread: 70,
-                        origin: { y: 0.5 },
-                        colors: ['#22d3ee', '#818cf8', '#f8fafc', '#a78bfa'],
-                        zIndex: 9999
-                    });
-                }
+                // Fire custom inline confetti to guarantee it works!
+                fireCustomConfetti();
 
                 lockGame(1500);
-                saveScore(); // Async fire-and-forget to avoid blocking main thread
+                saveScore(); 
             } else {
                 els.guessInput.value = "";
                 els.feedback.innerText = "WRONG! Try again."; 
                 els.feedback.className = "text-center font-bold text-xl h-7 tracking-wide flex items-center justify-center text-rose-500";
 
-                // Trigger shake and red flash error animation
                 els.heroBox.classList.add('animate-error');
                 setTimeout(() => {
                     els.heroBox.classList.remove('animate-error');
@@ -516,7 +547,7 @@
         }
 
         function saveScore() {
-            if (!navigator.onLine) return; // Rely on Firebase offline persistence later if needed
+            if (!navigator.onLine) return; 
             setDoc(doc(db, "players", currentUser.id), {
                 ign: currentUser.ign,
                 score: currentUser.score,
@@ -530,7 +561,6 @@
             els.debugMsg.classList.remove('hidden');
         }
 
-        // View Routing & State Management
         function switchScreen(hideEl, showEl) {
             hideEl.classList.add('hidden');
             hideEl.classList.remove('flex');
@@ -540,7 +570,7 @@
 
         async function openLeaderboard(e) {
             if(e) e.preventDefault();
-            history.pushState({ page: 'leaderboard' }, ''); // Pushes to history for Android Back button
+            history.pushState({ page: 'leaderboard' }, ''); 
             switchScreen(els.screenGame, els.screenLeaderboard);
             
             const tbody = document.getElementById('lb-body');
@@ -554,7 +584,6 @@
                 let rank = 1;
                 querySnapshot.forEach((doc) => {
                     const p = doc.data();
-                    // Basic XSS mitigation before injecting into DOM via innerHTML
                     const safeIgn = p.ign.replace(/</g, "&lt;").replace(/>/g, "&gt;");
                     const color = rank === 1 ? "text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.6)]" : rank === 2 ? "text-slate-200" : rank === 3 ? "text-indigo-400" : "text-slate-500";
                     tbody.innerHTML += `
@@ -572,7 +601,7 @@
 
         function closeLeaderboard(e, fromPopState = false) {
             if(e) e.preventDefault();
-            if (!fromPopState) history.back(); // Triggers OS-level back navigation
+            if (!fromPopState) history.back(); 
             switchScreen(els.screenLeaderboard, els.screenGame);
         }
 
