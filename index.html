@@ -447,61 +447,101 @@
 
         document.getElementById('btn-logout').addEventListener('click', () => { localStorage.removeItem('mlbb_id'); localStorage.removeItem('mlbb_zone'); location.reload(); });
 
-        async function handleLogin(e) {
-            e.preventDefault();
-            const id = document.getElementById('login-id').value.trim();
-            const zone = document.getElementById('login-zone').value.trim();
-            if (!/^\d+$/.test(id) || !/^\d+$/.test(zone)) return;
+async function handleLogin(e) {
+    e.preventDefault();
+    const id = document.getElementById('login-id').value.trim();
+    const zone = document.getElementById('login-zone').value.trim();
+    
+    // 1. Input Validation
+    if (!/^\d+$/.test(id) || !/^\d+$/.test(zone)) return;
 
-            els.loginMsg.innerText = "Connecting...";
-            document.getElementById('btn-login').disabled = true;
+    els.loginMsg.innerText = "Connecting...";
+    document.getElementById('btn-login').disabled = true;
 
-            try {
-                // API check
-                const res = await fetch(`https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`);
-                const data = await res.json();
-                if (!data.success && !data.name && !data.nickname) throw new Error("Invalid ID");
-                
-                // DB check (Ban/Score)
-                const userDoc = await getDoc(doc(db, "players", id));
-                if (userDoc.exists() && userDoc.data().isBanned) {
-                    alert("ACCOUNT BANNED"); localStorage.clear(); location.reload(); return;
-                }
-
-                currentUser.id = id;
-                currentUser.ign = data.name || data.nickname;
-                currentUser.score = userDoc.exists() ? userDoc.data().score : 0;
-                localStorage.setItem('mlbb_id', id); localStorage.setItem('mlbb_zone', zone);
-
-                document.getElementById('screen-login').classList.add('hidden');
-                document.getElementById('screen-login').classList.remove('flex');
-                document.getElementById('screen-game').classList.remove('hidden');
-                document.getElementById('screen-game').classList.add('flex');
-                
-                els.playerIgn.innerText = currentUser.ign;
-                els.playerScore.innerText = currentUser.score;
-                
-                nextHero();
-                initChatSystem();
-                listenToServerCommands(); // Start listening
-                
-                // Background Rank Check
-                try {
-                    const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
-                    const snapshot = await getDocs(q);
-                    let rank=1, found=false;
-                    snapshot.forEach(doc => { if(doc.id===id) found=true; if(!found) rank++; });
-                    currentUser.rank = found ? `#${rank}` : "100+";
-                } catch(e) { currentUser.rank="?"; }
-
-            } catch(e) { 
-                console.error(e); els.loginMsg.innerText = "Login Failed"; 
-                localStorage.clear();
-            } finally {
-                document.getElementById('btn-login').disabled = false;
-            }
+    try {
+        // 2. External API Check
+        const res = await fetch(`https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`);
+        const data = await res.json();
+        
+        // Check if API returned a valid user
+        if (!data.success && !data.name && !data.nickname) {
+            throw new Error("Invalid ID");
         }
+        
+        // Get the IGN from the API
+        const fetchedIgn = data.name || data.nickname;
 
+        // 3. Database Check
+        const userRef = doc(db, "players", id);
+        const userDoc = await getDoc(userRef);
+
+        // --- CORE FIX STARTS HERE ---
+        if (userDoc.exists()) {
+            // OLD PLAYER: Check ban and load score
+            const userData = userDoc.data();
+            if (userData.isBanned) {
+                alert("ACCOUNT BANNED"); 
+                localStorage.clear(); 
+                location.reload(); 
+                return;
+            }
+            currentUser.score = userData.score || 0;
+        } else {
+            // NEW PLAYER: Create the document IMMEDIATELY
+            // This prevents the listener from kicking them out
+            currentUser.score = 0;
+            await setDoc(userRef, {
+                ign: fetchedIgn,
+                score: 0,
+                createdAt: serverTimestamp(),
+                isBanned: false,
+                zone: zone
+            });
+        }
+        // --- CORE FIX ENDS HERE ---
+
+        // 4. Set Local State
+        currentUser.id = id;
+        currentUser.ign = fetchedIgn;
+        
+        localStorage.setItem('mlbb_id', id); 
+        localStorage.setItem('mlbb_zone', zone);
+
+        // 5. Switch Screens
+        document.getElementById('screen-login').classList.add('hidden');
+        document.getElementById('screen-login').classList.remove('flex');
+        document.getElementById('screen-game').classList.remove('hidden');
+        document.getElementById('screen-game').classList.add('flex');
+        
+        els.playerIgn.innerText = currentUser.ign;
+        els.playerScore.innerText = currentUser.score;
+        
+        // 6. Start Game Logic
+        nextHero();
+        initChatSystem();
+        
+        // 7. Start Listener 
+        // (Now safe because the document is guaranteed to exist)
+        listenToServerCommands(); 
+        
+        // 8. Background Rank Check
+        try {
+            const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
+            const snapshot = await getDocs(q);
+            let rank=1, found=false;
+            snapshot.forEach(doc => { if(doc.id===id) found=true; if(!found) rank++; });
+            currentUser.rank = found ? `#${rank}` : "100+";
+        } catch(e) { currentUser.rank="?"; }
+
+    } catch(e) { 
+        console.error(e); 
+        els.loginMsg.innerText = "Login Failed: Check ID/Zone"; 
+        localStorage.removeItem('mlbb_id');
+        localStorage.removeItem('mlbb_zone');
+    } finally {
+        document.getElementById('btn-login').disabled = false;
+    }
+}
         // --- GAMEPLAY ---
         function nextHero() {
             els.guessInput.value = ""; els.guessInput.disabled = false; els.btnSubmit.disabled = false;
