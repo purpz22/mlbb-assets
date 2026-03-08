@@ -97,15 +97,14 @@
     <!-- LOGIN SCREEN -->
     <div id="screen-login" class="absolute inset-0 w-full max-w-sm mx-auto px-6 flex flex-col items-center z-10 transition-all duration-300 overflow-y-auto py-10 no-scrollbar gap-8">
         <!-- Logo -->
-        <div class="flex flex-col items-center justify-center relative w-full shrink-0 pt-6">
-            <div class="absolute inset-0 bg-indigo-500/20 blur-[60px] rounded-full w-32 h-32 mx-auto -z-10 mix-blend-screen pointer-events-none"></div>
-            <h1 class="text-[3.5rem] font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-cyan-400 to-indigo-400 drop-shadow-lg leading-none">GUESS</h1>
-            <h2 class="text-3xl font-black italic tracking-widest text-white leading-none mt-1">THE HERO</h2>
-            <div class="h-1 w-12 bg-indigo-500 rounded-full mt-4 shadow-[0_0_15px_rgba(99,102,241,0.8)]"></div>
-            <p class="mt-4 text-[11px] font-black text-cyan-300 uppercase tracking-[0.15em] text-center px-4 py-2 leading-relaxed bg-slate-900/60 rounded-full border border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
-                🏆 Top 1 Player Will win 1 <span class="text-white">EPIC skin</span> of their choice
-            </p>
-        </div>
+        <div class="mt-4 flex flex-col gap-1 items-center">
+    <p class="text-[10px] font-black text-yellow-400 uppercase tracking-[0.15em] bg-yellow-900/20 px-3 py-1 rounded-full border border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.2)]">
+        🥇 1st: Epic Skin
+    </p>
+    <p class="text-[10px] font-black text-purple-400 uppercase tracking-[0.15em] bg-purple-900/20 px-3 py-1 rounded-full border border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]">
+        🥈 2nd: Starlight Premium
+    </p>
+</div>
 
         <!-- Login Form -->
         <div class="w-full bg-slate-900/60 backdrop-blur-xl p-6 rounded-[2rem] border border-slate-700/50 shadow-2xl flex flex-col gap-4 relative shrink-0">
@@ -667,49 +666,68 @@ async function handleLogin(e) {
             }
         }
 
-        async function openLeaderboard(e) {
-            if(e) e.preventDefault(); history.pushState({ page: 'leaderboard' }, ''); 
-            document.getElementById('screen-game').classList.add('hidden'); document.getElementById('screen-game').classList.remove('flex');
-            document.getElementById('screen-leaderboard').classList.remove('hidden'); document.getElementById('screen-leaderboard').classList.add('flex');
-            if(isChatOpen) toggleChat(); els.chatToggle.classList.add('hidden');
-            const tbody = document.getElementById('lb-body'); tbody.innerHTML = '<tr class="w-full"><td class="text-center text-slate-500 py-10 font-bold">Loading...</td></tr>';
-            try {
-                const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
-                const snapshot = await getDocs(q); tbody.innerHTML = ""; let rank=1;
-                snapshot.forEach(doc => {
-                    const p = doc.data();
-                    const color = rank===1?"text-cyan-400":rank===2?"text-slate-200":rank===3?"text-indigo-400":"text-slate-500";
-                    tbody.innerHTML += `<tr class="w-full flex items-center bg-slate-900/60 border border-slate-800 rounded-2xl mb-2 px-4 py-3"><td class="font-black text-xl w-10 text-center ${color}">#${rank}</td><td class="font-bold text-white truncate flex-1 px-3">${p.ign.replace(/</g, "&lt;")}</td><td class="font-black text-white text-right w-16 text-lg">${p.score}</td></tr>`;
-                    rank++;
-                });
-            } catch(e) { tbody.innerHTML = "Error."; }
-        }
-        
-        function closeLeaderboard(e) {
-            if(e) e.preventDefault();
-            document.getElementById('screen-leaderboard').classList.add('hidden'); document.getElementById('screen-leaderboard').classList.remove('flex');
-            document.getElementById('screen-game').classList.remove('hidden'); document.getElementById('screen-game').classList.add('flex');
-            els.chatToggle.classList.remove('hidden');
-        }
+async function openLeaderboard(e) {
+    if(e) e.preventDefault(); 
+    history.pushState({ page: 'leaderboard' }, ''); 
+    
+    document.getElementById('screen-game').classList.add('hidden'); 
+    document.getElementById('screen-game').classList.remove('flex');
+    document.getElementById('screen-leaderboard').classList.remove('hidden'); 
+    document.getElementById('screen-leaderboard').classList.add('flex');
+    
+    if(isChatOpen) {
+        toggleChat(); 
+    }
+    els.chatToggle.classList.add('hidden');
 
-        async function searchPlayer(e) {
-            e.preventDefault();
-            const id = document.getElementById('search-id').value;
-            const res = document.getElementById('search-result'); res.classList.remove('hidden'); res.classList.add('flex');
-            document.getElementById('search-rank').innerText = "...";
-            try {
-                const q = query(collection(db, "players"), orderBy("score", "desc"));
-                const snapshot = await getDocs(q);
-                let rank=1, found=false;
-                for(const doc of snapshot.docs) {
-                    if(doc.id===id) {
-                        found=true; document.getElementById('search-rank').innerText=`#${rank}`;
-                        document.getElementById('search-details').innerHTML = `${doc.data().ign} • ${doc.data().score} pts`; break;
-                    } rank++;
-                }
-                if(!found) { document.getElementById('search-rank').innerText="-"; document.getElementById('search-details').innerText="Not found"; }
-            } catch(e) { document.getElementById('search-rank').innerText="!"; }
-        }
+    const tbody = document.getElementById('lb-body'); 
+    tbody.innerHTML = '<tr class="w-full"><td class="text-center text-slate-500 py-10 font-bold animate-pulse">Loading Ranks...</td></tr>';
+
+    try {
+        const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
+        const snapshot = await getDocs(q); 
+        tbody.innerHTML = ""; 
+        let rank = 1;
+
+        snapshot.forEach(doc => {
+            const p = doc.data();
+            
+            // Define styling based on rank
+            let rankColor = "text-slate-500";
+            let bgClass = "bg-slate-900/60 border-slate-800";
+            let prizeBadge = "";
+
+            if (rank === 1) {
+                rankColor = "text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]";
+                bgClass = "bg-yellow-950/30 border-yellow-500/30 shadow-[inset_0_0_20px_rgba(250,204,21,0.1)]";
+                prizeBadge = `<div class="text-[9px] text-yellow-300 font-black uppercase tracking-wider bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20 w-fit mt-1 flex items-center gap-1">🏆 Epic Skin</div>`;
+            } else if (rank === 2) {
+                rankColor = "text-purple-400 drop-shadow-[0_0_5px_rgba(192,132,252,0.5)]";
+                bgClass = "bg-purple-950/30 border-purple-500/30 shadow-[inset_0_0_20px_rgba(192,132,252,0.1)]";
+                prizeBadge = `<div class="text-[9px] text-purple-300 font-black uppercase tracking-wider bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20 w-fit mt-1 flex items-center gap-1">🌟 Starlight Prem</div>`;
+            } else if (rank === 3) {
+                rankColor = "text-indigo-400";
+            } else {
+                rankColor = "text-slate-500";
+            }
+
+            // Construct the row
+            tbody.innerHTML += `
+                <tr class="w-full flex items-center ${bgClass} border rounded-2xl mb-2 px-4 py-3 relative overflow-hidden transition-all hover:scale-[1.01]">
+                    <td class="font-black text-2xl w-10 text-center ${rankColor} italic">#${rank}</td>
+                    <td class="flex flex-col justify-center flex-1 px-3 min-w-0">
+                        <span class="font-bold text-white truncate text-base leading-none">${p.ign.replace(/</g, "&lt;")}</span>
+                        ${prizeBadge}
+                    </td>
+                    <td class="font-black text-white text-right w-16 text-lg tracking-wider">${p.score}</td>
+                </tr>`;
+            rank++;
+        });
+    } catch(e) { 
+        console.error(e);
+        tbody.innerHTML = `<tr class="w-full"><td class="text-center text-rose-500 py-10 font-bold">Failed to load rankings.</td></tr>`; 
+    }
+}
     </script>
 </body>
 </html>
