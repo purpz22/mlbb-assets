@@ -586,35 +586,52 @@ async function handleLogin(e) {
             lockGame(3000);
         }
 
-        async function checkGuess(e) {
-            e.preventDefault();
-            if (!isGameActive) return;
-            const guess = els.guessInput.value.toLowerCase().replace(/[^a-z0-9]/g, '');
-            const answer = currentHero.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+async function checkGuess(e) {
+    e.preventDefault();
+    if (!isGameActive) return;
+    
+    const guess = els.guessInput.value.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const answer = currentHero.name.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-            if (guess === answer) {
-                clearInterval(timerInterval); isGameActive = false; els.timerBar.style.transition = 'none'; 
-                if(globalEventX2) { currentUser.score += 2; els.feedback.innerText = "CORRECT! (+2 POINTS)"; } 
-                else { currentUser.score++; els.feedback.innerText = "CORRECT!"; }
-                els.feedback.className = "text-center font-black text-xl h-7 text-cyan-400 tracking-[0.2em] drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] flex items-center justify-center";
-                els.playerScore.innerText = currentUser.score;
-                fireCustomConfetti(); lockGame(1500); saveScore(); 
-            } else {
-                els.guessInput.value = ""; els.feedback.innerText = "WRONG!"; els.feedback.className = "text-center font-bold text-xl h-7 tracking-wide flex items-center justify-center text-rose-500";
-                els.heroBox.classList.add('animate-error'); setTimeout(() => els.heroBox.classList.remove('animate-error'), 400);
-            }
+    if (guess === answer) {
+        // --- CORRECT GUESS ---
+        clearInterval(timerInterval); 
+        isGameActive = false; 
+        els.timerBar.style.transition = 'none'; 
+        
+        if (globalEventX2) { 
+            currentUser.score += 2; 
+            els.feedback.innerText = "CORRECT! (+2 POINTS)"; 
+        } else { 
+            currentUser.score++; 
+            els.feedback.innerText = "CORRECT!"; 
         }
-
-        function lockGame(delay) {
-            els.guessInput.disabled = true; els.btnSubmit.disabled = true;
-            setTimeout(nextHero, delay);
-        }
-
-        function saveScore() {
-            if (!navigator.onLine) return; 
-            setDoc(doc(db, "players", currentUser.id), { ign: currentUser.ign, score: currentUser.score, updatedAt: new Date() }, { merge: true });
-        }
-
+        
+        els.feedback.className = "text-center font-black text-xl h-7 text-cyan-400 tracking-[0.2em] drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] flex items-center justify-center";
+        els.playerScore.innerText = currentUser.score;
+        
+        fireCustomConfetti(); 
+        lockGame(1500); 
+        saveScore(); 
+        
+    } else {
+        // --- WRONG GUESS (UPDATED) ---
+        clearInterval(timerInterval); // Stop the timer immediately
+        isGameActive = false; // Lock the game state
+        els.timerBar.style.transition = 'none'; // Stop the timer bar animation
+        
+        els.guessInput.value = ""; 
+        els.feedback.innerText = `WRONG! It was ${currentHero.name}`; // Show them the real answer
+        els.feedback.className = "text-center font-bold text-lg h-7 tracking-wide flex items-center justify-center text-rose-500 uppercase";
+        
+        // Play the red shake animation
+        els.heroBox.classList.add('animate-error'); 
+        setTimeout(() => els.heroBox.classList.remove('animate-error'), 400);
+        
+        // Immediately skip to the next hero (1.5s delay so they can read the correct answer)
+        lockGame(1500);
+    }
+}
         // --- CHAT SYSTEM ---
         function initChatSystem() {
             const q = query(collection(db, "messages"), orderBy("timestamp", "desc"), limit(30));
