@@ -732,7 +732,7 @@ async function checkGuess(e) {
             });
         }
 
-        function function toggleChat() {
+        function toggleChat() {
             // Get fresh elements directly from the HTML to prevent "null" errors
             const chatContainer = document.getElementById('chat-container');
             const chatToggle = document.getElementById('btn-chat-toggle');
@@ -767,6 +767,28 @@ async function checkGuess(e) {
             e.preventDefault();
             toggleChat();
         };
+
+        async function sendChatMessage(e) {
+            e.preventDefault();
+            const text = els.chatInput.value.trim();
+            if (!text) return;
+            
+            els.chatInput.value = ""; 
+            els.chatInput.focus();
+            
+            try {
+                // Save to Firebase
+                await addDoc(collection(db, "messages"), { 
+                    ign: currentUser.ign, 
+                    rank: currentUser.rank || "N/A", 
+                    text: text, 
+                    timestamp: serverTimestamp() 
+                });
+            } catch (err) {
+                console.error("Chat Error:", err);
+                alert("Failed to send message. Check Firebase Database Rules.");
+            }
+        }
 
         function addMessageToUI(data) {
             const div = document.createElement('div'); 
