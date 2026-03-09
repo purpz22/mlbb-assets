@@ -614,91 +614,158 @@ async function handleLogin(e) {
     }
 }
         // --- GAMEPLAY ---
+// --- GAMEPLAY ---
         function nextHero() {
-            els.guessInput.value = ""; els.guessInput.disabled = false; els.btnSubmit.disabled = false;
-            els.feedback.innerText = ""; els.debugMsg.classList.add('hidden'); els.heroImg.style.display = 'block';
-            els.timerBar.style.backgroundColor = "#22d3ee"; 
+            try {
+                // 1. Reset all UI elements
+                els.guessInput.value = ""; 
+                els.guessInput.disabled = false; 
+                els.btnSubmit.disabled = false;
+                els.feedback.innerText = ""; 
+                els.debugMsg.classList.add('hidden'); 
+                els.heroImg.style.display = 'block';
+                els.timerBar.style.backgroundColor = "#22d3ee"; 
 
-            currentHero = heroes[Math.floor(Math.random() * heroes.length)];
-            els.heroImg.src = currentHero.icon_path;
-            
-            els.guessInput.placeholder = globalEventFirstLetter ? `Starts with: ${currentHero.name.charAt(0).toUpperCase()}` : "ENTER HERO";
-            setTimeout(() => els.guessInput.focus(), 100);
-            startTimer();
+                // 2. Pick a new random hero
+                currentHero = heroes[Math.floor(Math.random() * heroes.length)];
+                els.heroImg.src = currentHero.icon_path;
+                
+                // 3. Set Placeholder Text
+                els.guessInput.placeholder = globalEventFirstLetter ? `Starts with: ${currentHero.name.charAt(0).toUpperCase()}` : "ENTER HERO";
+                
+                // 4. Focus the input box safely
+                setTimeout(() => {
+                    if (!els.guessInput.disabled) els.guessInput.focus();
+                }, 100);
+                
+                // 5. Start the clock
+                startTimer();
+            } catch (err) {
+                console.error("Game Loop Error (nextHero):", err);
+                // If it crashes, force it to try again so the game doesn't freeze
+                setTimeout(nextHero, 1000);
+            }
         }
 
         function startTimer() {
+            // Clear any old timers just in case
             if (timerInterval) clearInterval(timerInterval);
             isGameActive = true;
             let timeLeft = 15;
             els.timerText.innerText = `${timeLeft}s`;
-            els.timerBar.style.transition = 'none'; els.timerBar.style.transform = 'scaleX(1)'; void els.timerBar.offsetWidth; 
+            
+            // Reset the shrinking animation bar
+            els.timerBar.style.transition = 'none'; 
+            els.timerBar.style.transform = 'scaleX(1)'; 
+            void els.timerBar.offsetWidth; // Force CSS refresh
+            
+            // Start the shrink animation
             els.timerBar.style.transition = `transform 15s linear, background-color 0.3s`;
             els.timerBar.style.transform = 'scaleX(0)';
 
+            // Start the countdown
             timerInterval = setInterval(() => {
-                timeLeft--; els.timerText.innerText = `${timeLeft}s`;
-                if (timeLeft <= 5) els.timerBar.style.backgroundColor = "#f43f5e"; 
-                if (timeLeft <= 0) { clearInterval(timerInterval); timeIsUp(); }
+                if (!isGameActive) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+                
+                timeLeft--; 
+                els.timerText.innerText = `${timeLeft}s`;
+                
+                if (timeLeft <= 5) els.timerBar.style.backgroundColor = "#f43f5e"; // Turn red
+                
+                if (timeLeft <= 0) { 
+                    clearInterval(timerInterval); 
+                    timeIsUp(); 
+                }
             }, 1000);
         }
 
         function timeIsUp() {
             isGameActive = false;
             els.feedback.innerText = `Time's Up! It was ${currentHero.name}`;
-            els.feedback.className = "text-center font-bold text-xl h-7 tracking-wide flex items-center justify-center text-rose-500";
+            els.feedback.className = "text-center font-bold text-xl h-7 tracking-wide flex items-center justify-center text-rose-500 uppercase";
+            
+            // Red shake animation
             els.heroBox.classList.add('animate-error');
-            setTimeout(() => { els.heroBox.classList.remove('animate-error'); }, 400);
+            setTimeout(() => els.heroBox.classList.remove('animate-error'), 400);
+            
+            // Wait 3 seconds, then next hero
             lockGame(3000);
         }
 
-async function checkGuess(e) {
-    e.preventDefault();
-    if (!isGameActive) return;
-    
-    const guess = els.guessInput.value.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const answer = currentHero.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        async function checkGuess(e) {
+            e.preventDefault();
+            if (!isGameActive) return;
+            
+            const guess = els.guessInput.value.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const answer = currentHero.name.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-    if (guess === answer) {
-        // --- CORRECT GUESS ---
-        clearInterval(timerInterval); 
-        isGameActive = false; 
-        els.timerBar.style.transition = 'none'; 
-        
-        if (globalEventX2) { 
-            currentUser.score += 2; 
-            els.feedback.innerText = "CORRECT! (+2 POINTS)"; 
-        } else { 
-            currentUser.score++; 
-            els.feedback.innerText = "CORRECT!"; 
+            if (guess === answer) {
+                // --- CORRECT ---
+                clearInterval(timerInterval); 
+                isGameActive = false; 
+                els.timerBar.style.transition = 'none'; 
+                
+                if (globalEventX2) { 
+                    currentUser.score += 2; 
+                    els.feedback.innerText = "CORRECT! (+2 POINTS)"; 
+                } else { 
+                    currentUser.score++; 
+                    els.feedback.innerText = "CORRECT!"; 
+                }
+                
+                els.feedback.className = "text-center font-black text-xl h-7 text-cyan-400 tracking-[0.2em] drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] flex items-center justify-center";
+                els.playerScore.innerText = currentUser.score;
+                
+                fireCustomConfetti(); 
+                saveScore(); 
+                
+                // Wait 1.5 seconds, then next hero
+                lockGame(1500); 
+            } else {
+                // --- WRONG ---
+                clearInterval(timerInterval); 
+                isGameActive = false; 
+                els.timerBar.style.transition = 'none'; 
+                
+                els.guessInput.value = ""; 
+                els.feedback.innerText = `WRONG! It was ${currentHero.name}`; 
+                els.feedback.className = "text-center font-bold text-lg h-7 tracking-wide flex items-center justify-center text-rose-500 uppercase";
+                
+                els.heroBox.classList.add('animate-error'); 
+                setTimeout(() => els.heroBox.classList.remove('animate-error'), 400);
+                
+                // Wait 1.5 seconds so they can read the answer, then next hero
+                lockGame(1500);
+            }
         }
-        
-        els.feedback.className = "text-center font-black text-xl h-7 text-cyan-400 tracking-[0.2em] drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] flex items-center justify-center";
-        els.playerScore.innerText = currentUser.score;
-        
-        fireCustomConfetti(); 
-        lockGame(1500); 
-        saveScore(); 
-        
-    } else {
-        // --- WRONG GUESS (UPDATED) ---
-        clearInterval(timerInterval); // Stop the timer immediately
-        isGameActive = false; // Lock the game state
-        els.timerBar.style.transition = 'none'; // Stop the timer bar animation
-        
-        els.guessInput.value = ""; 
-        els.feedback.innerText = `WRONG! It was ${currentHero.name}`; // Show them the real answer
-        els.feedback.className = "text-center font-bold text-lg h-7 tracking-wide flex items-center justify-center text-rose-500 uppercase";
-        
-        // Play the red shake animation
-        els.heroBox.classList.add('animate-error'); 
-        setTimeout(() => els.heroBox.classList.remove('animate-error'), 400);
-        
-        // Immediately skip to the next hero (1.5s delay so they can read the correct answer)
-        lockGame(1500);
-    }
-}
-        // --- CHAT SYSTEM ---
+
+        function lockGame(delay) {
+            // Disable inputs so they can't type while it transitions
+            els.guessInput.disabled = true; 
+            els.btnSubmit.disabled = true;
+            
+            // Force the next hero to load after the delay
+            setTimeout(() => {
+                nextHero();
+            }, delay);
+        }
+
+        async function saveScore() {
+            if (!navigator.onLine) return; 
+            try {
+                await setDoc(doc(db, "players", currentUser.id), { 
+                    ign: currentUser.ign, 
+                    score: currentUser.score, 
+                    updatedAt: new Date() 
+                }, { merge: true });
+            } catch (err) {
+                console.error("Failed to save score:", err);
+            }
+        }
+                // --- CHAT SYSTEM ---
  let isInitialLoad = true;
 
         function initChatSystem() {
