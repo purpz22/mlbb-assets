@@ -202,6 +202,18 @@
             </button>
         </div>
 
+        <!-- SPOTIFY RADIO WIDGET -->
+        <button id="btn-radio-toggle" class="absolute top-20 right-4 w-10 h-10 bg-slate-900/80 backdrop-blur-md rounded-full shadow-lg z-40 flex items-center justify-center border border-green-500/50 active:scale-90 transition-all hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.563.387-.857.207-2.35-1.434-5.305-1.76-8.786-.963-.335.077-.67-.133-.746-.47-.077-.334.132-.67.47-.745 3.808-.87 7.076-.496 9.712 1.115.293.18.386.563.207.856zm1.268-2.833c-.227.366-.706.48-1.072.253-2.687-1.65-6.785-2.13-9.965-1.166-.413.127-.848-.106-.973-.517-.125-.413.108-.848.52-.973 3.632-1.1 8.147-.563 11.237 1.332.365.226.48.705.253 1.07zm.106-2.94c-3.23-1.92-8.56-2.096-11.64-1.16-.497.15-1.016-.13-1.166-.625-.15-.498.13-1.018.626-1.168 3.53-1.073 9.405-.866 13.115 1.337.445.264.59.838.327 1.282-.264.443-.838.59-1.282.325z"/></svg>
+        </button>
+        
+        <div id="radio-container" class="absolute top-32 right-4 w-[300px] z-50 hidden transition-all duration-300">
+            <div class="bg-slate-900/95 backdrop-blur-2xl border border-green-500/30 rounded-2xl shadow-2xl p-2 relative">
+                <button id="btn-radio-close" class="absolute -top-3 -right-3 bg-slate-800 text-slate-400 hover:text-white border border-slate-600 rounded-full p-1 shadow-md z-10"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                <iframe id="spotify-player" style="border-radius:12px" src="" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+            </div>
+        </div>
+
         <!-- CHAT -->
         <div id="chat-toasts" class="absolute bottom-[200px] left-4 right-4 flex flex-col items-start gap-2 pointer-events-none z-30"></div>
         <button id="btn-chat-toggle" class="absolute bottom-6 right-6 w-12 h-12 bg-indigo-600 rounded-full shadow-[0_0_20px_rgba(79,70,229,0.5)] z-40 flex items-center justify-center border border-indigo-400/50 active:scale-90 transition-all hover:bg-indigo-500">
@@ -355,34 +367,37 @@
                         els.guessInput.placeholder = globalEventFirstLetter ? `Starts with: ${currentHero.name.charAt(0).toUpperCase()}` : "ENTER HERO";
                     }
 
-                    // 3. Music (Fixed: Instant Playback Without Refresh)
+                // 3. Music (Spotify Iframe Method)
+                    const spotifyIframe = document.getElementById('spotify-player');
+                    const radioToggleBtn = document.getElementById('btn-radio-toggle');
+                    const radioContainerDiv = document.getElementById('radio-container');
+
                     if(state.musicUrl && state.musicUrl.trim() !== "") {
                         if(activeMusicUrl !== state.musicUrl) {
-                            if(currentMusic) {
-                                currentMusic.pause();
-                                currentMusic.src = ""; // Free memory
-                            }
                             activeMusicUrl = state.musicUrl;
-                            currentMusic = new Audio(activeMusicUrl);
-                            currentMusic.loop = true;
-                            currentMusic.volume = 0.5;
                             
-                            // Attempt to play instantly
-                            currentMusic.play().then(() => {
-                                isMusicPlaying = true;
-                            }).catch(e => {
-                                console.log("Audio blocked by browser, waiting for interaction.");
-                                isMusicPlaying = false;
-                            });
+                            // Check if it's a Spotify Embed Link
+                            if(activeMusicUrl.includes("spotify.com/embed")) {
+                                spotifyIframe.src = activeMusicUrl;
+                                // Show the radio button if it was hidden
+                                if(radioContainerDiv.classList.contains('hidden')) {
+                                    radioToggleBtn.classList.remove('hidden');
+                                }
+                            } else {
+                                // Fallback just in case you use an MP3 link instead of Spotify later
+                                if(currentMusic) { currentMusic.pause(); currentMusic.src = ""; }
+                                currentMusic = new Audio(activeMusicUrl);
+                                currentMusic.loop = true; currentMusic.volume = 0.5;
+                                currentMusic.play().catch(e => console.log("Waiting for interaction"));
+                            }
                         }
                     } else {
-                        if (currentMusic) {
-                            currentMusic.pause();
-                            currentMusic.src = "";
-                            currentMusic = null;
-                        }
+                        // Admin cleared the music
                         activeMusicUrl = null;
-                        isMusicPlaying = false;
+                        spotifyIframe.src = "";
+                        radioToggleBtn.classList.add('hidden');
+                        radioContainerDiv.classList.add('hidden');
+                        if (currentMusic) { currentMusic.pause(); currentMusic = null; }
                     }
 
                     // 4. DRAMATIC BROADCAST (Fixed)
@@ -444,6 +459,19 @@
         els.heroImg.addEventListener('error', () => { els.heroImg.style.display='none'; els.debugMsg.innerText=`Missing: ${els.heroImg.src}`; els.debugMsg.classList.remove('hidden'); });
         window.addEventListener('popstate', (e) => {
             closeLeaderboard();
+        });
+        // Radio Toggle
+        const radioToggle = document.getElementById('btn-radio-toggle');
+        const radioContainer = document.getElementById('radio-container');
+        const radioClose = document.getElementById('btn-radio-close');
+
+        radioToggle.addEventListener('click', () => {
+            radioContainer.classList.remove('hidden');
+            radioToggle.classList.add('hidden');
+        });
+        radioClose.addEventListener('click', () => {
+            radioContainer.classList.add('hidden');
+            radioToggle.classList.remove('hidden');
         });
         // Chat
         els.chatToggle.addEventListener('click', toggleChat);
