@@ -6,17 +6,19 @@
     <meta name="theme-color" content="#020617">
     <title>MLBB Guess Hero</title>
     
-    <!-- CSP: Allows Audio from any HTTPS source -->
+<!-- CSP: Allows Custom YT Music API Streaming -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self'; 
-        script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://www.gstatic.com https://www.tiktok.com https://*.tiktok.com https://*.tiktokcdn.com https://*.ttwstatic.com; 
-        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.tiktok.com; 
+        script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://www.gstatic.com; 
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; 
         font-src https://fonts.gstatic.com; 
-        img-src 'self' data: https: http: https://*.tiktokcdn.com https://*.ibyteimg.com; 
-        media-src 'self' https: http: data: blob:;
-        connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app https://api.isan.eu.org https://corsproxy.io wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://www.tiktok.com https://*.tiktok.com https://*.tiktokcdn.com https://*.ttwstatic.com; 
-        frame-src https://www.tiktok.com https://*.tiktok.com;
+        img-src 'self' data: https: http: https://*.ytimg.com https://*.ggpht.com; 
+        media-src 'self' https: http: data: blob: https://*.googlevideo.com;
+connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://api.isan.eu.org http://127.0.0.1:5000 http://localhost:5000;        frame-src 'self';
     ">
+
+    <!-- Elfsight Core Script -->
+    <script src="https://elfsightcdn.com/platform.js" async></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -202,15 +204,44 @@
             </button>
         </div>
 
-        <!-- SPOTIFY RADIO WIDGET -->
-        <button id="btn-radio-toggle" class="absolute top-20 right-4 w-10 h-10 bg-slate-900/80 backdrop-blur-md rounded-full shadow-lg z-40 flex items-center justify-center border border-green-500/50 active:scale-90 transition-all hidden">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.563.387-.857.207-2.35-1.434-5.305-1.76-8.786-.963-.335.077-.67-.133-.746-.47-.077-.334.132-.67.47-.745 3.808-.87 7.076-.496 9.712 1.115.293.18.386.563.207.856zm1.268-2.833c-.227.366-.706.48-1.072.253-2.687-1.65-6.785-2.13-9.965-1.166-.413.127-.848-.106-.973-.517-.125-.413.108-.848.52-.973 3.632-1.1 8.147-.563 11.237 1.332.365.226.48.705.253 1.07zm.106-2.94c-3.23-1.92-8.56-2.096-11.64-1.16-.497.15-1.016-.13-1.166-.625-.15-.498.13-1.018.626-1.168 3.53-1.073 9.405-.866 13.115 1.337.445.264.59.838.327 1.282-.264.443-.838.59-1.282.325z"/></svg>
+<!-- CUSTOM YT MUSIC ENGINE -->
+        <button id="btn-radio-toggle" class="absolute top-20 right-4 w-10 h-10 bg-slate-900/90 backdrop-blur-md rounded-full shadow-[0_0_15px_rgba(239,68,68,0.3)] z-40 flex items-center justify-center border border-red-500/50 active:scale-90 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 pointer-events-none" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
         </button>
         
-        <div id="radio-container" class="absolute top-32 right-4 w-[300px] z-50 hidden transition-all duration-300">
-            <div class="bg-slate-900/95 backdrop-blur-2xl border border-green-500/30 rounded-2xl shadow-2xl p-2 relative">
-                <button id="btn-radio-close" class="absolute -top-3 -right-3 bg-slate-800 text-slate-400 hover:text-white border border-slate-600 rounded-full p-1 shadow-md z-10"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
-                <iframe id="spotify-player" style="border-radius:12px" src="" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        <div id="radio-container" class="absolute top-32 right-4 w-[280px] z-50 hidden transition-all duration-300">
+            <div class="bg-slate-900/95 backdrop-blur-2xl border border-red-500/30 rounded-2xl shadow-2xl p-4 relative flex flex-col gap-3">
+                <button id="btn-radio-close" class="absolute -top-3 -right-3 bg-slate-800 text-slate-400 hover:text-white border border-slate-600 rounded-full p-1.5 shadow-md z-10">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+                
+                <p class="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] text-center flex items-center justify-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+                    YT Music
+                </p>
+                
+                <!-- Search Form -->
+                <form id="form-yt-search" class="flex gap-2 w-full">
+                    <input type="text" id="yt-search-input" placeholder="Search song..." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-red-500 shadow-inner" autocomplete="off" required>
+                    <button type="submit" id="btn-yt-search" class="bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-bold active:scale-95 transition-all flex items-center justify-center min-w-[60px]">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </button>
+                </form>
+
+                <!-- Now Playing UI -->
+                <div id="yt-player-ui" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center gap-3 hidden mt-1">
+                    <img id="yt-thumb" src="" class="w-12 h-12 rounded-md object-cover animate-[spin_10s_linear_infinite]" style="animation-play-state: paused;">
+                    <div class="flex-1 min-w-0 flex flex-col justify-center">
+                        <p id="yt-title" class="text-xs font-bold text-white truncate w-full">Loading...</p>
+                        <p id="yt-artist" class="text-[10px] text-slate-400 truncate w-full">Please wait</p>
+                    </div>
+                    <button id="btn-yt-playpause" class="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center shrink-0 active:scale-90 transition-all shadow-[0_0_10px_rgba(220,38,38,0.5)]">
+                        <svg id="icon-pause" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        <svg id="icon-play" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </button>
+                </div>
+                
+                <p id="yt-error" class="text-[10px] text-red-400 text-center font-bold hidden"></p>
             </div>
         </div>
 
@@ -275,7 +306,7 @@
     </div>
 </div>
     <!-- APP LOGIC -->
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, addDoc, collection, query, orderBy, getDocs, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -293,10 +324,9 @@
         let globalEventX2 = false;
         let globalEventFirstLetter = false;
         let currentMusic = null;
-        let activeMusicUrl = null; // Fix: We track the raw URL to prevent instant recreation loop
+        let activeMusicUrl = null; 
         let isMusicPlaying = false;
         
-        // VINE BOOM
         const vineBoomAudio = new Audio("https://www.myinstants.com/media/sounds/vine-boom.mp3");
 
         // --- HERO DATA ---
@@ -335,8 +365,6 @@
             btnSubmit: document.getElementById('btn-submit'),
             heroBox: document.getElementById('hero-box'),
             chatContainer: document.getElementById('chat-container'),
-            chatToggle: document.getElementById('btn-chat-toggle'),
-            chatClose: document.getElementById('btn-chat-close'),
             chatInput: document.getElementById('chat-input'),
             chatForm: document.getElementById('form-chat'),
             chatMessages: document.getElementById('chat-messages'),
@@ -345,12 +373,11 @@
 
         // --- CORE LOGIC ---
         function listenToServerCommands() {
-            // GLOBAL COMMANDS
             onSnapshot(doc(db, "server", "state"), (docSnap) => {
                 if(docSnap.exists()) {
                     const state = docSnap.data();
                     
-                    // 1. Refresh
+                    // 1. Refresh Trigger
                     const lastRefresh = localStorage.getItem('last_refresh');
                     if(state.refreshTrigger) {
                         const triggerTime = state.refreshTrigger.toMillis ? state.refreshTrigger.toMillis().toString() : "";
@@ -367,7 +394,7 @@
                         els.guessInput.placeholder = globalEventFirstLetter ? `Starts with: ${currentHero.name.charAt(0).toUpperCase()}` : "ENTER HERO";
                     }
 
-                // 3. Music (Spotify Iframe Method)
+                    // 3. Spotify Radio / MP3 System
                     const spotifyIframe = document.getElementById('spotify-player');
                     const radioToggleBtn = document.getElementById('btn-radio-toggle');
                     const radioContainerDiv = document.getElementById('radio-container');
@@ -376,15 +403,17 @@
                         if(activeMusicUrl !== state.musicUrl) {
                             activeMusicUrl = state.musicUrl;
                             
-                            // Check if it's a Spotify Embed Link
                             if(activeMusicUrl.includes("spotify.com/embed")) {
+                                // It's Spotify! Stop normal MP3 if playing
+                                if (currentMusic) { currentMusic.pause(); currentMusic.src = ""; }
                                 spotifyIframe.src = activeMusicUrl;
-                                // Show the radio button if it was hidden
-                                if(radioContainerDiv.classList.contains('hidden')) {
-                                    radioToggleBtn.classList.remove('hidden');
-                                }
+                                if(radioContainerDiv.classList.contains('hidden')) radioToggleBtn.classList.remove('hidden');
                             } else {
-                                // Fallback just in case you use an MP3 link instead of Spotify later
+                                // It's an MP3 Link! Hide Spotify
+                                spotifyIframe.src = ""; 
+                                radioToggleBtn.classList.add('hidden');
+                                radioContainerDiv.classList.add('hidden');
+                                
                                 if(currentMusic) { currentMusic.pause(); currentMusic.src = ""; }
                                 currentMusic = new Audio(activeMusicUrl);
                                 currentMusic.loop = true; currentMusic.volume = 0.5;
@@ -392,38 +421,27 @@
                             }
                         }
                     } else {
-                        // Admin cleared the music
                         activeMusicUrl = null;
-                        spotifyIframe.src = "";
-                        radioToggleBtn.classList.add('hidden');
-                        radioContainerDiv.classList.add('hidden');
-                        if (currentMusic) { currentMusic.pause(); currentMusic = null; }
+                        if(spotifyIframe) spotifyIframe.src = "";
+                        if(radioToggleBtn) radioToggleBtn.classList.add('hidden');
+                        if(radioContainerDiv) radioContainerDiv.classList.add('hidden');
+                        if(currentMusic) { currentMusic.pause(); currentMusic = null; }
                     }
 
-                    // 4. DRAMATIC BROADCAST (Fixed)
+                    // 4. Broadcast Event
                     if(state.broadcastTrigger && state.broadcastTrigger.toMillis) {
                         const triggerTime = state.broadcastTrigger.toMillis().toString();
                         const lastBroadcast = localStorage.getItem('last_broadcast');
                         if(lastBroadcast !== triggerTime) {
                             localStorage.setItem('last_broadcast', triggerTime);
-                            
-                            // A. Sound
-                            vineBoomAudio.currentTime = 0;
-                            vineBoomAudio.volume = 1.0;
-                            vineBoomAudio.play().catch(e => console.log("Boom blocked"));
-                            
-                            // B. Visuals
+                            vineBoomAudio.currentTime = 0; vineBoomAudio.volume = 1.0; vineBoomAudio.play().catch(e => {});
                             const overlay = document.getElementById('screen-broadcast');
                             const box = document.getElementById('broadcast-box');
                             const text = document.getElementById('broadcast-text');
-                            
                             if(overlay && box && text) {
                                 text.innerText = state.broadcastMsg || "ATTENTION!";
-                                overlay.classList.remove('hidden');
-                                overlay.classList.add('flex');
-                                box.classList.remove('animate-boom');
-                                void box.offsetWidth; 
-                                box.classList.add('animate-boom');
+                                overlay.classList.remove('hidden'); overlay.classList.add('flex');
+                                box.classList.remove('animate-boom'); void box.offsetWidth; box.classList.add('animate-boom');
                                 setTimeout(() => { overlay.classList.add('hidden'); overlay.classList.remove('flex'); }, 6000);
                             }
                         }
@@ -431,121 +449,48 @@
                 }
             });
 
-            // PERSONAL (Ban/Score)
+            // Player Ban/Score Listener
             if(currentUser.id) {
                 onSnapshot(doc(db, "players", currentUser.id), (docSnap) => {
                     if(docSnap.exists()) {
                         const data = docSnap.data();
-                        if(data.isBanned) {
-                            alert("BANNED."); localStorage.removeItem('mlbb_id'); window.location.reload();
-                        }
-                        if(data.score !== currentUser.score) {
-                            currentUser.score = data.score;
-                            els.playerScore.innerText = currentUser.score;
-                        }
-                    } else {
-                        localStorage.removeItem('mlbb_id'); window.location.reload();
-                    }
+                        if(data.isBanned) { alert("BANNED."); localStorage.removeItem('mlbb_id'); window.location.reload(); }
+                        if(data.score !== currentUser.score) { currentUser.score = data.score; els.playerScore.innerText = currentUser.score; }
+                    } else { localStorage.removeItem('mlbb_id'); window.location.reload(); }
                 });
             }
         }
 
-        // --- EVENT LISTENERS ---
-        document.getElementById('form-login').addEventListener('submit', handleLogin);
-        document.getElementById('form-guess').addEventListener('submit', checkGuess);
-        document.getElementById('btn-show-leaderboard').addEventListener('click', openLeaderboard);
-        document.getElementById('btn-close-leaderboard').addEventListener('click', closeLeaderboard);
-        document.getElementById('form-search').addEventListener('submit', searchPlayer);
-        els.heroImg.addEventListener('error', () => { els.heroImg.style.display='none'; els.debugMsg.innerText=`Missing: ${els.heroImg.src}`; els.debugMsg.classList.remove('hidden'); });
-        window.addEventListener('popstate', (e) => {
-            closeLeaderboard();
-        });
-        // Radio Toggle
-        const radioToggle = document.getElementById('btn-radio-toggle');
-        const radioContainer = document.getElementById('radio-container');
-        const radioClose = document.getElementById('btn-radio-close');
-
-        radioToggle.addEventListener('click', () => {
-            radioContainer.classList.remove('hidden');
-            radioToggle.classList.add('hidden');
-        });
-        radioClose.addEventListener('click', () => {
-            radioContainer.classList.add('hidden');
-            radioToggle.classList.remove('hidden');
-        });
-        // Chat
-        els.chatToggle.addEventListener('click', toggleChat);
-        els.chatClose.addEventListener('click', toggleChat);
-        els.chatForm.addEventListener('submit', sendChatMessage);
-
-        // Music Force Start on Interaction (Expanded to catch any input/touches)
-        const unlockMusic = () => {
-            if(currentMusic && currentMusic.paused) {
-                currentMusic.play().then(() => isMusicPlaying = true).catch(e => console.log(e));
-            }
-        };
-        document.body.addEventListener('click', unlockMusic, { passive: true });
-        document.body.addEventListener('touchstart', unlockMusic, { passive: true });
-        document.body.addEventListener('keydown', unlockMusic, { passive: true });
-
         // --- INSTANT AUTO-LOGIN ---
         window.addEventListener('DOMContentLoaded', () => {
-    // 1. Pre-fill the input boxes with the last used ID/Zone
-    const lastId = localStorage.getItem('last_mlbb_id');
-    const lastZone = localStorage.getItem('last_mlbb_zone');
-    if (lastId) document.getElementById('login-id').value = lastId;
-    if (lastZone) document.getElementById('login-zone').value = lastZone;
+            const lastId = localStorage.getItem('last_mlbb_id');
+            const lastZone = localStorage.getItem('last_mlbb_zone');
+            if (lastId) document.getElementById('login-id').value = lastId;
+            if (lastZone) document.getElementById('login-zone').value = lastZone;
 
-    // 2. Perform auto-login if they haven't explicitly logged out
-    const savedId = localStorage.getItem('mlbb_id');
-    const savedZone = localStorage.getItem('mlbb_zone');
-    
-    if (savedId && savedZone) {
-        performAutoLogin(savedId, savedZone);
-    }
-});
+            const savedId = localStorage.getItem('mlbb_id');
+            const savedZone = localStorage.getItem('mlbb_zone');
+            if (savedId && savedZone) performAutoLogin(savedId, savedZone);
+        });
 
         async function performAutoLogin(id, zone) {
             const btn = document.getElementById('btn-login');
-            btn.disabled = true;
-            btn.innerText = "RESTORING SESSION...";
+            btn.disabled = true; btn.innerText = "RESTORING...";
             els.loginMsg.innerText = "Welcome back!";
 
             try {
-                // Fetch directly from your database, skip the slow external API
-                const userRef = doc(db, "players", id);
-                const userDoc = await getDoc(userRef);
-
+                const userDoc = await getDoc(doc(db, "players", id));
                 if (userDoc.exists()) {
                     const userData = userDoc.data();
+                    if (userData.isBanned) { localStorage.clear(); location.reload(); return; }
                     
-                    if (userData.isBanned) {
-                        alert("ACCOUNT BANNED"); 
-                        localStorage.clear(); 
-                        location.reload(); 
-                        return;
-                    }
+                    currentUser.id = id; currentUser.ign = userData.ign; currentUser.score = userData.score || 0;
                     
-                    // Restore Player State
-                    currentUser.id = id;
-                    currentUser.ign = userData.ign;
-                    currentUser.score = userData.score || 0;
+                    els.screenLogin.classList.add('hidden'); els.screenLogin.classList.remove('flex');
+                    els.screenGame.classList.remove('hidden'); els.screenGame.classList.add('flex');
+                    els.playerIgn.innerText = currentUser.ign; els.playerScore.innerText = currentUser.score;
                     
-                    // Switch Screens
-                    document.getElementById('screen-login').classList.add('hidden');
-                    document.getElementById('screen-login').classList.remove('flex');
-                    document.getElementById('screen-game').classList.remove('hidden');
-                    document.getElementById('screen-game').classList.add('flex');
-                    
-                    els.playerIgn.innerText = currentUser.ign;
-                    els.playerScore.innerText = currentUser.score;
-                    
-                    // Start Game
-                    nextHero();
-                    initChatSystem();
-                    listenToServerCommands();
-                    
-                    // Background Rank Check
+                    nextHero(); initChatSystem(); listenToServerCommands();
                     try {
                         const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
                         const snapshot = await getDocs(q);
@@ -553,110 +498,47 @@
                         snapshot.forEach(doc => { if(doc.id === id) found = true; if(!found) rank++; });
                         currentUser.rank = found ? `#${rank}` : "100+";
                     } catch(e) { currentUser.rank = "?"; }
-
-                } else {
-                    // Document missing from database, force manual login
-                    throw new Error("Session expired.");
-                }
+                } else throw new Error("Session expired.");
             } catch (e) {
-                console.error("Auto-login failed:", e);
-                // Clear broken save data and reset the login screen
-                localStorage.removeItem('mlbb_id');
-                localStorage.removeItem('mlbb_zone');
-                btn.disabled = false;
-                btn.innerText = "CONNECT";
-                els.loginMsg.innerText = "";
-                
-                // Leave their ID typed in just in case they want to try again
-                document.getElementById('login-id').value = id; 
-                document.getElementById('login-zone').value = zone;
+                localStorage.removeItem('mlbb_id'); localStorage.removeItem('mlbb_zone');
+                btn.disabled = false; btn.innerText = "CONNECT"; els.loginMsg.innerText = "";
             }
         }
-        document.getElementById('btn-logout').addEventListener('click', () => { localStorage.removeItem('mlbb_id'); localStorage.removeItem('mlbb_zone'); location.reload(); });
 
         async function handleLogin(e) {
             e.preventDefault();
             const id = document.getElementById('login-id').value.trim();
             const zone = document.getElementById('login-zone').value.trim();
-            
-            // 1. Input Validation
             if (!/^\d+$/.test(id) || !/^\d+$/.test(zone)) return;
 
-            els.loginMsg.innerText = "Connecting...";
-            document.getElementById('btn-login').disabled = true;
+            els.loginMsg.innerText = "Connecting..."; document.getElementById('btn-login').disabled = true;
 
             try {
-                // 2. External API Check
                 const res = await fetch(`https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`);
                 const data = await res.json();
+                if (!data.success && !data.name && !data.nickname) throw new Error("Invalid ID");
                 
-                // Check if API returned a valid user
-                if (!data.success && !data.name && !data.nickname) {
-                    throw new Error("Invalid ID");
-                }
-                
-                // Get the IGN from the API
                 const fetchedIgn = data.name || data.nickname;
-
-                // 3. Database Check
                 const userRef = doc(db, "players", id);
                 const userDoc = await getDoc(userRef);
 
-                // --- CORE FIX STARTS HERE ---
                 if (userDoc.exists()) {
-                    // OLD PLAYER: Check ban and load score
-                    const userData = userDoc.data();
-                    if (userData.isBanned) {
-                        alert("ACCOUNT BANNED"); 
-                        localStorage.clear(); 
-                        location.reload(); 
-                        return;
-                    }
-                    currentUser.score = userData.score || 0;
+                    if (userDoc.data().isBanned) { localStorage.clear(); location.reload(); return; }
+                    currentUser.score = userDoc.data().score || 0;
                 } else {
-                    // NEW PLAYER: Create the document IMMEDIATELY
-                    // This prevents the listener from kicking them out
                     currentUser.score = 0;
-                    await setDoc(userRef, {
-                        ign: fetchedIgn,
-                        score: 0,
-                        createdAt: serverTimestamp(),
-                        isBanned: false,
-                        zone: zone
-                    });
+                    await setDoc(userRef, { ign: fetchedIgn, score: 0, createdAt: serverTimestamp(), isBanned: false, zone: zone });
                 }
-                // --- CORE FIX ENDS HERE ---
 
-           // 4. Set Local State
-            currentUser.id = id;
-            currentUser.ign = fetchedIgn;
+                currentUser.id = id; currentUser.ign = fetchedIgn;
+                localStorage.setItem('mlbb_id', id); localStorage.setItem('mlbb_zone', zone);
+                localStorage.setItem('last_mlbb_id', id); localStorage.setItem('last_mlbb_zone', zone);
 
-            // For auto-login
-            localStorage.setItem('mlbb_id', id); 
-            localStorage.setItem('mlbb_zone', zone);
-
-            // For remembering the typing inputs after logout
-            localStorage.setItem('last_mlbb_id', id); 
-            localStorage.setItem('last_mlbb_zone', zone);
-
-                // 5. Switch Screens
-                document.getElementById('screen-login').classList.add('hidden');
-                document.getElementById('screen-login').classList.remove('flex');
-                document.getElementById('screen-game').classList.remove('hidden');
-                document.getElementById('screen-game').classList.add('flex');
+                els.screenLogin.classList.add('hidden'); els.screenLogin.classList.remove('flex');
+                els.screenGame.classList.remove('hidden'); els.screenGame.classList.add('flex');
+                els.playerIgn.innerText = currentUser.ign; els.playerScore.innerText = currentUser.score;
                 
-                els.playerIgn.innerText = currentUser.ign;
-                els.playerScore.innerText = currentUser.score;
-                
-                // 6. Start Game Logic
-                nextHero();
-                initChatSystem();
-                
-                // 7. Start Listener 
-                // (Now safe because the document is guaranteed to exist)
-                listenToServerCommands(); 
-                
-                // 8. Background Rank Check
+                nextHero(); initChatSystem(); listenToServerCommands();
                 try {
                     const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
                     const snapshot = await getDocs(q);
@@ -664,82 +546,40 @@
                     snapshot.forEach(doc => { if(doc.id===id) found=true; if(!found) rank++; });
                     currentUser.rank = found ? `#${rank}` : "100+";
                 } catch(e) { currentUser.rank="?"; }
-
             } catch(e) { 
-                console.error(e); 
-                els.loginMsg.innerText = "Login Failed: Check ID/Zone"; 
-                localStorage.removeItem('mlbb_id');
-                localStorage.removeItem('mlbb_zone');
-            } finally {
-                document.getElementById('btn-login').disabled = false;
-            }
+                els.loginMsg.innerText = "Login Failed"; 
+                localStorage.removeItem('mlbb_id'); localStorage.removeItem('mlbb_zone');
+            } finally { document.getElementById('btn-login').disabled = false; }
         }
-        
-        // --- GAMEPLAY ---
+
+        // --- GAMEPLAY LOGIC ---
         function nextHero() {
             try {
-                // 1. Reset all UI elements
-                els.guessInput.value = ""; 
-                els.guessInput.disabled = false; 
-                els.btnSubmit.disabled = false;
-                els.feedback.innerText = ""; 
-                els.debugMsg.classList.add('hidden'); 
-                els.heroImg.style.display = 'block';
+                els.guessInput.value = ""; els.guessInput.disabled = false; els.btnSubmit.disabled = false;
+                els.feedback.innerText = ""; els.debugMsg.classList.add('hidden'); els.heroImg.style.display = 'block';
                 els.timerBar.style.backgroundColor = "#22d3ee"; 
 
-                // 2. Pick a new random hero
                 currentHero = heroes[Math.floor(Math.random() * heroes.length)];
                 els.heroImg.src = currentHero.icon_path;
-                
-                // 3. Set Placeholder Text
                 els.guessInput.placeholder = globalEventFirstLetter ? `Starts with: ${currentHero.name.charAt(0).toUpperCase()}` : "ENTER HERO";
                 
-                // 4. Focus the input box safely
-                setTimeout(() => {
-                    if (!els.guessInput.disabled) els.guessInput.focus();
-                }, 100);
-                
-                // 5. Start the clock
+                setTimeout(() => { if (!els.guessInput.disabled) els.guessInput.focus(); }, 100);
                 startTimer();
-            } catch (err) {
-                console.error("Game Loop Error (nextHero):", err);
-                // If it crashes, force it to try again so the game doesn't freeze
-                setTimeout(nextHero, 1000);
-            }
+            } catch (err) { setTimeout(nextHero, 1000); }
         }
 
         function startTimer() {
-            // Clear any old timers just in case
             if (timerInterval) clearInterval(timerInterval);
-            isGameActive = true;
-            let timeLeft = 15;
-            els.timerText.innerText = `${timeLeft}s`;
+            isGameActive = true; let timeLeft = 15; els.timerText.innerText = `${timeLeft}s`;
             
-            // Reset the shrinking animation bar
-            els.timerBar.style.transition = 'none'; 
-            els.timerBar.style.transform = 'scaleX(1)'; 
-            void els.timerBar.offsetWidth; // Force CSS refresh
-            
-            // Start the shrink animation
-            els.timerBar.style.transition = `transform 15s linear, background-color 0.3s`;
-            els.timerBar.style.transform = 'scaleX(0)';
+            els.timerBar.style.transition = 'none'; els.timerBar.style.transform = 'scaleX(1)'; void els.timerBar.offsetWidth; 
+            els.timerBar.style.transition = `transform 15s linear, background-color 0.3s`; els.timerBar.style.transform = 'scaleX(0)';
 
-            // Start the countdown
             timerInterval = setInterval(() => {
-                if (!isGameActive) {
-                    clearInterval(timerInterval);
-                    return;
-                }
-                
-                timeLeft--; 
-                els.timerText.innerText = `${timeLeft}s`;
-                
-                if (timeLeft <= 5) els.timerBar.style.backgroundColor = "#f43f5e"; // Turn red
-                
-                if (timeLeft <= 0) { 
-                    clearInterval(timerInterval); 
-                    timeIsUp(); 
-                }
+                if (!isGameActive) { clearInterval(timerInterval); return; }
+                timeLeft--; els.timerText.innerText = `${timeLeft}s`;
+                if (timeLeft <= 5) els.timerBar.style.backgroundColor = "#f43f5e";
+                if (timeLeft <= 0) { clearInterval(timerInterval); timeIsUp(); }
             }, 1000);
         }
 
@@ -747,204 +587,82 @@
             isGameActive = false;
             els.feedback.innerText = `Time's Up! It was ${currentHero.name}`;
             els.feedback.className = "text-center font-bold text-xl h-7 tracking-wide flex items-center justify-center text-rose-500 uppercase";
-            
-            // Red shake animation
-            els.heroBox.classList.add('animate-error');
-            setTimeout(() => els.heroBox.classList.remove('animate-error'), 400);
-            
-            // Wait 3 seconds, then next hero
+            els.heroBox.classList.add('animate-error'); setTimeout(() => els.heroBox.classList.remove('animate-error'), 400);
             lockGame(3000);
         }
 
         async function checkGuess(e) {
-            e.preventDefault();
-            if (!isGameActive) return;
-            
+            e.preventDefault(); if (!isGameActive) return;
             const guess = els.guessInput.value.toLowerCase().replace(/[^a-z0-9]/g, '');
             const answer = currentHero.name.toLowerCase().replace(/[^a-z0-9]/g, '');
 
             if (guess === answer) {
-                // --- CORRECT ---
-                clearInterval(timerInterval); 
-                isGameActive = false; 
-                els.timerBar.style.transition = 'none'; 
-                
-                if (globalEventX2) { 
-                    currentUser.score += 2; 
-                    els.feedback.innerText = "CORRECT! (+2 POINTS)"; 
-                } else { 
-                    currentUser.score++; 
-                    els.feedback.innerText = "CORRECT!"; 
-                }
-                
+                clearInterval(timerInterval); isGameActive = false; els.timerBar.style.transition = 'none'; 
+                if (globalEventX2) { currentUser.score += 2; els.feedback.innerText = "CORRECT! (+2 POINTS)"; } 
+                else { currentUser.score++; els.feedback.innerText = "CORRECT!"; }
                 els.feedback.className = "text-center font-black text-xl h-7 text-cyan-400 tracking-[0.2em] drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] flex items-center justify-center";
                 els.playerScore.innerText = currentUser.score;
-                
-                fireCustomConfetti(); 
-                saveScore(); 
-                
-                // Wait 1.5 seconds, then next hero
-                lockGame(1500); 
+                fireCustomConfetti(); saveScore(); lockGame(1500); 
             } else {
-                // --- WRONG ---
-                clearInterval(timerInterval); 
-                isGameActive = false; 
-                els.timerBar.style.transition = 'none'; 
-                
-                els.guessInput.value = ""; 
-                els.feedback.innerText = `WRONG! It was ${currentHero.name}`; 
+                clearInterval(timerInterval); isGameActive = false; els.timerBar.style.transition = 'none'; 
+                els.guessInput.value = ""; els.feedback.innerText = `WRONG! It was ${currentHero.name}`; 
                 els.feedback.className = "text-center font-bold text-lg h-7 tracking-wide flex items-center justify-center text-rose-500 uppercase";
-                
-                els.heroBox.classList.add('animate-error'); 
-                setTimeout(() => els.heroBox.classList.remove('animate-error'), 400);
-                
-                // Wait 1.5 seconds so they can read the answer, then next hero
+                els.heroBox.classList.add('animate-error'); setTimeout(() => els.heroBox.classList.remove('animate-error'), 400);
                 lockGame(1500);
             }
         }
 
         function lockGame(delay) {
-            // Disable inputs so they can't type while it transitions
-            els.guessInput.disabled = true; 
-            els.btnSubmit.disabled = true;
-            
-            // Force the next hero to load after the delay
-            setTimeout(() => {
-                nextHero();
-            }, delay);
+            els.guessInput.disabled = true; els.btnSubmit.disabled = true;
+            setTimeout(nextHero, delay);
         }
 
         async function saveScore() {
             if (!navigator.onLine) return; 
-            try {
-                await setDoc(doc(db, "players", currentUser.id), { 
-                    ign: currentUser.ign, 
-                    score: currentUser.score, 
-                    updatedAt: new Date() 
-                }, { merge: true });
-            } catch (err) {
-                console.error("Failed to save score:", err);
-            }
+            try { await setDoc(doc(db, "players", currentUser.id), { ign: currentUser.ign, score: currentUser.score, updatedAt: new Date() }, { merge: true }); } catch (err) {}
         }
 
         // --- CHAT SYSTEM ---
         let isInitialLoad = true;
-
         function initChatSystem() {
-            // Get the 30 most recent messages
             const q = query(collection(db, "messages"), orderBy("timestamp", "desc"), limit(30));
-            
             onSnapshot(q, (snapshot) => {
-                // Reverse the order so the oldest is at the top, newest at the bottom
                 const newDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).reverse();
-                
-                // Clear the chat box and rebuild it (prevents duplicate message bugs)
                 els.chatMessages.innerHTML = '<div class="text-center text-[10px] text-slate-500 uppercase tracking-widest py-4">Welcome to Global Chat</div>';
-                
-                newDocs.forEach(data => {
-                    addMessageToUI(data);
-                });
+                newDocs.forEach(data => addMessageToUI(data));
 
-                // Handle Toasts (Pop-ups on the side of the screen) ONLY for new messages
                 snapshot.docChanges().forEach((change) => {
-                    if (change.type === "added" && !isInitialLoad) {
-                        const data = change.doc.data();
-                        if (!isChatOpen) showToast(data);
-                    }
+                    if (change.type === "added" && !isInitialLoad && !isChatOpen) showToast(change.doc.data());
                 });
                 
-                // Auto-scroll to bottom on first load
-                if (isInitialLoad) {
-                    setTimeout(() => els.chatMessages.scrollTop = els.chatMessages.scrollHeight, 100);
-                    isInitialLoad = false;
-                }
+                if (isInitialLoad) { setTimeout(() => els.chatMessages.scrollTop = els.chatMessages.scrollHeight, 100); isInitialLoad = false; }
             });
         }
 
-function toggleChat(e) {
-    // Prevent double-firing or weird browser behavior
-    if (e) e.preventDefault(); 
-    
-    // Get fresh elements directly from the HTML to prevent "null" errors
-    const chatContainer = document.getElementById('chat-container');
-    const chatToggle = document.getElementById('btn-chat-toggle');
-    const chatMessages = document.getElementById('chat-messages');
-    const chatInput = document.getElementById('chat-input');
-    
-    // Check if it is currently hidden
-    if (chatContainer.classList.contains('hidden')) { 
-        // OPEN THE CHAT
-        isChatOpen = true;
-        chatContainer.classList.remove('hidden'); 
-        chatToggle.classList.add('hidden'); 
-        
-        // Scroll to bottom and focus the typing box
-        setTimeout(() => chatMessages.scrollTop = chatMessages.scrollHeight, 50); 
-        setTimeout(() => chatInput.focus(), 100); 
-    } else { 
-        // CLOSE THE CHAT
-        isChatOpen = false;
-        chatContainer.classList.add('hidden'); 
-        chatToggle.classList.remove('hidden'); 
-    }
-}
-
-
         async function sendChatMessage(e) {
-            e.preventDefault();
-            const text = els.chatInput.value.trim();
-            if (!text) return;
-            
-            els.chatInput.value = ""; 
-            els.chatInput.focus();
-            
-            try {
-                // Save to Firebase
-                await addDoc(collection(db, "messages"), { 
-                    ign: currentUser.ign, 
-                    rank: currentUser.rank || "N/A", 
-                    text: text, 
-                    timestamp: serverTimestamp() 
-                });
-            } catch (err) {
-                console.error("Chat Error:", err);
-                alert("Failed to send message. Check Firebase Database Rules.");
-            }
+            e.preventDefault(); const text = els.chatInput.value.trim(); if (!text) return;
+            els.chatInput.value = ""; els.chatInput.focus();
+            try { await addDoc(collection(db, "messages"), { ign: currentUser.ign, rank: currentUser.rank || "N/A", text: text, timestamp: serverTimestamp() });
+            } catch (err) { console.error("Chat Error:", err); }
         }
 
         function addMessageToUI(data) {
-            const div = document.createElement('div'); 
-            div.className = "flex flex-col animate-[slideUp_0.3s_ease-out]";
-            div.innerHTML = `
-                <div class="flex items-baseline gap-2">
-                    <span class="text-[10px] font-black ${data.rank === "#1" ? "text-cyan-400" : "text-indigo-400"} tracking-wider">${data.rank}</span>
-                    <span class="text-xs font-bold text-slate-400 truncate max-w-[120px]">${data.ign}</span>
-                </div>
-                <div class="bg-slate-800/60 rounded-r-xl rounded-bl-xl p-2 text-sm text-slate-200 mt-0.5 break-words border border-slate-700/50">
-                    ${data.text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
-                </div>`;
-            els.chatMessages.appendChild(div); 
-            els.chatMessages.scrollTop = els.chatMessages.scrollHeight; // Auto-scroll down
+            const div = document.createElement('div'); div.className = "flex flex-col animate-[slideUp_0.3s_ease-out]";
+            div.innerHTML = `<div class="flex items-baseline gap-2"><span class="text-[10px] font-black ${data.rank === "#1" ? "text-cyan-400" : "text-indigo-400"} tracking-wider">${data.rank}</span><span class="text-xs font-bold text-slate-400 truncate max-w-[120px]">${data.ign}</span></div><div class="bg-slate-800/60 rounded-r-xl rounded-bl-xl p-2 text-sm text-slate-200 mt-0.5 break-words border border-slate-700/50">${data.text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`;
+            els.chatMessages.appendChild(div); els.chatMessages.scrollTop = els.chatMessages.scrollHeight; 
         }
 
         function showToast(data) {
-            const toast = document.createElement('div'); 
-            toast.className = "bg-slate-900/90 backdrop-blur-md border border-slate-700 p-3 rounded-xl shadow-lg flex flex-col gap-1 toast-enter pointer-events-auto max-w-[250px]";
+            const toast = document.createElement('div'); toast.className = "bg-slate-900/90 backdrop-blur-md border border-slate-700 p-3 rounded-xl shadow-lg flex flex-col gap-1 toast-enter pointer-events-auto max-w-[250px]";
             toast.innerHTML = `<div class="flex items-center gap-2"><span class="text-[9px] font-black text-indigo-400 bg-indigo-900/30 px-1 rounded">${data.rank}</span><span class="text-[10px] font-bold text-slate-400 truncate">${data.ign}</span></div><span class="text-xs text-white leading-tight break-words">${data.text.replace(/</g, "&lt;")}</span>`;
             els.chatToasts.appendChild(toast);
-            setTimeout(() => { 
-                toast.classList.remove('toast-enter'); 
-                toast.classList.add('toast-exit'); 
-                setTimeout(() => toast.remove(), 300); 
-            }, 4000);
+            setTimeout(() => { toast.classList.remove('toast-enter'); toast.classList.add('toast-exit'); setTimeout(() => toast.remove(), 300); }, 4000);
         }
 
-        // --- UTILS ---
         function fireCustomConfetti() {
             const colors = ['#22d3ee', '#818cf8', '#f8fafc'];
             for (let i = 0; i < 30; i++) {
-                const conf = document.createElement('div');
-                conf.style.cssText = `position:fixed;width:8px;height:8px;background:${colors[Math.floor(Math.random()*3)]};left:50%;top:50%;z-index:99;pointer-events:none;border-radius:50%`;
+                const conf = document.createElement('div'); conf.style.cssText = `position:fixed;width:8px;height:8px;background:${colors[Math.floor(Math.random()*3)]};left:50%;top:50%;z-index:99;pointer-events:none;border-radius:50%`;
                 document.body.appendChild(conf);
                 const angle = Math.random() * Math.PI * 2, velocity = Math.random() * 15 + 5;
                 const vx = Math.cos(angle) * velocity; let vy = Math.sin(angle) * velocity - 8;
@@ -955,82 +673,186 @@ function toggleChat(e) {
         }
 
         async function openLeaderboard(e) {
-            if(e) e.preventDefault(); 
-            history.pushState({ page: 'leaderboard' }, ''); 
-            
-            document.getElementById('screen-game').classList.add('hidden'); 
-            document.getElementById('screen-game').classList.remove('flex');
-            document.getElementById('screen-leaderboard').classList.remove('hidden'); 
-            document.getElementById('screen-leaderboard').classList.add('flex');
-            
-            if(isChatOpen) {
-                toggleChat(); 
-            }
-            els.chatToggle.classList.add('hidden');
-
-            const tbody = document.getElementById('lb-body'); 
-            tbody.innerHTML = '<tr class="w-full"><td class="text-center text-slate-500 py-10 font-bold animate-pulse">Loading Ranks...</td></tr>';
-
+            if(e) e.preventDefault(); history.pushState({ page: 'leaderboard' }, ''); 
+            els.screenGame.classList.add('hidden'); els.screenGame.classList.remove('flex');
+            els.screenLeaderboard.classList.remove('hidden'); els.screenLeaderboard.classList.add('flex');
+            const tbody = document.getElementById('lb-body'); tbody.innerHTML = '<tr class="w-full"><td class="text-center text-slate-500 py-10 font-bold animate-pulse">Loading Ranks...</td></tr>';
             try {
                 const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
-                const snapshot = await getDocs(q); 
-                tbody.innerHTML = ""; 
-                let rank = 1;
-
+                const snapshot = await getDocs(q); tbody.innerHTML = ""; let rank = 1;
                 snapshot.forEach(doc => {
-                    const p = doc.data();
-                    
-                    // Define styling based on rank
-                    let rankColor = "text-slate-500";
-                    let bgClass = "bg-slate-900/60 border-slate-800";
-                    let prizeBadge = "";
-
-                    if (rank === 1) {
-                        rankColor = "text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]";
-                        bgClass = "bg-yellow-950/30 border-yellow-500/30 shadow-[inset_0_0_20px_rgba(250,204,21,0.1)]";
-                        prizeBadge = `<div class="text-[9px] text-yellow-300 font-black uppercase tracking-wider bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20 w-fit mt-1 flex items-center gap-1">🏆 Epic Skin</div>`;
-                    } else if (rank === 2) {
-                        rankColor = "text-purple-400 drop-shadow-[0_0_5px_rgba(192,132,252,0.5)]";
-                        bgClass = "bg-purple-950/30 border-purple-500/30 shadow-[inset_0_0_20px_rgba(192,132,252,0.1)]";
-                        prizeBadge = `<div class="text-[9px] text-purple-300 font-black uppercase tracking-wider bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20 w-fit mt-1 flex items-center gap-1">🌟 Starlight Prem</div>`;
-                    } else if (rank === 3) {
-                        rankColor = "text-indigo-400";
-                    } else {
-                        rankColor = "text-slate-500";
-                    }
-
-                    // Construct the row
-                    tbody.innerHTML += `
-                        <tr class="w-full flex items-center ${bgClass} border rounded-2xl mb-2 px-4 py-3 relative overflow-hidden transition-all hover:scale-[1.01]">
-                            <td class="font-black text-2xl w-10 text-center ${rankColor} italic">#${rank}</td>
-                            <td class="flex flex-col justify-center flex-1 px-3 min-w-0">
-                                <span class="font-bold text-white truncate text-base leading-none">${p.ign.replace(/</g, "&lt;")}</span>
-                                ${prizeBadge}
-                            </td>
-                            <td class="font-black text-white text-right w-16 text-lg tracking-wider">${p.score}</td>
-                        </tr>`;
+                    const p = doc.data(); let rankColor = "text-slate-500", bgClass = "bg-slate-900/60 border-slate-800", prizeBadge = "";
+                    if (rank === 1) { rankColor = "text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"; bgClass = "bg-yellow-950/30 border-yellow-500/30"; prizeBadge = `<div class="text-[9px] text-yellow-300 font-black uppercase tracking-wider bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20 w-fit mt-1 flex items-center gap-1">🏆 Epic Skin</div>`; } 
+                    else if (rank === 2) { rankColor = "text-purple-400 drop-shadow-[0_0_5px_rgba(192,132,252,0.5)]"; bgClass = "bg-purple-950/30 border-purple-500/30"; prizeBadge = `<div class="text-[9px] text-purple-300 font-black uppercase tracking-wider bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20 w-fit mt-1 flex items-center gap-1">🌟 Starlight Prem</div>`; } 
+                    else if (rank === 3) { rankColor = "text-indigo-400"; }
+                    tbody.innerHTML += `<tr class="w-full flex items-center ${bgClass} border rounded-2xl mb-2 px-4 py-3 relative overflow-hidden transition-all hover:scale-[1.01]"><td class="font-black text-2xl w-10 text-center ${rankColor} italic">#${rank}</td><td class="flex flex-col justify-center flex-1 px-3 min-w-0"><span class="font-bold text-white truncate text-base leading-none">${p.ign.replace(/</g, "&lt;")}</span>${prizeBadge}</td><td class="font-black text-white text-right w-16 text-lg tracking-wider">${p.score}</td></tr>`;
                     rank++;
                 });
-            } catch(e) { 
-                console.error(e);
-                tbody.innerHTML = `<tr class="w-full"><td class="text-center text-rose-500 py-10 font-bold">Failed to load rankings.</td></tr>`; 
-            }
+            } catch(e) { tbody.innerHTML = `<tr class="w-full"><td class="text-center text-rose-500 py-10 font-bold">Failed to load rankings.</td></tr>`; }
         }
 
         function closeLeaderboard(e) {
             if(e) e.preventDefault();
-            
-            // Hide leaderboard
-            document.getElementById('screen-leaderboard').classList.add('hidden'); 
-            document.getElementById('screen-leaderboard').classList.remove('flex');
-            
-            // Show Game screen
-            document.getElementById('screen-game').classList.remove('hidden'); 
-            document.getElementById('screen-game').classList.add('flex');
-            
-            // Bring the Chat button back
-            if (els.chatToggle) els.chatToggle.classList.remove('hidden');
+            els.screenLeaderboard.classList.add('hidden'); els.screenLeaderboard.classList.remove('flex');
+            els.screenGame.classList.remove('hidden'); els.screenGame.classList.add('flex');
         }
+
+        // --- ALL BUTTON EVENT LISTENERS ARE SAFELY ATTACHED HERE ---
+        
+        // Form submissions
+        document.getElementById('form-login').addEventListener('submit', handleLogin);
+        document.getElementById('form-guess').addEventListener('submit', checkGuess);
+        els.chatForm.addEventListener('submit', sendChatMessage);
+        
+        // Leaderboard & Misc
+        document.getElementById('btn-show-leaderboard').addEventListener('click', openLeaderboard);
+        document.getElementById('btn-close-leaderboard').addEventListener('click', closeLeaderboard);
+        els.heroImg.addEventListener('error', () => { els.heroImg.style.display='none'; els.debugMsg.innerText=`Missing: ${els.heroImg.src}`; els.debugMsg.classList.remove('hidden'); });
+        window.addEventListener('popstate', closeLeaderboard);
+
+        // Switch Account (Logout)
+        document.getElementById('btn-logout').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('mlbb_id');
+            localStorage.removeItem('mlbb_zone');
+            location.reload();
+        });
+
+        // Chat Toggle Buttons
+        const chatToggleBtn = document.getElementById('btn-chat-toggle');
+        const chatCloseBtn = document.getElementById('btn-chat-close');
+        
+        chatToggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            isChatOpen = true;
+            els.chatContainer.classList.remove('hidden');
+            chatToggleBtn.classList.add('hidden');
+            setTimeout(() => { els.chatMessages.scrollTop = els.chatMessages.scrollHeight; els.chatInput.focus(); }, 100);
+        });
+        
+        chatCloseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            isChatOpen = false;
+            els.chatContainer.classList.add('hidden');
+            chatToggleBtn.classList.remove('hidden');
+        });
+
+        // Radio Toggle Buttons
+        const radioToggleBtn = document.getElementById('btn-radio-toggle');
+        const radioContainer = document.getElementById('radio-container');
+        const radioCloseBtn = document.getElementById('btn-radio-close');
+
+        if(radioToggleBtn && radioContainer && radioCloseBtn) {
+            radioToggleBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                radioContainer.classList.remove('hidden');
+                radioToggleBtn.classList.add('hidden');
+            });
+            radioCloseBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                radioContainer.classList.add('hidden');
+                radioToggleBtn.classList.remove('hidden');
+            });
+        }
+
+        // Music Unlock on touch/click
+        const unlockMusic = () => {
+            if(currentMusic && currentMusic.paused) {
+                currentMusic.play().then(() => isMusicPlaying = true).catch(e => console.log(e));
+            }
+        };
+        document.body.addEventListener('click', unlockMusic, { passive: true });
+        document.body.addEventListener('touchstart', unlockMusic, { passive: true });
+
+// --- CUSTOM YOUTUBE MUSIC API LOGIC ---
+        const ytSearchForm = document.getElementById('form-yt-search');
+        const ytSearchInput = document.getElementById('yt-search-input');
+        const btnYtSearch = document.getElementById('btn-yt-search');
+        
+        const ytPlayerUI = document.getElementById('yt-player-ui');
+        const ytThumb = document.getElementById('yt-thumb');
+        const ytTitle = document.getElementById('yt-title');
+        const ytArtist = document.getElementById('yt-artist');
+        const ytError = document.getElementById('yt-error');
+        
+        const btnPlayPause = document.getElementById('btn-yt-playpause');
+        const iconPlay = document.getElementById('icon-play');
+        const iconPause = document.getElementById('icon-pause');
+
+        // Create the native HTML Audio element
+        let nativeAudio = new Audio();
+        nativeAudio.volume = 0.5;
+
+        if(ytSearchForm) {
+ytSearchForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const query = ytSearchInput.value.trim();
+    if(!query) return;
+
+    ytSearchInput.blur();
+    btnYtSearch.innerHTML = `<svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+    ytError.classList.add('hidden');
+    
+    try {
+        const searchRes = await fetch(`http://127.0.0.1:5000/search?q=${encodeURIComponent(query)}`);
+        const searchData = await searchRes.json();
+        
+        if(!searchData.items || searchData.items.length === 0) throw new Error("No songs found");
+        const bestResult = searchData.items[0];
+
+        ytPlayerUI.classList.remove('hidden');
+        ytTitle.innerText = bestResult.title;
+        ytArtist.innerText = bestResult.uploaderName || "Unknown Artist";
+        ytThumb.src = bestResult.thumbnail;
+        
+        const streamRes = await fetch(`http://127.0.0.1:5000/streams/${bestResult.videoId}`);
+        const streamData = await streamRes.json();
+        
+        if(streamData.error) throw new Error(streamData.error);
+        
+        nativeAudio.src = streamData.audioUrl;
+        nativeAudio.play();
+
+        iconPlay.classList.add('hidden');
+        iconPause.classList.remove('hidden');
+        ytThumb.style.animationPlayState = 'running';
+
+    } catch (err) {
+        console.error(err);
+        ytError.innerText = err.message || "Failed — try another song";
+        ytError.classList.remove('hidden');
+        ytPlayerUI.classList.add('hidden');
+    } finally {
+        btnYtSearch.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>`;
+    }
+});
+
+// Play/Pause Button Logic
+            btnPlayPause.addEventListener('click', (e) => {
+                e.preventDefault();
+                if(!nativeAudio.src) return;
+
+                if(nativeAudio.paused) {
+                    nativeAudio.play();
+                    iconPlay.classList.add('hidden');
+                    iconPause.classList.remove('hidden');
+                    ytThumb.style.animationPlayState = 'running';
+                } else {
+                    nativeAudio.pause();
+                    iconPause.classList.add('hidden');
+                    iconPlay.classList.remove('hidden');
+                    ytThumb.style.animationPlayState = 'paused';
+                }
+            });
+            
+            // Auto-reset when song ends
+            nativeAudio.addEventListener('ended', () => {
+                iconPause.classList.add('hidden');
+                iconPlay.classList.remove('hidden');
+                ytThumb.style.animationPlayState = 'paused';
+            });
+        }
+
     </script>
-</body>
+    </body>
 </html>
