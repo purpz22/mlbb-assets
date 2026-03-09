@@ -102,12 +102,12 @@
             <h1 class="text-[3.5rem] font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-cyan-400 to-indigo-400 drop-shadow-lg leading-none">GUESS</h1>
             <h2 class="text-3xl font-black italic tracking-widest text-white leading-none mt-1">THE HERO</h2>
             <div class="h-1 w-12 bg-indigo-500 rounded-full mt-4 shadow-[0_0_15px_rgba(99,102,241,0.8)]"></div>
-    <p class="text-[10px] font-black text-yellow-400 uppercase tracking-[0.15em] bg-yellow-900/20 px-3 py-1 rounded-full border border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.2)]">
-        🥇 1st: Epic Skin
-    </p>
-    <p class="text-[10px] font-black text-purple-400 uppercase tracking-[0.15em] bg-purple-900/20 px-3 py-1 rounded-full border border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]">
-        🥈 2nd: Starlight Premium
-    </p>
+            <p class="text-[10px] font-black text-yellow-400 uppercase tracking-[0.15em] bg-yellow-900/20 px-3 py-1 rounded-full border border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.2)]">
+                🥇 1st: Epic Skin
+            </p>
+            <p class="text-[10px] font-black text-purple-400 uppercase tracking-[0.15em] bg-purple-900/20 px-3 py-1 rounded-full border border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]">
+                🥈 2nd: Starlight Premium
+            </p>
         </div>
 
         <!-- Login Form -->
@@ -281,6 +281,7 @@
         let globalEventX2 = false;
         let globalEventFirstLetter = false;
         let currentMusic = null;
+        let activeMusicUrl = null; // Fix: We track the raw URL to prevent instant recreation loop
         let isMusicPlaying = false;
         
         // VINE BOOM
@@ -354,18 +355,33 @@
                         els.guessInput.placeholder = globalEventFirstLetter ? `Starts with: ${currentHero.name.charAt(0).toUpperCase()}` : "ENTER HERO";
                     }
 
-                    // 3. Music
-                    if(state.musicUrl && state.musicUrl !== "") {
-                        if(!currentMusic || currentMusic.src !== state.musicUrl) {
-                            if(currentMusic) currentMusic.pause();
-                            currentMusic = new Audio(state.musicUrl);
+                    // 3. Music (Fixed: Instant Playback Without Refresh)
+                    if(state.musicUrl && state.musicUrl.trim() !== "") {
+                        if(activeMusicUrl !== state.musicUrl) {
+                            if(currentMusic) {
+                                currentMusic.pause();
+                                currentMusic.src = ""; // Free memory
+                            }
+                            activeMusicUrl = state.musicUrl;
+                            currentMusic = new Audio(activeMusicUrl);
                             currentMusic.loop = true;
                             currentMusic.volume = 0.5;
-                            currentMusic.play().then(() => isMusicPlaying = true).catch(e => { console.log("Audio waiting for interaction"); isMusicPlaying = false; });
+                            
+                            // Attempt to play instantly
+                            currentMusic.play().then(() => {
+                                isMusicPlaying = true;
+                            }).catch(e => {
+                                console.log("Audio blocked by browser, waiting for interaction.");
+                                isMusicPlaying = false;
+                            });
                         }
-                    } else if (currentMusic) {
-                        currentMusic.pause();
-                        currentMusic = null;
+                    } else {
+                        if (currentMusic) {
+                            currentMusic.pause();
+                            currentMusic.src = "";
+                            currentMusic = null;
+                        }
+                        activeMusicUrl = null;
                         isMusicPlaying = false;
                     }
 
@@ -427,194 +443,199 @@
         document.getElementById('form-search').addEventListener('submit', searchPlayer);
         els.heroImg.addEventListener('error', () => { els.heroImg.style.display='none'; els.debugMsg.innerText=`Missing: ${els.heroImg.src}`; els.debugMsg.classList.remove('hidden'); });
         window.addEventListener('popstate', (e) => {
-    closeLeaderboard();
-});
+            closeLeaderboard();
+        });
         // Chat
         els.chatToggle.addEventListener('click', toggleChat);
         els.chatClose.addEventListener('click', toggleChat);
         els.chatForm.addEventListener('submit', sendChatMessage);
 
-        // Music Force Start on Interaction
-        document.body.addEventListener('click', () => {
-            if(currentMusic && !isMusicPlaying) currentMusic.play().then(() => isMusicPlaying = true).catch(e => console.log(e));
-        }, { passive: true });
-
-// --- INSTANT AUTO-LOGIN ---
-window.addEventListener('DOMContentLoaded', () => {
-    const savedId = localStorage.getItem('mlbb_id');
-    const savedZone = localStorage.getItem('mlbb_zone');
-    
-    if (savedId && savedZone) {
-        performAutoLogin(savedId, savedZone);
-    }
-});
-
-async function performAutoLogin(id, zone) {
-    const btn = document.getElementById('btn-login');
-    btn.disabled = true;
-    btn.innerText = "RESTORING SESSION...";
-    els.loginMsg.innerText = "Welcome back!";
-
-    try {
-        // Fetch directly from your database, skip the slow external API
-        const userRef = doc(db, "players", id);
-        const userDoc = await getDoc(userRef);
-
-        if (userDoc.exists()) {
-            const userData = userDoc.data();
-            
-            if (userData.isBanned) {
-                alert("ACCOUNT BANNED"); 
-                localStorage.clear(); 
-                location.reload(); 
-                return;
+        // Music Force Start on Interaction (Expanded to catch any input/touches)
+        const unlockMusic = () => {
+            if(currentMusic && currentMusic.paused) {
+                currentMusic.play().then(() => isMusicPlaying = true).catch(e => console.log(e));
             }
-            
-            // Restore Player State
-            currentUser.id = id;
-            currentUser.ign = userData.ign;
-            currentUser.score = userData.score || 0;
-            
-            // Switch Screens
-            document.getElementById('screen-login').classList.add('hidden');
-            document.getElementById('screen-login').classList.remove('flex');
-            document.getElementById('screen-game').classList.remove('hidden');
-            document.getElementById('screen-game').classList.add('flex');
-            
-            els.playerIgn.innerText = currentUser.ign;
-            els.playerScore.innerText = currentUser.score;
-            
-            // Start Game
-            nextHero();
-            initChatSystem();
-            listenToServerCommands();
-            
-            // Background Rank Check
-            try {
-                const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
-                const snapshot = await getDocs(q);
-                let rank = 1, found = false;
-                snapshot.forEach(doc => { if(doc.id === id) found = true; if(!found) rank++; });
-                currentUser.rank = found ? `#${rank}` : "100+";
-            } catch(e) { currentUser.rank = "?"; }
+        };
+        document.body.addEventListener('click', unlockMusic, { passive: true });
+        document.body.addEventListener('touchstart', unlockMusic, { passive: true });
+        document.body.addEventListener('keydown', unlockMusic, { passive: true });
 
-        } else {
-            // Document missing from database, force manual login
-            throw new Error("Session expired.");
+        // --- INSTANT AUTO-LOGIN ---
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedId = localStorage.getItem('mlbb_id');
+            const savedZone = localStorage.getItem('mlbb_zone');
+            
+            if (savedId && savedZone) {
+                performAutoLogin(savedId, savedZone);
+            }
+        });
+
+        async function performAutoLogin(id, zone) {
+            const btn = document.getElementById('btn-login');
+            btn.disabled = true;
+            btn.innerText = "RESTORING SESSION...";
+            els.loginMsg.innerText = "Welcome back!";
+
+            try {
+                // Fetch directly from your database, skip the slow external API
+                const userRef = doc(db, "players", id);
+                const userDoc = await getDoc(userRef);
+
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    
+                    if (userData.isBanned) {
+                        alert("ACCOUNT BANNED"); 
+                        localStorage.clear(); 
+                        location.reload(); 
+                        return;
+                    }
+                    
+                    // Restore Player State
+                    currentUser.id = id;
+                    currentUser.ign = userData.ign;
+                    currentUser.score = userData.score || 0;
+                    
+                    // Switch Screens
+                    document.getElementById('screen-login').classList.add('hidden');
+                    document.getElementById('screen-login').classList.remove('flex');
+                    document.getElementById('screen-game').classList.remove('hidden');
+                    document.getElementById('screen-game').classList.add('flex');
+                    
+                    els.playerIgn.innerText = currentUser.ign;
+                    els.playerScore.innerText = currentUser.score;
+                    
+                    // Start Game
+                    nextHero();
+                    initChatSystem();
+                    listenToServerCommands();
+                    
+                    // Background Rank Check
+                    try {
+                        const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
+                        const snapshot = await getDocs(q);
+                        let rank = 1, found = false;
+                        snapshot.forEach(doc => { if(doc.id === id) found = true; if(!found) rank++; });
+                        currentUser.rank = found ? `#${rank}` : "100+";
+                    } catch(e) { currentUser.rank = "?"; }
+
+                } else {
+                    // Document missing from database, force manual login
+                    throw new Error("Session expired.");
+                }
+            } catch (e) {
+                console.error("Auto-login failed:", e);
+                // Clear broken save data and reset the login screen
+                localStorage.removeItem('mlbb_id');
+                localStorage.removeItem('mlbb_zone');
+                btn.disabled = false;
+                btn.innerText = "CONNECT";
+                els.loginMsg.innerText = "";
+                
+                // Leave their ID typed in just in case they want to try again
+                document.getElementById('login-id').value = id; 
+                document.getElementById('login-zone').value = zone;
+            }
         }
-    } catch (e) {
-        console.error("Auto-login failed:", e);
-        // Clear broken save data and reset the login screen
-        localStorage.removeItem('mlbb_id');
-        localStorage.removeItem('mlbb_zone');
-        btn.disabled = false;
-        btn.innerText = "CONNECT";
-        els.loginMsg.innerText = "";
-        
-        // Leave their ID typed in just in case they want to try again
-        document.getElementById('login-id').value = id; 
-        document.getElementById('login-zone').value = zone;
-    }
-}
         document.getElementById('btn-logout').addEventListener('click', () => { localStorage.removeItem('mlbb_id'); localStorage.removeItem('mlbb_zone'); location.reload(); });
 
-async function handleLogin(e) {
-    e.preventDefault();
-    const id = document.getElementById('login-id').value.trim();
-    const zone = document.getElementById('login-zone').value.trim();
-    
-    // 1. Input Validation
-    if (!/^\d+$/.test(id) || !/^\d+$/.test(zone)) return;
+        async function handleLogin(e) {
+            e.preventDefault();
+            const id = document.getElementById('login-id').value.trim();
+            const zone = document.getElementById('login-zone').value.trim();
+            
+            // 1. Input Validation
+            if (!/^\d+$/.test(id) || !/^\d+$/.test(zone)) return;
 
-    els.loginMsg.innerText = "Connecting...";
-    document.getElementById('btn-login').disabled = true;
+            els.loginMsg.innerText = "Connecting...";
+            document.getElementById('btn-login').disabled = true;
 
-    try {
-        // 2. External API Check
-        const res = await fetch(`https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`);
-        const data = await res.json();
-        
-        // Check if API returned a valid user
-        if (!data.success && !data.name && !data.nickname) {
-            throw new Error("Invalid ID");
-        }
-        
-        // Get the IGN from the API
-        const fetchedIgn = data.name || data.nickname;
+            try {
+                // 2. External API Check
+                const res = await fetch(`https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`);
+                const data = await res.json();
+                
+                // Check if API returned a valid user
+                if (!data.success && !data.name && !data.nickname) {
+                    throw new Error("Invalid ID");
+                }
+                
+                // Get the IGN from the API
+                const fetchedIgn = data.name || data.nickname;
 
-        // 3. Database Check
-        const userRef = doc(db, "players", id);
-        const userDoc = await getDoc(userRef);
+                // 3. Database Check
+                const userRef = doc(db, "players", id);
+                const userDoc = await getDoc(userRef);
 
-        // --- CORE FIX STARTS HERE ---
-        if (userDoc.exists()) {
-            // OLD PLAYER: Check ban and load score
-            const userData = userDoc.data();
-            if (userData.isBanned) {
-                alert("ACCOUNT BANNED"); 
-                localStorage.clear(); 
-                location.reload(); 
-                return;
+                // --- CORE FIX STARTS HERE ---
+                if (userDoc.exists()) {
+                    // OLD PLAYER: Check ban and load score
+                    const userData = userDoc.data();
+                    if (userData.isBanned) {
+                        alert("ACCOUNT BANNED"); 
+                        localStorage.clear(); 
+                        location.reload(); 
+                        return;
+                    }
+                    currentUser.score = userData.score || 0;
+                } else {
+                    // NEW PLAYER: Create the document IMMEDIATELY
+                    // This prevents the listener from kicking them out
+                    currentUser.score = 0;
+                    await setDoc(userRef, {
+                        ign: fetchedIgn,
+                        score: 0,
+                        createdAt: serverTimestamp(),
+                        isBanned: false,
+                        zone: zone
+                    });
+                }
+                // --- CORE FIX ENDS HERE ---
+
+                // 4. Set Local State
+                currentUser.id = id;
+                currentUser.ign = fetchedIgn;
+                
+                localStorage.setItem('mlbb_id', id); 
+                localStorage.setItem('mlbb_zone', zone);
+
+                // 5. Switch Screens
+                document.getElementById('screen-login').classList.add('hidden');
+                document.getElementById('screen-login').classList.remove('flex');
+                document.getElementById('screen-game').classList.remove('hidden');
+                document.getElementById('screen-game').classList.add('flex');
+                
+                els.playerIgn.innerText = currentUser.ign;
+                els.playerScore.innerText = currentUser.score;
+                
+                // 6. Start Game Logic
+                nextHero();
+                initChatSystem();
+                
+                // 7. Start Listener 
+                // (Now safe because the document is guaranteed to exist)
+                listenToServerCommands(); 
+                
+                // 8. Background Rank Check
+                try {
+                    const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
+                    const snapshot = await getDocs(q);
+                    let rank=1, found=false;
+                    snapshot.forEach(doc => { if(doc.id===id) found=true; if(!found) rank++; });
+                    currentUser.rank = found ? `#${rank}` : "100+";
+                } catch(e) { currentUser.rank="?"; }
+
+            } catch(e) { 
+                console.error(e); 
+                els.loginMsg.innerText = "Login Failed: Check ID/Zone"; 
+                localStorage.removeItem('mlbb_id');
+                localStorage.removeItem('mlbb_zone');
+            } finally {
+                document.getElementById('btn-login').disabled = false;
             }
-            currentUser.score = userData.score || 0;
-        } else {
-            // NEW PLAYER: Create the document IMMEDIATELY
-            // This prevents the listener from kicking them out
-            currentUser.score = 0;
-            await setDoc(userRef, {
-                ign: fetchedIgn,
-                score: 0,
-                createdAt: serverTimestamp(),
-                isBanned: false,
-                zone: zone
-            });
         }
-        // --- CORE FIX ENDS HERE ---
-
-        // 4. Set Local State
-        currentUser.id = id;
-        currentUser.ign = fetchedIgn;
         
-        localStorage.setItem('mlbb_id', id); 
-        localStorage.setItem('mlbb_zone', zone);
-
-        // 5. Switch Screens
-        document.getElementById('screen-login').classList.add('hidden');
-        document.getElementById('screen-login').classList.remove('flex');
-        document.getElementById('screen-game').classList.remove('hidden');
-        document.getElementById('screen-game').classList.add('flex');
-        
-        els.playerIgn.innerText = currentUser.ign;
-        els.playerScore.innerText = currentUser.score;
-        
-        // 6. Start Game Logic
-        nextHero();
-        initChatSystem();
-        
-        // 7. Start Listener 
-        // (Now safe because the document is guaranteed to exist)
-        listenToServerCommands(); 
-        
-        // 8. Background Rank Check
-        try {
-            const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
-            const snapshot = await getDocs(q);
-            let rank=1, found=false;
-            snapshot.forEach(doc => { if(doc.id===id) found=true; if(!found) rank++; });
-            currentUser.rank = found ? `#${rank}` : "100+";
-        } catch(e) { currentUser.rank="?"; }
-
-    } catch(e) { 
-        console.error(e); 
-        els.loginMsg.innerText = "Login Failed: Check ID/Zone"; 
-        localStorage.removeItem('mlbb_id');
-        localStorage.removeItem('mlbb_zone');
-    } finally {
-        document.getElementById('btn-login').disabled = false;
-    }
-}
         // --- GAMEPLAY ---
-// --- GAMEPLAY ---
         function nextHero() {
             try {
                 // 1. Reset all UI elements
@@ -765,8 +786,9 @@ async function handleLogin(e) {
                 console.error("Failed to save score:", err);
             }
         }
-                // --- CHAT SYSTEM ---
- let isInitialLoad = true;
+
+        // --- CHAT SYSTEM ---
+        let isInitialLoad = true;
 
         function initChatSystem() {
             // Get the 30 most recent messages
@@ -883,6 +905,7 @@ async function handleLogin(e) {
                 setTimeout(() => toast.remove(), 300); 
             }, 4000);
         }
+
         // --- UTILS ---
         function fireCustomConfetti() {
             const colors = ['#22d3ee', '#818cf8', '#f8fafc'];
@@ -898,83 +921,83 @@ async function handleLogin(e) {
             }
         }
 
-async function openLeaderboard(e) {
-    if(e) e.preventDefault(); 
-    history.pushState({ page: 'leaderboard' }, ''); 
-    
-    document.getElementById('screen-game').classList.add('hidden'); 
-    document.getElementById('screen-game').classList.remove('flex');
-    document.getElementById('screen-leaderboard').classList.remove('hidden'); 
-    document.getElementById('screen-leaderboard').classList.add('flex');
-    
-    if(isChatOpen) {
-        toggleChat(); 
-    }
-    els.chatToggle.classList.add('hidden');
-
-    const tbody = document.getElementById('lb-body'); 
-    tbody.innerHTML = '<tr class="w-full"><td class="text-center text-slate-500 py-10 font-bold animate-pulse">Loading Ranks...</td></tr>';
-
-    try {
-        const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
-        const snapshot = await getDocs(q); 
-        tbody.innerHTML = ""; 
-        let rank = 1;
-
-        snapshot.forEach(doc => {
-            const p = doc.data();
+        async function openLeaderboard(e) {
+            if(e) e.preventDefault(); 
+            history.pushState({ page: 'leaderboard' }, ''); 
             
-            // Define styling based on rank
-            let rankColor = "text-slate-500";
-            let bgClass = "bg-slate-900/60 border-slate-800";
-            let prizeBadge = "";
-
-            if (rank === 1) {
-                rankColor = "text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]";
-                bgClass = "bg-yellow-950/30 border-yellow-500/30 shadow-[inset_0_0_20px_rgba(250,204,21,0.1)]";
-                prizeBadge = `<div class="text-[9px] text-yellow-300 font-black uppercase tracking-wider bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20 w-fit mt-1 flex items-center gap-1">🏆 Epic Skin</div>`;
-            } else if (rank === 2) {
-                rankColor = "text-purple-400 drop-shadow-[0_0_5px_rgba(192,132,252,0.5)]";
-                bgClass = "bg-purple-950/30 border-purple-500/30 shadow-[inset_0_0_20px_rgba(192,132,252,0.1)]";
-                prizeBadge = `<div class="text-[9px] text-purple-300 font-black uppercase tracking-wider bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20 w-fit mt-1 flex items-center gap-1">🌟 Starlight Prem</div>`;
-            } else if (rank === 3) {
-                rankColor = "text-indigo-400";
-            } else {
-                rankColor = "text-slate-500";
+            document.getElementById('screen-game').classList.add('hidden'); 
+            document.getElementById('screen-game').classList.remove('flex');
+            document.getElementById('screen-leaderboard').classList.remove('hidden'); 
+            document.getElementById('screen-leaderboard').classList.add('flex');
+            
+            if(isChatOpen) {
+                toggleChat(); 
             }
+            els.chatToggle.classList.add('hidden');
 
-            // Construct the row
-            tbody.innerHTML += `
-                <tr class="w-full flex items-center ${bgClass} border rounded-2xl mb-2 px-4 py-3 relative overflow-hidden transition-all hover:scale-[1.01]">
-                    <td class="font-black text-2xl w-10 text-center ${rankColor} italic">#${rank}</td>
-                    <td class="flex flex-col justify-center flex-1 px-3 min-w-0">
-                        <span class="font-bold text-white truncate text-base leading-none">${p.ign.replace(/</g, "&lt;")}</span>
-                        ${prizeBadge}
-                    </td>
-                    <td class="font-black text-white text-right w-16 text-lg tracking-wider">${p.score}</td>
-                </tr>`;
-            rank++;
-        });
-    } catch(e) { 
-        console.error(e);
-        tbody.innerHTML = `<tr class="w-full"><td class="text-center text-rose-500 py-10 font-bold">Failed to load rankings.</td></tr>`; 
-    }
-}
+            const tbody = document.getElementById('lb-body'); 
+            tbody.innerHTML = '<tr class="w-full"><td class="text-center text-slate-500 py-10 font-bold animate-pulse">Loading Ranks...</td></tr>';
 
-function closeLeaderboard(e) {
-    if(e) e.preventDefault();
-    
-    // Hide leaderboard
-    document.getElementById('screen-leaderboard').classList.add('hidden'); 
-    document.getElementById('screen-leaderboard').classList.remove('flex');
-    
-    // Show Game screen
-    document.getElementById('screen-game').classList.remove('hidden'); 
-    document.getElementById('screen-game').classList.add('flex');
-    
-    // Bring the Chat button back
-    if (els.chatToggle) els.chatToggle.classList.remove('hidden');
-}
+            try {
+                const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
+                const snapshot = await getDocs(q); 
+                tbody.innerHTML = ""; 
+                let rank = 1;
+
+                snapshot.forEach(doc => {
+                    const p = doc.data();
+                    
+                    // Define styling based on rank
+                    let rankColor = "text-slate-500";
+                    let bgClass = "bg-slate-900/60 border-slate-800";
+                    let prizeBadge = "";
+
+                    if (rank === 1) {
+                        rankColor = "text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]";
+                        bgClass = "bg-yellow-950/30 border-yellow-500/30 shadow-[inset_0_0_20px_rgba(250,204,21,0.1)]";
+                        prizeBadge = `<div class="text-[9px] text-yellow-300 font-black uppercase tracking-wider bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20 w-fit mt-1 flex items-center gap-1">🏆 Epic Skin</div>`;
+                    } else if (rank === 2) {
+                        rankColor = "text-purple-400 drop-shadow-[0_0_5px_rgba(192,132,252,0.5)]";
+                        bgClass = "bg-purple-950/30 border-purple-500/30 shadow-[inset_0_0_20px_rgba(192,132,252,0.1)]";
+                        prizeBadge = `<div class="text-[9px] text-purple-300 font-black uppercase tracking-wider bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20 w-fit mt-1 flex items-center gap-1">🌟 Starlight Prem</div>`;
+                    } else if (rank === 3) {
+                        rankColor = "text-indigo-400";
+                    } else {
+                        rankColor = "text-slate-500";
+                    }
+
+                    // Construct the row
+                    tbody.innerHTML += `
+                        <tr class="w-full flex items-center ${bgClass} border rounded-2xl mb-2 px-4 py-3 relative overflow-hidden transition-all hover:scale-[1.01]">
+                            <td class="font-black text-2xl w-10 text-center ${rankColor} italic">#${rank}</td>
+                            <td class="flex flex-col justify-center flex-1 px-3 min-w-0">
+                                <span class="font-bold text-white truncate text-base leading-none">${p.ign.replace(/</g, "&lt;")}</span>
+                                ${prizeBadge}
+                            </td>
+                            <td class="font-black text-white text-right w-16 text-lg tracking-wider">${p.score}</td>
+                        </tr>`;
+                    rank++;
+                });
+            } catch(e) { 
+                console.error(e);
+                tbody.innerHTML = `<tr class="w-full"><td class="text-center text-rose-500 py-10 font-bold">Failed to load rankings.</td></tr>`; 
+            }
+        }
+
+        function closeLeaderboard(e) {
+            if(e) e.preventDefault();
+            
+            // Hide leaderboard
+            document.getElementById('screen-leaderboard').classList.add('hidden'); 
+            document.getElementById('screen-leaderboard').classList.remove('flex');
+            
+            // Show Game screen
+            document.getElementById('screen-game').classList.remove('hidden'); 
+            document.getElementById('screen-game').classList.add('flex');
+            
+            // Bring the Chat button back
+            if (els.chatToggle) els.chatToggle.classList.remove('hidden');
+        }
     </script>
 </body>
 </html>
