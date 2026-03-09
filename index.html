@@ -439,17 +439,83 @@
             if(currentMusic && !isMusicPlaying) currentMusic.play().then(() => isMusicPlaying = true).catch(e => console.log(e));
         }, { passive: true });
 
-        // Auto Login
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedId = localStorage.getItem('mlbb_id');
-            const savedZone = localStorage.getItem('mlbb_zone');
-            if (savedId && savedZone) {
-                document.getElementById('login-id').value = savedId;
-                document.getElementById('login-zone').value = savedZone;
-                document.getElementById('btn-login').click();
-            }
-        });
+// --- INSTANT AUTO-LOGIN ---
+window.addEventListener('DOMContentLoaded', () => {
+    const savedId = localStorage.getItem('mlbb_id');
+    const savedZone = localStorage.getItem('mlbb_zone');
+    
+    if (savedId && savedZone) {
+        performAutoLogin(savedId, savedZone);
+    }
+});
 
+async function performAutoLogin(id, zone) {
+    const btn = document.getElementById('btn-login');
+    btn.disabled = true;
+    btn.innerText = "RESTORING SESSION...";
+    els.loginMsg.innerText = "Welcome back!";
+
+    try {
+        // Fetch directly from your database, skip the slow external API
+        const userRef = doc(db, "players", id);
+        const userDoc = await getDoc(userRef);
+
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            
+            if (userData.isBanned) {
+                alert("ACCOUNT BANNED"); 
+                localStorage.clear(); 
+                location.reload(); 
+                return;
+            }
+            
+            // Restore Player State
+            currentUser.id = id;
+            currentUser.ign = userData.ign;
+            currentUser.score = userData.score || 0;
+            
+            // Switch Screens
+            document.getElementById('screen-login').classList.add('hidden');
+            document.getElementById('screen-login').classList.remove('flex');
+            document.getElementById('screen-game').classList.remove('hidden');
+            document.getElementById('screen-game').classList.add('flex');
+            
+            els.playerIgn.innerText = currentUser.ign;
+            els.playerScore.innerText = currentUser.score;
+            
+            // Start Game
+            nextHero();
+            initChatSystem();
+            listenToServerCommands();
+            
+            // Background Rank Check
+            try {
+                const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
+                const snapshot = await getDocs(q);
+                let rank = 1, found = false;
+                snapshot.forEach(doc => { if(doc.id === id) found = true; if(!found) rank++; });
+                currentUser.rank = found ? `#${rank}` : "100+";
+            } catch(e) { currentUser.rank = "?"; }
+
+        } else {
+            // Document missing from database, force manual login
+            throw new Error("Session expired.");
+        }
+    } catch (e) {
+        console.error("Auto-login failed:", e);
+        // Clear broken save data and reset the login screen
+        localStorage.removeItem('mlbb_id');
+        localStorage.removeItem('mlbb_zone');
+        btn.disabled = false;
+        btn.innerText = "CONNECT";
+        els.loginMsg.innerText = "";
+        
+        // Leave their ID typed in just in case they want to try again
+        document.getElementById('login-id').value = id; 
+        document.getElementById('login-zone').value = zone;
+    }
+}
         document.getElementById('btn-logout').addEventListener('click', () => { localStorage.removeItem('mlbb_id'); localStorage.removeItem('mlbb_zone'); location.reload(); });
 
 async function handleLogin(e) {
