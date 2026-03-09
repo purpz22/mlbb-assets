@@ -833,41 +833,34 @@
             });
         }
 
-        function toggleChat() {
-            // Get fresh elements directly from the HTML to prevent "null" errors
-            const chatContainer = document.getElementById('chat-container');
-            const chatToggle = document.getElementById('btn-chat-toggle');
-            const chatMessages = document.getElementById('chat-messages');
-            const chatInput = document.getElementById('chat-input');
-            
-            // Check if it is currently hidden
-            if (chatContainer.classList.contains('hidden')) { 
-                // OPEN THE CHAT
-                isChatOpen = true;
-                chatContainer.classList.remove('hidden'); 
-                chatToggle.classList.add('hidden'); 
-                
-                // Scroll to bottom and focus the typing box
-                setTimeout(() => chatMessages.scrollTop = chatMessages.scrollHeight, 50); 
-                setTimeout(() => chatInput.focus(), 100); 
-            } else { 
-                // CLOSE THE CHAT
-                isChatOpen = false;
-                chatContainer.classList.add('hidden'); 
-                chatToggle.classList.remove('hidden'); 
-            }
-        }
-
-        // FORCE ATTACH THE CLICK EVENTS (Put these right below the toggleChat function)
-        document.getElementById('btn-chat-toggle').onclick = function(e) {
-            e.preventDefault();
-            toggleChat();
-        };
+function toggleChat(e) {
+    // Prevent double-firing or weird browser behavior
+    if (e) e.preventDefault(); 
+    
+    // Get fresh elements directly from the HTML to prevent "null" errors
+    const chatContainer = document.getElementById('chat-container');
+    const chatToggle = document.getElementById('btn-chat-toggle');
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    
+    // Check if it is currently hidden
+    if (chatContainer.classList.contains('hidden')) { 
+        // OPEN THE CHAT
+        isChatOpen = true;
+        chatContainer.classList.remove('hidden'); 
+        chatToggle.classList.add('hidden'); 
         
-        document.getElementById('btn-chat-close').onclick = function(e) {
-            e.preventDefault();
-            toggleChat();
-        };
+        // Scroll to bottom and focus the typing box
+        setTimeout(() => chatMessages.scrollTop = chatMessages.scrollHeight, 50); 
+        setTimeout(() => chatInput.focus(), 100); 
+    } else { 
+        // CLOSE THE CHAT
+        isChatOpen = false;
+        chatContainer.classList.add('hidden'); 
+        chatToggle.classList.remove('hidden'); 
+    }
+}
+
 
         async function sendChatMessage(e) {
             e.preventDefault();
