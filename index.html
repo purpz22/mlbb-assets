@@ -633,47 +633,100 @@ async function checkGuess(e) {
     }
 }
         // --- CHAT SYSTEM ---
+ let isInitialLoad = true;
+
         function initChatSystem() {
+            // Get the 30 most recent messages
             const q = query(collection(db, "messages"), orderBy("timestamp", "desc"), limit(30));
+            
             onSnapshot(q, (snapshot) => {
+                // Reverse the order so the oldest is at the top, newest at the bottom
+                const newDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).reverse();
+                
+                // Clear the chat box and rebuild it (prevents duplicate message bugs)
+                els.chatMessages.innerHTML = '<div class="text-center text-[10px] text-slate-500 uppercase tracking-widest py-4">Welcome to Global Chat</div>';
+                
+                newDocs.forEach(data => {
+                    addMessageToUI(data);
+                });
+
+                // Handle Toasts (Pop-ups on the side of the screen) ONLY for new messages
                 snapshot.docChanges().forEach((change) => {
-                    if (change.type === "added") {
+                    if (change.type === "added" && !isInitialLoad) {
                         const data = change.doc.data();
-                        const age = Date.now() - (data.timestamp ? data.timestamp.toMillis() : Date.now());
-                        if (age < 30000) {
-                            addMessageToUI(data, data.timestamp ? data.timestamp.toMillis() : Date.now());
-                            if (!isChatOpen && age < 5000) showToast(data);
-                        }
+                        if (!isChatOpen) showToast(data);
                     }
                 });
+                
+                // Auto-scroll to bottom on first load
+                if (isInitialLoad) {
+                    setTimeout(() => els.chatMessages.scrollTop = els.chatMessages.scrollHeight, 100);
+                    isInitialLoad = false;
+                }
             });
         }
+
         function toggleChat() {
             isChatOpen = !isChatOpen;
-            if (isChatOpen) { els.chatContainer.classList.remove('hidden'); els.chatToggle.classList.add('hidden'); setTimeout(()=>els.chatMessages.scrollTop=els.chatMessages.scrollHeight,50); setTimeout(()=>els.chatInput.focus(),100); } 
-            else { els.chatContainer.classList.add('hidden'); els.chatToggle.classList.remove('hidden'); }
+            if (isChatOpen) { 
+                els.chatContainer.classList.remove('hidden'); 
+                els.chatToggle.classList.add('hidden'); 
+                setTimeout(() => els.chatMessages.scrollTop = els.chatMessages.scrollHeight, 50); 
+                setTimeout(() => els.chatInput.focus(), 100); 
+            } else { 
+                els.chatContainer.classList.add('hidden'); 
+                els.chatToggle.classList.remove('hidden'); 
+            }
         }
+
         async function sendChatMessage(e) {
             e.preventDefault();
             const text = els.chatInput.value.trim();
             if (!text) return;
-            els.chatInput.value = ""; els.chatInput.focus();
-            await addDoc(collection(db, "messages"), { ign: currentUser.ign, rank: currentUser.rank || "N/A", text: text, timestamp: serverTimestamp() });
-        }
-        function addMessageToUI(data, msgTime) {
-            const id = `msg-${msgTime}`; if (document.getElementById(id)) return;
-            const div = document.createElement('div'); div.id = id; div.className = "flex flex-col animate-[slideUp_0.3s_ease-out]";
-            div.innerHTML = `<div class="flex items-baseline gap-2"><span class="text-[10px] font-black ${data.rank==="#1"?"text-cyan-400":"text-indigo-400"} tracking-wider">${data.rank}</span><span class="text-xs font-bold text-slate-400 truncate max-w-[120px]">${data.ign}</span></div><div class="bg-slate-800/60 rounded-r-xl rounded-bl-xl p-2 text-sm text-slate-200 mt-0.5 break-words border border-slate-700/50">${data.text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`;
-            els.chatMessages.appendChild(div); els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
-            setTimeout(() => { div.classList.add('opacity-50'); setTimeout(() => div.remove(), 1000); }, 30000 - (Date.now() - msgTime));
-        }
-        function showToast(data) {
-            const toast = document.createElement('div'); toast.className = "bg-slate-900/90 backdrop-blur-md border border-slate-700 p-3 rounded-xl shadow-lg flex flex-col gap-1 toast-enter pointer-events-auto max-w-[250px]";
-            toast.innerHTML = `<div class="flex items-center gap-2"><span class="text-[9px] font-black text-indigo-400 bg-indigo-900/30 px-1 rounded">${data.rank}</span><span class="text-[10px] font-bold text-slate-400 truncate">${data.ign}</span></div><span class="text-xs text-white leading-tight break-words">${data.text.replace(/</g, "&lt;")}</span>`;
-            els.chatToasts.appendChild(toast);
-            setTimeout(() => { toast.classList.remove('toast-enter'); toast.classList.add('toast-exit'); setTimeout(() => toast.remove(), 300); }, 4000);
+            
+            els.chatInput.value = ""; 
+            els.chatInput.focus();
+            
+            try {
+                // Save to Firebase
+                await addDoc(collection(db, "messages"), { 
+                    ign: currentUser.ign, 
+                    rank: currentUser.rank || "N/A", 
+                    text: text, 
+                    timestamp: serverTimestamp() 
+                });
+            } catch (err) {
+                console.error("Chat Error:", err);
+                alert("Failed to send message. Check Firebase Database Rules.");
+            }
         }
 
+        function addMessageToUI(data) {
+            const div = document.createElement('div'); 
+            div.className = "flex flex-col animate-[slideUp_0.3s_ease-out]";
+            div.innerHTML = `
+                <div class="flex items-baseline gap-2">
+                    <span class="text-[10px] font-black ${data.rank === "#1" ? "text-cyan-400" : "text-indigo-400"} tracking-wider">${data.rank}</span>
+                    <span class="text-xs font-bold text-slate-400 truncate max-w-[120px]">${data.ign}</span>
+                </div>
+                <div class="bg-slate-800/60 rounded-r-xl rounded-bl-xl p-2 text-sm text-slate-200 mt-0.5 break-words border border-slate-700/50">
+                    ${data.text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
+                </div>`;
+            els.chatMessages.appendChild(div); 
+            els.chatMessages.scrollTop = els.chatMessages.scrollHeight; // Auto-scroll down
+        }
+
+        function showToast(data) {
+            const toast = document.createElement('div'); 
+            toast.className = "bg-slate-900/90 backdrop-blur-md border border-slate-700 p-3 rounded-xl shadow-lg flex flex-col gap-1 toast-enter pointer-events-auto max-w-[250px]";
+            toast.innerHTML = `<div class="flex items-center gap-2"><span class="text-[9px] font-black text-indigo-400 bg-indigo-900/30 px-1 rounded">${data.rank}</span><span class="text-[10px] font-bold text-slate-400 truncate">${data.ign}</span></div><span class="text-xs text-white leading-tight break-words">${data.text.replace(/</g, "&lt;")}</span>`;
+            els.chatToasts.appendChild(toast);
+            setTimeout(() => { 
+                toast.classList.remove('toast-enter'); 
+                toast.classList.add('toast-exit'); 
+                setTimeout(() => toast.remove(), 300); 
+            }, 4000);
+        }
         // --- UTILS ---
         function fireCustomConfetti() {
             const colors = ['#22d3ee', '#818cf8', '#f8fafc'];
