@@ -462,13 +462,20 @@
 
         // --- INSTANT AUTO-LOGIN ---
         window.addEventListener('DOMContentLoaded', () => {
-            const savedId = localStorage.getItem('mlbb_id');
-            const savedZone = localStorage.getItem('mlbb_zone');
-            
-            if (savedId && savedZone) {
-                performAutoLogin(savedId, savedZone);
-            }
-        });
+    // 1. Pre-fill the input boxes with the last used ID/Zone
+    const lastId = localStorage.getItem('last_mlbb_id');
+    const lastZone = localStorage.getItem('last_mlbb_zone');
+    if (lastId) document.getElementById('login-id').value = lastId;
+    if (lastZone) document.getElementById('login-zone').value = lastZone;
+
+    // 2. Perform auto-login if they haven't explicitly logged out
+    const savedId = localStorage.getItem('mlbb_id');
+    const savedZone = localStorage.getItem('mlbb_zone');
+    
+    if (savedId && savedZone) {
+        performAutoLogin(savedId, savedZone);
+    }
+});
 
         async function performAutoLogin(id, zone) {
             const btn = document.getElementById('btn-login');
@@ -592,12 +599,17 @@
                 }
                 // --- CORE FIX ENDS HERE ---
 
-                // 4. Set Local State
-                currentUser.id = id;
-                currentUser.ign = fetchedIgn;
-                
-                localStorage.setItem('mlbb_id', id); 
-                localStorage.setItem('mlbb_zone', zone);
+           // 4. Set Local State
+            currentUser.id = id;
+            currentUser.ign = fetchedIgn;
+
+            // For auto-login
+            localStorage.setItem('mlbb_id', id); 
+            localStorage.setItem('mlbb_zone', zone);
+
+            // For remembering the typing inputs after logout
+            localStorage.setItem('last_mlbb_id', id); 
+            localStorage.setItem('last_mlbb_zone', zone);
 
                 // 5. Switch Screens
                 document.getElementById('screen-login').classList.add('hidden');
