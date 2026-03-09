@@ -732,40 +732,41 @@ async function checkGuess(e) {
             });
         }
 
-        function toggleChat() {
-            isChatOpen = !isChatOpen;
-            if (isChatOpen) { 
-                els.chatContainer.classList.remove('hidden'); 
-                els.chatToggle.classList.add('hidden'); 
-                setTimeout(() => els.chatMessages.scrollTop = els.chatMessages.scrollHeight, 50); 
-                setTimeout(() => els.chatInput.focus(), 100); 
+        function function toggleChat() {
+            // Get fresh elements directly from the HTML to prevent "null" errors
+            const chatContainer = document.getElementById('chat-container');
+            const chatToggle = document.getElementById('btn-chat-toggle');
+            const chatMessages = document.getElementById('chat-messages');
+            const chatInput = document.getElementById('chat-input');
+            
+            // Check if it is currently hidden
+            if (chatContainer.classList.contains('hidden')) { 
+                // OPEN THE CHAT
+                isChatOpen = true;
+                chatContainer.classList.remove('hidden'); 
+                chatToggle.classList.add('hidden'); 
+                
+                // Scroll to bottom and focus the typing box
+                setTimeout(() => chatMessages.scrollTop = chatMessages.scrollHeight, 50); 
+                setTimeout(() => chatInput.focus(), 100); 
             } else { 
-                els.chatContainer.classList.add('hidden'); 
-                els.chatToggle.classList.remove('hidden'); 
+                // CLOSE THE CHAT
+                isChatOpen = false;
+                chatContainer.classList.add('hidden'); 
+                chatToggle.classList.remove('hidden'); 
             }
         }
 
-        async function sendChatMessage(e) {
+        // FORCE ATTACH THE CLICK EVENTS (Put these right below the toggleChat function)
+        document.getElementById('btn-chat-toggle').onclick = function(e) {
             e.preventDefault();
-            const text = els.chatInput.value.trim();
-            if (!text) return;
-            
-            els.chatInput.value = ""; 
-            els.chatInput.focus();
-            
-            try {
-                // Save to Firebase
-                await addDoc(collection(db, "messages"), { 
-                    ign: currentUser.ign, 
-                    rank: currentUser.rank || "N/A", 
-                    text: text, 
-                    timestamp: serverTimestamp() 
-                });
-            } catch (err) {
-                console.error("Chat Error:", err);
-                alert("Failed to send message. Check Firebase Database Rules.");
-            }
-        }
+            toggleChat();
+        };
+        
+        document.getElementById('btn-chat-close').onclick = function(e) {
+            e.preventDefault();
+            toggleChat();
+        };
 
         function addMessageToUI(data) {
             const div = document.createElement('div'); 
