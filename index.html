@@ -102,8 +102,11 @@
             <h1 class="text-[3.5rem] font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-cyan-400 to-indigo-400 drop-shadow-lg leading-none">GUESS</h1>
             <h2 class="text-3xl font-black italic tracking-widest text-white leading-none mt-1">THE HERO</h2>
             <div class="h-1 w-12 bg-indigo-500 rounded-full mt-4 shadow-[0_0_15px_rgba(99,102,241,0.8)]"></div>
-            <p class="mt-4 text-[11px] font-black text-cyan-300 uppercase tracking-[0.15em] text-center px-4 py-2 leading-relaxed bg-slate-900/60 rounded-full border border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
-                🏆 Top 1 Player Will win 1 <span class="text-white">EPIC skin</span> of their choice
+            <p class="text-[10px] font-black text-yellow-400 uppercase tracking-[0.15em] bg-yellow-900/20 px-3 py-1 rounded-full border border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.2)]">
+                🥇 1st: Epic Skin
+            </p>
+            <p class="text-[10px] font-black text-purple-400 uppercase tracking-[0.15em] bg-purple-900/20 px-3 py-1 rounded-full border border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]">
+                🥈 2nd: Starlight Premium
             </p>
         </div>
 
@@ -199,6 +202,18 @@
             </button>
         </div>
 
+        <!-- SPOTIFY RADIO WIDGET -->
+        <button id="btn-radio-toggle" class="absolute top-20 right-4 w-10 h-10 bg-slate-900/80 backdrop-blur-md rounded-full shadow-lg z-40 flex items-center justify-center border border-green-500/50 active:scale-90 transition-all hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.563.387-.857.207-2.35-1.434-5.305-1.76-8.786-.963-.335.077-.67-.133-.746-.47-.077-.334.132-.67.47-.745 3.808-.87 7.076-.496 9.712 1.115.293.18.386.563.207.856zm1.268-2.833c-.227.366-.706.48-1.072.253-2.687-1.65-6.785-2.13-9.965-1.166-.413.127-.848-.106-.973-.517-.125-.413.108-.848.52-.973 3.632-1.1 8.147-.563 11.237 1.332.365.226.48.705.253 1.07zm.106-2.94c-3.23-1.92-8.56-2.096-11.64-1.16-.497.15-1.016-.13-1.166-.625-.15-.498.13-1.018.626-1.168 3.53-1.073 9.405-.866 13.115 1.337.445.264.59.838.327 1.282-.264.443-.838.59-1.282.325z"/></svg>
+        </button>
+        
+        <div id="radio-container" class="absolute top-32 right-4 w-[300px] z-50 hidden transition-all duration-300">
+            <div class="bg-slate-900/95 backdrop-blur-2xl border border-green-500/30 rounded-2xl shadow-2xl p-2 relative">
+                <button id="btn-radio-close" class="absolute -top-3 -right-3 bg-slate-800 text-slate-400 hover:text-white border border-slate-600 rounded-full p-1 shadow-md z-10"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                <iframe id="spotify-player" style="border-radius:12px" src="" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+            </div>
+        </div>
+
         <!-- CHAT -->
         <div id="chat-toasts" class="absolute bottom-[200px] left-4 right-4 flex flex-col items-start gap-2 pointer-events-none z-30"></div>
         <button id="btn-chat-toggle" class="absolute bottom-6 right-6 w-12 h-12 bg-indigo-600 rounded-full shadow-[0_0_20px_rgba(79,70,229,0.5)] z-40 flex items-center justify-center border border-indigo-400/50 active:scale-90 transition-all hover:bg-indigo-500">
@@ -278,6 +293,7 @@
         let globalEventX2 = false;
         let globalEventFirstLetter = false;
         let currentMusic = null;
+        let activeMusicUrl = null; // Fix: We track the raw URL to prevent instant recreation loop
         let isMusicPlaying = false;
         
         // VINE BOOM
@@ -351,19 +367,37 @@
                         els.guessInput.placeholder = globalEventFirstLetter ? `Starts with: ${currentHero.name.charAt(0).toUpperCase()}` : "ENTER HERO";
                     }
 
-                    // 3. Music
-                    if(state.musicUrl && state.musicUrl !== "") {
-                        if(!currentMusic || currentMusic.src !== state.musicUrl) {
-                            if(currentMusic) currentMusic.pause();
-                            currentMusic = new Audio(state.musicUrl);
-                            currentMusic.loop = true;
-                            currentMusic.volume = 0.5;
-                            currentMusic.play().then(() => isMusicPlaying = true).catch(e => { console.log("Audio waiting for interaction"); isMusicPlaying = false; });
+                // 3. Music (Spotify Iframe Method)
+                    const spotifyIframe = document.getElementById('spotify-player');
+                    const radioToggleBtn = document.getElementById('btn-radio-toggle');
+                    const radioContainerDiv = document.getElementById('radio-container');
+
+                    if(state.musicUrl && state.musicUrl.trim() !== "") {
+                        if(activeMusicUrl !== state.musicUrl) {
+                            activeMusicUrl = state.musicUrl;
+                            
+                            // Check if it's a Spotify Embed Link
+                            if(activeMusicUrl.includes("spotify.com/embed")) {
+                                spotifyIframe.src = activeMusicUrl;
+                                // Show the radio button if it was hidden
+                                if(radioContainerDiv.classList.contains('hidden')) {
+                                    radioToggleBtn.classList.remove('hidden');
+                                }
+                            } else {
+                                // Fallback just in case you use an MP3 link instead of Spotify later
+                                if(currentMusic) { currentMusic.pause(); currentMusic.src = ""; }
+                                currentMusic = new Audio(activeMusicUrl);
+                                currentMusic.loop = true; currentMusic.volume = 0.5;
+                                currentMusic.play().catch(e => console.log("Waiting for interaction"));
+                            }
                         }
-                    } else if (currentMusic) {
-                        currentMusic.pause();
-                        currentMusic = null;
-                        isMusicPlaying = false;
+                    } else {
+                        // Admin cleared the music
+                        activeMusicUrl = null;
+                        spotifyIframe.src = "";
+                        radioToggleBtn.classList.add('hidden');
+                        radioContainerDiv.classList.add('hidden');
+                        if (currentMusic) { currentMusic.pause(); currentMusic = null; }
                     }
 
                     // 4. DRAMATIC BROADCAST (Fixed)
@@ -423,56 +457,189 @@
         document.getElementById('btn-close-leaderboard').addEventListener('click', closeLeaderboard);
         document.getElementById('form-search').addEventListener('submit', searchPlayer);
         els.heroImg.addEventListener('error', () => { els.heroImg.style.display='none'; els.debugMsg.innerText=`Missing: ${els.heroImg.src}`; els.debugMsg.classList.remove('hidden'); });
-        
+        window.addEventListener('popstate', (e) => {
+            closeLeaderboard();
+        });
+        // Radio Toggle
+        const radioToggle = document.getElementById('btn-radio-toggle');
+        const radioContainer = document.getElementById('radio-container');
+        const radioClose = document.getElementById('btn-radio-close');
+
+        radioToggle.addEventListener('click', () => {
+            radioContainer.classList.remove('hidden');
+            radioToggle.classList.add('hidden');
+        });
+        radioClose.addEventListener('click', () => {
+            radioContainer.classList.add('hidden');
+            radioToggle.classList.remove('hidden');
+        });
         // Chat
         els.chatToggle.addEventListener('click', toggleChat);
         els.chatClose.addEventListener('click', toggleChat);
         els.chatForm.addEventListener('submit', sendChatMessage);
 
-        // Music Force Start on Interaction
-        document.body.addEventListener('click', () => {
-            if(currentMusic && !isMusicPlaying) currentMusic.play().then(() => isMusicPlaying = true).catch(e => console.log(e));
-        }, { passive: true });
-
-        // Auto Login
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedId = localStorage.getItem('mlbb_id');
-            const savedZone = localStorage.getItem('mlbb_zone');
-            if (savedId && savedZone) {
-                document.getElementById('login-id').value = savedId;
-                document.getElementById('login-zone').value = savedZone;
-                document.getElementById('btn-login').click();
+        // Music Force Start on Interaction (Expanded to catch any input/touches)
+        const unlockMusic = () => {
+            if(currentMusic && currentMusic.paused) {
+                currentMusic.play().then(() => isMusicPlaying = true).catch(e => console.log(e));
             }
-        });
+        };
+        document.body.addEventListener('click', unlockMusic, { passive: true });
+        document.body.addEventListener('touchstart', unlockMusic, { passive: true });
+        document.body.addEventListener('keydown', unlockMusic, { passive: true });
 
+        // --- INSTANT AUTO-LOGIN ---
+        window.addEventListener('DOMContentLoaded', () => {
+    // 1. Pre-fill the input boxes with the last used ID/Zone
+    const lastId = localStorage.getItem('last_mlbb_id');
+    const lastZone = localStorage.getItem('last_mlbb_zone');
+    if (lastId) document.getElementById('login-id').value = lastId;
+    if (lastZone) document.getElementById('login-zone').value = lastZone;
+
+    // 2. Perform auto-login if they haven't explicitly logged out
+    const savedId = localStorage.getItem('mlbb_id');
+    const savedZone = localStorage.getItem('mlbb_zone');
+    
+    if (savedId && savedZone) {
+        performAutoLogin(savedId, savedZone);
+    }
+});
+
+        async function performAutoLogin(id, zone) {
+            const btn = document.getElementById('btn-login');
+            btn.disabled = true;
+            btn.innerText = "RESTORING SESSION...";
+            els.loginMsg.innerText = "Welcome back!";
+
+            try {
+                // Fetch directly from your database, skip the slow external API
+                const userRef = doc(db, "players", id);
+                const userDoc = await getDoc(userRef);
+
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    
+                    if (userData.isBanned) {
+                        alert("ACCOUNT BANNED"); 
+                        localStorage.clear(); 
+                        location.reload(); 
+                        return;
+                    }
+                    
+                    // Restore Player State
+                    currentUser.id = id;
+                    currentUser.ign = userData.ign;
+                    currentUser.score = userData.score || 0;
+                    
+                    // Switch Screens
+                    document.getElementById('screen-login').classList.add('hidden');
+                    document.getElementById('screen-login').classList.remove('flex');
+                    document.getElementById('screen-game').classList.remove('hidden');
+                    document.getElementById('screen-game').classList.add('flex');
+                    
+                    els.playerIgn.innerText = currentUser.ign;
+                    els.playerScore.innerText = currentUser.score;
+                    
+                    // Start Game
+                    nextHero();
+                    initChatSystem();
+                    listenToServerCommands();
+                    
+                    // Background Rank Check
+                    try {
+                        const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
+                        const snapshot = await getDocs(q);
+                        let rank = 1, found = false;
+                        snapshot.forEach(doc => { if(doc.id === id) found = true; if(!found) rank++; });
+                        currentUser.rank = found ? `#${rank}` : "100+";
+                    } catch(e) { currentUser.rank = "?"; }
+
+                } else {
+                    // Document missing from database, force manual login
+                    throw new Error("Session expired.");
+                }
+            } catch (e) {
+                console.error("Auto-login failed:", e);
+                // Clear broken save data and reset the login screen
+                localStorage.removeItem('mlbb_id');
+                localStorage.removeItem('mlbb_zone');
+                btn.disabled = false;
+                btn.innerText = "CONNECT";
+                els.loginMsg.innerText = "";
+                
+                // Leave their ID typed in just in case they want to try again
+                document.getElementById('login-id').value = id; 
+                document.getElementById('login-zone').value = zone;
+            }
+        }
         document.getElementById('btn-logout').addEventListener('click', () => { localStorage.removeItem('mlbb_id'); localStorage.removeItem('mlbb_zone'); location.reload(); });
 
         async function handleLogin(e) {
             e.preventDefault();
             const id = document.getElementById('login-id').value.trim();
             const zone = document.getElementById('login-zone').value.trim();
+            
+            // 1. Input Validation
             if (!/^\d+$/.test(id) || !/^\d+$/.test(zone)) return;
 
             els.loginMsg.innerText = "Connecting...";
             document.getElementById('btn-login').disabled = true;
 
             try {
-                // API check
+                // 2. External API Check
                 const res = await fetch(`https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`);
                 const data = await res.json();
-                if (!data.success && !data.name && !data.nickname) throw new Error("Invalid ID");
                 
-                // DB check (Ban/Score)
-                const userDoc = await getDoc(doc(db, "players", id));
-                if (userDoc.exists() && userDoc.data().isBanned) {
-                    alert("ACCOUNT BANNED"); localStorage.clear(); location.reload(); return;
+                // Check if API returned a valid user
+                if (!data.success && !data.name && !data.nickname) {
+                    throw new Error("Invalid ID");
                 }
+                
+                // Get the IGN from the API
+                const fetchedIgn = data.name || data.nickname;
 
-                currentUser.id = id;
-                currentUser.ign = data.name || data.nickname;
-                currentUser.score = userDoc.exists() ? userDoc.data().score : 0;
-                localStorage.setItem('mlbb_id', id); localStorage.setItem('mlbb_zone', zone);
+                // 3. Database Check
+                const userRef = doc(db, "players", id);
+                const userDoc = await getDoc(userRef);
 
+                // --- CORE FIX STARTS HERE ---
+                if (userDoc.exists()) {
+                    // OLD PLAYER: Check ban and load score
+                    const userData = userDoc.data();
+                    if (userData.isBanned) {
+                        alert("ACCOUNT BANNED"); 
+                        localStorage.clear(); 
+                        location.reload(); 
+                        return;
+                    }
+                    currentUser.score = userData.score || 0;
+                } else {
+                    // NEW PLAYER: Create the document IMMEDIATELY
+                    // This prevents the listener from kicking them out
+                    currentUser.score = 0;
+                    await setDoc(userRef, {
+                        ign: fetchedIgn,
+                        score: 0,
+                        createdAt: serverTimestamp(),
+                        isBanned: false,
+                        zone: zone
+                    });
+                }
+                // --- CORE FIX ENDS HERE ---
+
+           // 4. Set Local State
+            currentUser.id = id;
+            currentUser.ign = fetchedIgn;
+
+            // For auto-login
+            localStorage.setItem('mlbb_id', id); 
+            localStorage.setItem('mlbb_zone', zone);
+
+            // For remembering the typing inputs after logout
+            localStorage.setItem('last_mlbb_id', id); 
+            localStorage.setItem('last_mlbb_zone', zone);
+
+                // 5. Switch Screens
                 document.getElementById('screen-login').classList.add('hidden');
                 document.getElementById('screen-login').classList.remove('flex');
                 document.getElementById('screen-game').classList.remove('hidden');
@@ -481,11 +648,15 @@
                 els.playerIgn.innerText = currentUser.ign;
                 els.playerScore.innerText = currentUser.score;
                 
+                // 6. Start Game Logic
                 nextHero();
                 initChatSystem();
-                listenToServerCommands(); // Start listening
                 
-                // Background Rank Check
+                // 7. Start Listener 
+                // (Now safe because the document is guaranteed to exist)
+                listenToServerCommands(); 
+                
+                // 8. Background Rank Check
                 try {
                     const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
                     const snapshot = await getDocs(q);
@@ -495,121 +666,277 @@
                 } catch(e) { currentUser.rank="?"; }
 
             } catch(e) { 
-                console.error(e); els.loginMsg.innerText = "Login Failed"; 
-                localStorage.clear();
+                console.error(e); 
+                els.loginMsg.innerText = "Login Failed: Check ID/Zone"; 
+                localStorage.removeItem('mlbb_id');
+                localStorage.removeItem('mlbb_zone');
             } finally {
                 document.getElementById('btn-login').disabled = false;
             }
         }
-
+        
         // --- GAMEPLAY ---
         function nextHero() {
-            els.guessInput.value = ""; els.guessInput.disabled = false; els.btnSubmit.disabled = false;
-            els.feedback.innerText = ""; els.debugMsg.classList.add('hidden'); els.heroImg.style.display = 'block';
-            els.timerBar.style.backgroundColor = "#22d3ee"; 
+            try {
+                // 1. Reset all UI elements
+                els.guessInput.value = ""; 
+                els.guessInput.disabled = false; 
+                els.btnSubmit.disabled = false;
+                els.feedback.innerText = ""; 
+                els.debugMsg.classList.add('hidden'); 
+                els.heroImg.style.display = 'block';
+                els.timerBar.style.backgroundColor = "#22d3ee"; 
 
-            currentHero = heroes[Math.floor(Math.random() * heroes.length)];
-            els.heroImg.src = currentHero.icon_path;
-            
-            els.guessInput.placeholder = globalEventFirstLetter ? `Starts with: ${currentHero.name.charAt(0).toUpperCase()}` : "ENTER HERO";
-            setTimeout(() => els.guessInput.focus(), 100);
-            startTimer();
+                // 2. Pick a new random hero
+                currentHero = heroes[Math.floor(Math.random() * heroes.length)];
+                els.heroImg.src = currentHero.icon_path;
+                
+                // 3. Set Placeholder Text
+                els.guessInput.placeholder = globalEventFirstLetter ? `Starts with: ${currentHero.name.charAt(0).toUpperCase()}` : "ENTER HERO";
+                
+                // 4. Focus the input box safely
+                setTimeout(() => {
+                    if (!els.guessInput.disabled) els.guessInput.focus();
+                }, 100);
+                
+                // 5. Start the clock
+                startTimer();
+            } catch (err) {
+                console.error("Game Loop Error (nextHero):", err);
+                // If it crashes, force it to try again so the game doesn't freeze
+                setTimeout(nextHero, 1000);
+            }
         }
 
         function startTimer() {
+            // Clear any old timers just in case
             if (timerInterval) clearInterval(timerInterval);
             isGameActive = true;
             let timeLeft = 15;
             els.timerText.innerText = `${timeLeft}s`;
-            els.timerBar.style.transition = 'none'; els.timerBar.style.transform = 'scaleX(1)'; void els.timerBar.offsetWidth; 
+            
+            // Reset the shrinking animation bar
+            els.timerBar.style.transition = 'none'; 
+            els.timerBar.style.transform = 'scaleX(1)'; 
+            void els.timerBar.offsetWidth; // Force CSS refresh
+            
+            // Start the shrink animation
             els.timerBar.style.transition = `transform 15s linear, background-color 0.3s`;
             els.timerBar.style.transform = 'scaleX(0)';
 
+            // Start the countdown
             timerInterval = setInterval(() => {
-                timeLeft--; els.timerText.innerText = `${timeLeft}s`;
-                if (timeLeft <= 5) els.timerBar.style.backgroundColor = "#f43f5e"; 
-                if (timeLeft <= 0) { clearInterval(timerInterval); timeIsUp(); }
+                if (!isGameActive) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+                
+                timeLeft--; 
+                els.timerText.innerText = `${timeLeft}s`;
+                
+                if (timeLeft <= 5) els.timerBar.style.backgroundColor = "#f43f5e"; // Turn red
+                
+                if (timeLeft <= 0) { 
+                    clearInterval(timerInterval); 
+                    timeIsUp(); 
+                }
             }, 1000);
         }
 
         function timeIsUp() {
             isGameActive = false;
             els.feedback.innerText = `Time's Up! It was ${currentHero.name}`;
-            els.feedback.className = "text-center font-bold text-xl h-7 tracking-wide flex items-center justify-center text-rose-500";
+            els.feedback.className = "text-center font-bold text-xl h-7 tracking-wide flex items-center justify-center text-rose-500 uppercase";
+            
+            // Red shake animation
             els.heroBox.classList.add('animate-error');
-            setTimeout(() => { els.heroBox.classList.remove('animate-error'); }, 400);
+            setTimeout(() => els.heroBox.classList.remove('animate-error'), 400);
+            
+            // Wait 3 seconds, then next hero
             lockGame(3000);
         }
 
         async function checkGuess(e) {
             e.preventDefault();
             if (!isGameActive) return;
+            
             const guess = els.guessInput.value.toLowerCase().replace(/[^a-z0-9]/g, '');
             const answer = currentHero.name.toLowerCase().replace(/[^a-z0-9]/g, '');
 
             if (guess === answer) {
-                clearInterval(timerInterval); isGameActive = false; els.timerBar.style.transition = 'none'; 
-                if(globalEventX2) { currentUser.score += 2; els.feedback.innerText = "CORRECT! (+2 POINTS)"; } 
-                else { currentUser.score++; els.feedback.innerText = "CORRECT!"; }
+                // --- CORRECT ---
+                clearInterval(timerInterval); 
+                isGameActive = false; 
+                els.timerBar.style.transition = 'none'; 
+                
+                if (globalEventX2) { 
+                    currentUser.score += 2; 
+                    els.feedback.innerText = "CORRECT! (+2 POINTS)"; 
+                } else { 
+                    currentUser.score++; 
+                    els.feedback.innerText = "CORRECT!"; 
+                }
+                
                 els.feedback.className = "text-center font-black text-xl h-7 text-cyan-400 tracking-[0.2em] drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] flex items-center justify-center";
                 els.playerScore.innerText = currentUser.score;
-                fireCustomConfetti(); lockGame(1500); saveScore(); 
+                
+                fireCustomConfetti(); 
+                saveScore(); 
+                
+                // Wait 1.5 seconds, then next hero
+                lockGame(1500); 
             } else {
-                els.guessInput.value = ""; els.feedback.innerText = "WRONG!"; els.feedback.className = "text-center font-bold text-xl h-7 tracking-wide flex items-center justify-center text-rose-500";
-                els.heroBox.classList.add('animate-error'); setTimeout(() => els.heroBox.classList.remove('animate-error'), 400);
+                // --- WRONG ---
+                clearInterval(timerInterval); 
+                isGameActive = false; 
+                els.timerBar.style.transition = 'none'; 
+                
+                els.guessInput.value = ""; 
+                els.feedback.innerText = `WRONG! It was ${currentHero.name}`; 
+                els.feedback.className = "text-center font-bold text-lg h-7 tracking-wide flex items-center justify-center text-rose-500 uppercase";
+                
+                els.heroBox.classList.add('animate-error'); 
+                setTimeout(() => els.heroBox.classList.remove('animate-error'), 400);
+                
+                // Wait 1.5 seconds so they can read the answer, then next hero
+                lockGame(1500);
             }
         }
 
         function lockGame(delay) {
-            els.guessInput.disabled = true; els.btnSubmit.disabled = true;
-            setTimeout(nextHero, delay);
+            // Disable inputs so they can't type while it transitions
+            els.guessInput.disabled = true; 
+            els.btnSubmit.disabled = true;
+            
+            // Force the next hero to load after the delay
+            setTimeout(() => {
+                nextHero();
+            }, delay);
         }
 
-        function saveScore() {
+        async function saveScore() {
             if (!navigator.onLine) return; 
-            setDoc(doc(db, "players", currentUser.id), { ign: currentUser.ign, score: currentUser.score, updatedAt: new Date() }, { merge: true });
+            try {
+                await setDoc(doc(db, "players", currentUser.id), { 
+                    ign: currentUser.ign, 
+                    score: currentUser.score, 
+                    updatedAt: new Date() 
+                }, { merge: true });
+            } catch (err) {
+                console.error("Failed to save score:", err);
+            }
         }
 
         // --- CHAT SYSTEM ---
+        let isInitialLoad = true;
+
         function initChatSystem() {
+            // Get the 30 most recent messages
             const q = query(collection(db, "messages"), orderBy("timestamp", "desc"), limit(30));
+            
             onSnapshot(q, (snapshot) => {
+                // Reverse the order so the oldest is at the top, newest at the bottom
+                const newDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).reverse();
+                
+                // Clear the chat box and rebuild it (prevents duplicate message bugs)
+                els.chatMessages.innerHTML = '<div class="text-center text-[10px] text-slate-500 uppercase tracking-widest py-4">Welcome to Global Chat</div>';
+                
+                newDocs.forEach(data => {
+                    addMessageToUI(data);
+                });
+
+                // Handle Toasts (Pop-ups on the side of the screen) ONLY for new messages
                 snapshot.docChanges().forEach((change) => {
-                    if (change.type === "added") {
+                    if (change.type === "added" && !isInitialLoad) {
                         const data = change.doc.data();
-                        const age = Date.now() - (data.timestamp ? data.timestamp.toMillis() : Date.now());
-                        if (age < 30000) {
-                            addMessageToUI(data, data.timestamp ? data.timestamp.toMillis() : Date.now());
-                            if (!isChatOpen && age < 5000) showToast(data);
-                        }
+                        if (!isChatOpen) showToast(data);
                     }
                 });
+                
+                // Auto-scroll to bottom on first load
+                if (isInitialLoad) {
+                    setTimeout(() => els.chatMessages.scrollTop = els.chatMessages.scrollHeight, 100);
+                    isInitialLoad = false;
+                }
             });
         }
-        function toggleChat() {
-            isChatOpen = !isChatOpen;
-            if (isChatOpen) { els.chatContainer.classList.remove('hidden'); els.chatToggle.classList.add('hidden'); setTimeout(()=>els.chatMessages.scrollTop=els.chatMessages.scrollHeight,50); setTimeout(()=>els.chatInput.focus(),100); } 
-            else { els.chatContainer.classList.add('hidden'); els.chatToggle.classList.remove('hidden'); }
-        }
+
+function toggleChat(e) {
+    // Prevent double-firing or weird browser behavior
+    if (e) e.preventDefault(); 
+    
+    // Get fresh elements directly from the HTML to prevent "null" errors
+    const chatContainer = document.getElementById('chat-container');
+    const chatToggle = document.getElementById('btn-chat-toggle');
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    
+    // Check if it is currently hidden
+    if (chatContainer.classList.contains('hidden')) { 
+        // OPEN THE CHAT
+        isChatOpen = true;
+        chatContainer.classList.remove('hidden'); 
+        chatToggle.classList.add('hidden'); 
+        
+        // Scroll to bottom and focus the typing box
+        setTimeout(() => chatMessages.scrollTop = chatMessages.scrollHeight, 50); 
+        setTimeout(() => chatInput.focus(), 100); 
+    } else { 
+        // CLOSE THE CHAT
+        isChatOpen = false;
+        chatContainer.classList.add('hidden'); 
+        chatToggle.classList.remove('hidden'); 
+    }
+}
+
+
         async function sendChatMessage(e) {
             e.preventDefault();
             const text = els.chatInput.value.trim();
             if (!text) return;
-            els.chatInput.value = ""; els.chatInput.focus();
-            await addDoc(collection(db, "messages"), { ign: currentUser.ign, rank: currentUser.rank || "N/A", text: text, timestamp: serverTimestamp() });
+            
+            els.chatInput.value = ""; 
+            els.chatInput.focus();
+            
+            try {
+                // Save to Firebase
+                await addDoc(collection(db, "messages"), { 
+                    ign: currentUser.ign, 
+                    rank: currentUser.rank || "N/A", 
+                    text: text, 
+                    timestamp: serverTimestamp() 
+                });
+            } catch (err) {
+                console.error("Chat Error:", err);
+                alert("Failed to send message. Check Firebase Database Rules.");
+            }
         }
-        function addMessageToUI(data, msgTime) {
-            const id = `msg-${msgTime}`; if (document.getElementById(id)) return;
-            const div = document.createElement('div'); div.id = id; div.className = "flex flex-col animate-[slideUp_0.3s_ease-out]";
-            div.innerHTML = `<div class="flex items-baseline gap-2"><span class="text-[10px] font-black ${data.rank==="#1"?"text-cyan-400":"text-indigo-400"} tracking-wider">${data.rank}</span><span class="text-xs font-bold text-slate-400 truncate max-w-[120px]">${data.ign}</span></div><div class="bg-slate-800/60 rounded-r-xl rounded-bl-xl p-2 text-sm text-slate-200 mt-0.5 break-words border border-slate-700/50">${data.text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`;
-            els.chatMessages.appendChild(div); els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
-            setTimeout(() => { div.classList.add('opacity-50'); setTimeout(() => div.remove(), 1000); }, 30000 - (Date.now() - msgTime));
+
+        function addMessageToUI(data) {
+            const div = document.createElement('div'); 
+            div.className = "flex flex-col animate-[slideUp_0.3s_ease-out]";
+            div.innerHTML = `
+                <div class="flex items-baseline gap-2">
+                    <span class="text-[10px] font-black ${data.rank === "#1" ? "text-cyan-400" : "text-indigo-400"} tracking-wider">${data.rank}</span>
+                    <span class="text-xs font-bold text-slate-400 truncate max-w-[120px]">${data.ign}</span>
+                </div>
+                <div class="bg-slate-800/60 rounded-r-xl rounded-bl-xl p-2 text-sm text-slate-200 mt-0.5 break-words border border-slate-700/50">
+                    ${data.text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
+                </div>`;
+            els.chatMessages.appendChild(div); 
+            els.chatMessages.scrollTop = els.chatMessages.scrollHeight; // Auto-scroll down
         }
+
         function showToast(data) {
-            const toast = document.createElement('div'); toast.className = "bg-slate-900/90 backdrop-blur-md border border-slate-700 p-3 rounded-xl shadow-lg flex flex-col gap-1 toast-enter pointer-events-auto max-w-[250px]";
+            const toast = document.createElement('div'); 
+            toast.className = "bg-slate-900/90 backdrop-blur-md border border-slate-700 p-3 rounded-xl shadow-lg flex flex-col gap-1 toast-enter pointer-events-auto max-w-[250px]";
             toast.innerHTML = `<div class="flex items-center gap-2"><span class="text-[9px] font-black text-indigo-400 bg-indigo-900/30 px-1 rounded">${data.rank}</span><span class="text-[10px] font-bold text-slate-400 truncate">${data.ign}</span></div><span class="text-xs text-white leading-tight break-words">${data.text.replace(/</g, "&lt;")}</span>`;
             els.chatToasts.appendChild(toast);
-            setTimeout(() => { toast.classList.remove('toast-enter'); toast.classList.add('toast-exit'); setTimeout(() => toast.remove(), 300); }, 4000);
+            setTimeout(() => { 
+                toast.classList.remove('toast-enter'); 
+                toast.classList.add('toast-exit'); 
+                setTimeout(() => toast.remove(), 300); 
+            }, 4000);
         }
 
         // --- UTILS ---
@@ -628,47 +955,81 @@
         }
 
         async function openLeaderboard(e) {
-            if(e) e.preventDefault(); history.pushState({ page: 'leaderboard' }, ''); 
-            document.getElementById('screen-game').classList.add('hidden'); document.getElementById('screen-game').classList.remove('flex');
-            document.getElementById('screen-leaderboard').classList.remove('hidden'); document.getElementById('screen-leaderboard').classList.add('flex');
-            if(isChatOpen) toggleChat(); els.chatToggle.classList.add('hidden');
-            const tbody = document.getElementById('lb-body'); tbody.innerHTML = '<tr class="w-full"><td class="text-center text-slate-500 py-10 font-bold">Loading...</td></tr>';
+            if(e) e.preventDefault(); 
+            history.pushState({ page: 'leaderboard' }, ''); 
+            
+            document.getElementById('screen-game').classList.add('hidden'); 
+            document.getElementById('screen-game').classList.remove('flex');
+            document.getElementById('screen-leaderboard').classList.remove('hidden'); 
+            document.getElementById('screen-leaderboard').classList.add('flex');
+            
+            if(isChatOpen) {
+                toggleChat(); 
+            }
+            els.chatToggle.classList.add('hidden');
+
+            const tbody = document.getElementById('lb-body'); 
+            tbody.innerHTML = '<tr class="w-full"><td class="text-center text-slate-500 py-10 font-bold animate-pulse">Loading Ranks...</td></tr>';
+
             try {
                 const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
-                const snapshot = await getDocs(q); tbody.innerHTML = ""; let rank=1;
+                const snapshot = await getDocs(q); 
+                tbody.innerHTML = ""; 
+                let rank = 1;
+
                 snapshot.forEach(doc => {
                     const p = doc.data();
-                    const color = rank===1?"text-cyan-400":rank===2?"text-slate-200":rank===3?"text-indigo-400":"text-slate-500";
-                    tbody.innerHTML += `<tr class="w-full flex items-center bg-slate-900/60 border border-slate-800 rounded-2xl mb-2 px-4 py-3"><td class="font-black text-xl w-10 text-center ${color}">#${rank}</td><td class="font-bold text-white truncate flex-1 px-3">${p.ign.replace(/</g, "&lt;")}</td><td class="font-black text-white text-right w-16 text-lg">${p.score}</td></tr>`;
+                    
+                    // Define styling based on rank
+                    let rankColor = "text-slate-500";
+                    let bgClass = "bg-slate-900/60 border-slate-800";
+                    let prizeBadge = "";
+
+                    if (rank === 1) {
+                        rankColor = "text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]";
+                        bgClass = "bg-yellow-950/30 border-yellow-500/30 shadow-[inset_0_0_20px_rgba(250,204,21,0.1)]";
+                        prizeBadge = `<div class="text-[9px] text-yellow-300 font-black uppercase tracking-wider bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20 w-fit mt-1 flex items-center gap-1">🏆 Epic Skin</div>`;
+                    } else if (rank === 2) {
+                        rankColor = "text-purple-400 drop-shadow-[0_0_5px_rgba(192,132,252,0.5)]";
+                        bgClass = "bg-purple-950/30 border-purple-500/30 shadow-[inset_0_0_20px_rgba(192,132,252,0.1)]";
+                        prizeBadge = `<div class="text-[9px] text-purple-300 font-black uppercase tracking-wider bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20 w-fit mt-1 flex items-center gap-1">🌟 Starlight Prem</div>`;
+                    } else if (rank === 3) {
+                        rankColor = "text-indigo-400";
+                    } else {
+                        rankColor = "text-slate-500";
+                    }
+
+                    // Construct the row
+                    tbody.innerHTML += `
+                        <tr class="w-full flex items-center ${bgClass} border rounded-2xl mb-2 px-4 py-3 relative overflow-hidden transition-all hover:scale-[1.01]">
+                            <td class="font-black text-2xl w-10 text-center ${rankColor} italic">#${rank}</td>
+                            <td class="flex flex-col justify-center flex-1 px-3 min-w-0">
+                                <span class="font-bold text-white truncate text-base leading-none">${p.ign.replace(/</g, "&lt;")}</span>
+                                ${prizeBadge}
+                            </td>
+                            <td class="font-black text-white text-right w-16 text-lg tracking-wider">${p.score}</td>
+                        </tr>`;
                     rank++;
                 });
-            } catch(e) { tbody.innerHTML = "Error."; }
-        }
-        
-        function closeLeaderboard(e) {
-            if(e) e.preventDefault();
-            document.getElementById('screen-leaderboard').classList.add('hidden'); document.getElementById('screen-leaderboard').classList.remove('flex');
-            document.getElementById('screen-game').classList.remove('hidden'); document.getElementById('screen-game').classList.add('flex');
-            els.chatToggle.classList.remove('hidden');
+            } catch(e) { 
+                console.error(e);
+                tbody.innerHTML = `<tr class="w-full"><td class="text-center text-rose-500 py-10 font-bold">Failed to load rankings.</td></tr>`; 
+            }
         }
 
-        async function searchPlayer(e) {
-            e.preventDefault();
-            const id = document.getElementById('search-id').value;
-            const res = document.getElementById('search-result'); res.classList.remove('hidden'); res.classList.add('flex');
-            document.getElementById('search-rank').innerText = "...";
-            try {
-                const q = query(collection(db, "players"), orderBy("score", "desc"));
-                const snapshot = await getDocs(q);
-                let rank=1, found=false;
-                for(const doc of snapshot.docs) {
-                    if(doc.id===id) {
-                        found=true; document.getElementById('search-rank').innerText=`#${rank}`;
-                        document.getElementById('search-details').innerHTML = `${doc.data().ign} • ${doc.data().score} pts`; break;
-                    } rank++;
-                }
-                if(!found) { document.getElementById('search-rank').innerText="-"; document.getElementById('search-details').innerText="Not found"; }
-            } catch(e) { document.getElementById('search-rank').innerText="!"; }
+        function closeLeaderboard(e) {
+            if(e) e.preventDefault();
+            
+            // Hide leaderboard
+            document.getElementById('screen-leaderboard').classList.add('hidden'); 
+            document.getElementById('screen-leaderboard').classList.remove('flex');
+            
+            // Show Game screen
+            document.getElementById('screen-game').classList.remove('hidden'); 
+            document.getElementById('screen-game').classList.add('flex');
+            
+            // Bring the Chat button back
+            if (els.chatToggle) els.chatToggle.classList.remove('hidden');
         }
     </script>
 </body>
