@@ -426,7 +426,9 @@
         document.getElementById('btn-close-leaderboard').addEventListener('click', closeLeaderboard);
         document.getElementById('form-search').addEventListener('submit', searchPlayer);
         els.heroImg.addEventListener('error', () => { els.heroImg.style.display='none'; els.debugMsg.innerText=`Missing: ${els.heroImg.src}`; els.debugMsg.classList.remove('hidden'); });
-        
+        window.addEventListener('popstate', (e) => {
+    closeLeaderboard();
+});
         // Chat
         els.chatToggle.addEventListener('click', toggleChat);
         els.chatClose.addEventListener('click', toggleChat);
@@ -731,6 +733,21 @@ async function openLeaderboard(e) {
         console.error(e);
         tbody.innerHTML = `<tr class="w-full"><td class="text-center text-rose-500 py-10 font-bold">Failed to load rankings.</td></tr>`; 
     }
+}
+
+function closeLeaderboard(e) {
+    if(e) e.preventDefault();
+    
+    // Hide leaderboard
+    document.getElementById('screen-leaderboard').classList.add('hidden'); 
+    document.getElementById('screen-leaderboard').classList.remove('flex');
+    
+    // Show Game screen
+    document.getElementById('screen-game').classList.remove('hidden'); 
+    document.getElementById('screen-game').classList.add('flex');
+    
+    // Bring the Chat button back
+    if (els.chatToggle) els.chatToggle.classList.remove('hidden');
 }
     </script>
 </body>
