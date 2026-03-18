@@ -15,15 +15,21 @@
     <!-- Simple Login Cover -->
     <div id="admin-login" class="fixed inset-0 bg-slate-950 z-50 flex flex-col items-center justify-center gap-4">
         <h1 class="text-3xl font-black text-cyan-400">ADMIN ACCESS</h1>
-        <input type="password" id="admin-pass" placeholder="Enter Password" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500">
-        <button id="btn-login" class="bg-indigo-600 px-8 py-3 rounded-xl font-bold uppercase hover:bg-indigo-500">Login</button>
+        <div class="flex flex-col gap-3 w-80">
+            <!-- Added Email Input -->
+            <input type="email" id="admin-email" placeholder="Admin Email" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500">
+            <input type="password" id="admin-pass" placeholder="Enter Password" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500">
+            <!-- Added Error Message Display -->
+            <p id="login-error" class="text-rose-500 text-sm text-center hidden font-bold"></p>
+            <button id="btn-login" class="bg-indigo-600 px-8 py-3 rounded-xl font-bold uppercase hover:bg-indigo-500 mt-2">Secure Login</button>
+        </div>
     </div>
 
     <!-- Main Dashboard -->
     <div id="admin-dashboard" class="hidden max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
         
         <!-- Header -->
-        <div class="col-span-full border-b border-slate-800 pb-4 flex justify-between items-center">
+        <div class="col-span-full border-b border-slate-800 pb-4 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
                 <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-500">CONTROL CENTER</h1>
                 <p class="text-slate-400 text-sm tracking-widest uppercase">MLBB Guess Hero Backend</p>
@@ -37,6 +43,10 @@
                     <span class="block text-xs text-slate-500 uppercase">Total Players</span>
                     <span id="stat-total" class="text-2xl font-black text-cyan-400">0</span>
                 </div>
+                <!-- Added Logout Button -->
+                <button id="btn-logout" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-3 rounded-xl text-xs font-bold text-rose-400 uppercase tracking-widest ml-2 transition-all">
+                    Logout
+                </button>
             </div>
         </div>
 
@@ -52,7 +62,7 @@
                 <p class="text-xs text-slate-500 mt-2 text-center">Instantly reloads the page for everyone.</p>
             </div>
 
-            <!-- DRAMATIC BROADCAST (NEW) -->
+            <!-- DRAMATIC BROADCAST -->
             <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 relative overflow-hidden">
                 <div class="absolute inset-0 bg-rose-500/5 pointer-events-none"></div>
                 <h2 class="text-xl font-bold mb-4 text-rose-500 border-b border-slate-700 pb-2 relative z-10">Dramatic Announcement</h2>
@@ -96,7 +106,7 @@
             
             <div class="flex-1 overflow-y-auto pr-2">
                 <table class="w-full text-left">
-                    <thead class="text-xs uppercase text-slate-500 sticky top-0 bg-slate-900">
+                    <thead class="text-xs uppercase text-slate-500 sticky top-0 bg-slate-900 z-10">
                         <tr>
                             <th class="py-2">ID</th>
                             <th class="py-2">IGN</th>
@@ -115,6 +125,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        // Import Auth modules
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, deleteDoc, collection, query, onSnapshot, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // CONFIG
@@ -126,29 +138,73 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Security
-        document.getElementById('btn-login').addEventListener('click', () => {
-            if(document.getElementById('admin-pass').value === 'admin123') {
+        // Variables to hold listener references to prevent duplicates on re-login
+        let unsubPlayers = null;
+        let unsubServer = null;
+        let serverState = { doublePoints: false, firstLetter: false };
+
+        // --- AUTHENTICATION STATE OBSERVER ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Logged in
                 document.getElementById('admin-login').classList.add('hidden');
                 document.getElementById('admin-dashboard').classList.remove('hidden');
                 initAdmin();
             } else {
-                alert("Wrong Password");
+                // Logged out
+                document.getElementById('admin-login').classList.remove('hidden');
+                document.getElementById('admin-dashboard').classList.add('hidden');
+                
+                // Stop listening to database if logged out
+                if(unsubPlayers) unsubPlayers();
+                if(unsubServer) unsubServer();
             }
         });
 
-        // Current Server State
-        let serverState = {
-            doublePoints: false,
-            firstLetter: false
-        };
+        // --- LOGIN ACTION ---
+        document.getElementById('btn-login').addEventListener('click', () => {
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-pass').value;
+            const errorText = document.getElementById('login-error');
 
+            errorText.classList.add('hidden'); // Reset error message
+
+            if(!email || !pass) {
+                errorText.innerText = "Please enter both Email and Password";
+                errorText.classList.remove('hidden');
+                return;
+            }
+
+            // Secure Firebase Authentication Call
+            signInWithEmailAndPassword(auth, email, pass)
+                .then((userCredential) => {
+                    // Success is automatically handled by onAuthStateChanged
+                    document.getElementById('admin-pass').value = ''; // clear password input securely
+                })
+                .catch((error) => {
+                    // Custom user-friendly error messages
+                    if(error.code === 'auth/invalid-credential') {
+                        errorText.innerText = "Incorrect Email or Password.";
+                    } else {
+                        errorText.innerText = error.message;
+                    }
+                    errorText.classList.remove('hidden');
+                });
+        });
+
+        // --- LOGOUT ACTION ---
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            signOut(auth);
+        });
+
+        // --- DATABASE LISTENERS ---
         function initAdmin() {
             // Listen to Players
             const q = query(collection(db, "players"));
-            onSnapshot(q, (snapshot) => {
+            unsubPlayers = onSnapshot(q, (snapshot) => {
                 const list = document.getElementById('player-list');
                 list.innerHTML = "";
                 let total = 0;
@@ -183,7 +239,7 @@
             });
 
             // Listen to Server State
-            onSnapshot(doc(db, "server", "state"), (docSnap) => {
+            unsubServer = onSnapshot(doc(db, "server", "state"), (docSnap) => {
                 if(docSnap.exists()) {
                     serverState = docSnap.data();
                     const btnX2 = document.getElementById('toggle-x2');
