@@ -14,10 +14,9 @@
         font-src https://fonts.gstatic.com; 
         img-src 'self' data: https: http: https://*.ytimg.com https://*.ggpht.com; 
         media-src 'self' https: http: data: blob: https://*.googlevideo.com;
-        connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://api.isan.eu.org https://purpleeez.site http://127.0.0.1:5000 http://localhost:5000; 
-        frame-src 'self' https://www.tiktok.com;
-    ">
-
+  connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://api.isan.eu.org https://accounts.spotify.com https://api.spotify.com http://127.0.0.1:5000 http://localhost:5000; 
+    frame-src 'self' https://www.tiktok.com;
+">
     <script src="https://elfsightcdn.com/platform.js" async></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -334,10 +333,12 @@
             });
         }
 
-        // --- SPOTIFY INTEGRATION S256 PKCE ---
+// --- SPOTIFY INTEGRATION S256 PKCE (DIRECT TO SPOTIFY) ---
         const spotifyClientId = '2670466b08474c9898b7627a096248bc'; 
         const spotifyRedirectUri = window.location.origin + window.location.pathname;
-        const spotifyTokenEndpoint = 'https://purpleeez.site/spotify/token';
+        
+        // Use Official Spotify Token URL instead of your proxy
+        const spotifyTokenEndpoint = 'https://accounts.spotify.com/api/token';
 
         // Cryptography functions for S256 PKCE
         const generateRandomString = (length) => {
@@ -374,7 +375,7 @@
             authUrl.searchParams.append("response_type", "code");
             authUrl.searchParams.append("redirect_uri", spotifyRedirectUri);
             authUrl.searchParams.append("scope", scope);
-            authUrl.searchParams.append("code_challenge_method", "S256"); // Fixed: S256 instead of plain
+            authUrl.searchParams.append("code_challenge_method", "S256"); 
             authUrl.searchParams.append("code_challenge", codeChallenge);
 
             window.location.href = authUrl.toString();
@@ -388,29 +389,28 @@
             els.status.innerText = "Connecting Spotify...";
             try {
                 const codeVerifier = localStorage.getItem('spotify_code_verifier');
-                const response = await fetch(spotifyTokenEndpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        grant_type: 'authorization_code', 
-                        code: code, 
-                        redirect_uri: spotifyRedirectUri,
-                        code_verifier: codeVerifier, // Matches the S256 challenge above
-                        client_id: spotifyClientId
-                    })
+                
+                // Spotify requires Form URL-Encoded data, NOT JSON.
+                const payload = new URLSearchParams({
+                    client_id: spotifyClientId,
+                    grant_type: 'authorization_code',
+                    code: code,
+                    redirect_uri: spotifyRedirectUri,
+                    code_verifier: codeVerifier
                 });
 
-                // Error Handling for "Invalid JSON"
-                const contentType = response.headers.get("content-type");
-                if (!contentType || !contentType.includes("application/json")) {
-                    const text = await response.text();
-                    throw new Error(`Server Error: ${text.substring(0, 50)}`);
-                }
+                const response = await fetch(spotifyTokenEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: payload
+                });
 
                 const data = await response.json();
-                if (!response.ok) throw new Error(data.error || "Failed");
+                if (!response.ok) throw new Error(data.error_description || data.error || "Failed");
 
                 localStorage.setItem('spotify_token', data.access_token);
+                if (data.refresh_token) localStorage.setItem('spotify_refresh_token', data.refresh_token);
+                
                 els.status.innerText = "Spotify Linked!";
                 window.history.replaceState({}, document.title, spotifyRedirectUri);
             } catch (err) {
@@ -418,7 +418,7 @@
                 els.status.innerText = `Spotify Error: ${err.message}`;
             }
         }
-
+        
         // --- CHAT SYSTEM ---
         function initChat() {
             const q = query(collection(db, "messages"), orderBy("timestamp", "desc"), limit(20));
