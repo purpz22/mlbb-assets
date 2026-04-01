@@ -160,10 +160,15 @@
         </div>
     </div>
 
-    <!-- BROADCAST -->
-    <div id="screen-broadcast" class="fixed inset-0 z-[100] hidden items-center justify-center pointer-events-none bg-red-950/40 backdrop-blur-sm">
-        <div id="broadcast-box" class="bg-black border-4 border-rose-600 rounded-3xl p-8 flex flex-col items-center text-center shadow-2xl">
-            <h1 class="text-2xl font-black text-rose-500 uppercase mb-4">ADMIN BROADCAST</h1>
+<!-- BROADCAST -->
+    <!-- FIX: Removed pointer-events-none so the button can be clicked -->
+    <div id="screen-broadcast" class="fixed inset-0 z-[100] hidden items-center justify-center bg-red-950/60 backdrop-blur-sm">
+        <!-- Added relative positioning and max-width -->
+        <div id="broadcast-box" class="relative bg-black border-4 border-rose-600 rounded-3xl p-8 flex flex-col items-center text-center shadow-2xl max-w-sm w-[90%]">
+            <!-- CLOSE BUTTON -->
+            <button id="btn-close-broadcast" class="absolute top-3 right-4 text-rose-600 hover:text-rose-400 text-2xl font-black transition-colors">✕</button>
+            
+            <h1 class="text-2xl font-black text-rose-500 uppercase mb-4 mt-2">ADMIN BROADCAST</h1>
             <p id="broadcast-text" class="text-3xl font-black text-white uppercase"></p>
         </div>
     </div>
@@ -348,6 +353,9 @@
         }
 
         // Event Listeners
+        document.getElementById('btn-close-broadcast').addEventListener('click', () => {
+        document.getElementById('screen-broadcast').classList.add('hidden');
+        });
         document.getElementById('form-login').addEventListener('submit', handleLogin);
         document.getElementById('form-guess').addEventListener('submit', checkGuess);
         document.getElementById('form-chat').addEventListener('submit', sendChat);
