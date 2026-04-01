@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#020617">
-    <title>MLBB Guess Hero</title>
+    <title>MLBB Guess Hero - Survival Streak</title>
     
     <!-- CSP: Allows Custom YT Music API Streaming -->
     <meta http-equiv="Content-Security-Policy" content="
@@ -823,6 +823,12 @@
         const spotifyRedirectUri = window.location.origin + window.location.pathname;
         const spotifyPlaylistUri = 'spotify:playlist:37i9dQZF1DXcBWIGoYBM5M'; // example playlist URI
 
+        const spotifyTokenEndpoint = (window.location.hostname.includes('github.io') || window.location.hostname.includes('vercel.app'))
+            ? 'https://your-backend-host.example.com/spotify/token'  // Replace with deployed backend
+            : 'http://127.0.0.1:5000/spotify/token';
+
+        console.log('Spotify token endpoint:', spotifyTokenEndpoint);
+
         const spotifyLoginBtn = document.getElementById('btn-spotify-login');
         const spotifyPlayBtn = document.getElementById('btn-spotify-play');
 
@@ -926,7 +932,10 @@
             }
 
             try {
-                const tokenResponse = await fetch('/spotify/token', {
+                const tokenUrl = spotifyTokenEndpoint;
+                console.log('Spotify token exchange request', tokenUrl);
+
+                const tokenResponse = await fetch(tokenUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -937,9 +946,17 @@
                     })
                 });
 
-                const data = await tokenResponse.json();
+                const text = await tokenResponse.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (parseErr) {
+                    console.error('Spotify token exchange: non-JSON response', text);
+                    throw new Error('Spotify token exchange failed: invalid JSON response');
+                }
+
                 if (!tokenResponse.ok) {
-                    throw new Error(data.error_description || data.error || data.error_description || 'Token exchange failed');
+                    throw new Error(data.error_description || data.error || 'Token exchange failed');
                 }
 
                 saveSpotifyTokens(data);
@@ -963,7 +980,10 @@
             }
 
             try {
-                const response = await fetch('/spotify/token', {
+                const tokenUrl = spotifyTokenEndpoint;
+                console.log('Spotify refresh token request', tokenUrl);
+
+                const response = await fetch(tokenUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -971,7 +991,14 @@
                         refresh_token: refreshToken
                     })
                 });
-                const data = await response.json();
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (parseErr) {
+                    console.error('Spotify refresh token: non-JSON response', text);
+                    throw new Error('Spotify token refresh failed: invalid JSON response');
+                }
                 if (!response.ok) {
                     throw new Error(data.error_description || data.error || 'Refresh failed');
                 }
@@ -1064,6 +1091,8 @@
         handleSpotifyCallback().catch((err) => {
             console.error('Spotify callback handler error', err);
         });
+
+        
     </script>
 </body>
 </html>
