@@ -6,17 +6,17 @@
     <meta name="theme-color" content="#020617">
     <title>MLBB Guess Hero - Survival Streak</title>
     
-    <!-- CSP: Fixed to allow your backend domain -->
+    <!-- CSP: Cleaned up unused domains, allowed MyInstants for the vine boom audio -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self'; 
-        script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://www.gstatic.com; 
+        script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://www.gstatic.com https://www.tiktok.com; 
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; 
         font-src https://fonts.gstatic.com; 
         img-src 'self' data: https: http: https://*.ytimg.com https://*.ggpht.com; 
-        media-src 'self' https: http: data: blob: https://*.googlevideo.com;
-  connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://api.isan.eu.org https://accounts.spotify.com https://api.spotify.com http://127.0.0.1:5000 http://localhost:5000; 
-    frame-src 'self' https://www.tiktok.com;
-">
+        media-src 'self' https: http: data: blob: https://*.googlevideo.com https://www.myinstants.com;
+        connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://api.isan.eu.org; 
+        frame-src 'self' https://www.tiktok.com;
+    ">
     <script src="https://elfsightcdn.com/platform.js" async></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -121,23 +121,6 @@
             <button id="btn-show-leaderboard" class="h-10 w-full text-cyan-400 font-bold text-[10px] uppercase tracking-widest">Open Leaderboard</button>
         </div>
 
-        <!-- RADIO PANEL -->
-        <button id="btn-radio-toggle" class="absolute top-20 right-4 w-10 h-10 bg-slate-900 border border-cyan-500/50 rounded-full flex items-center justify-center z-40">
-            <svg class="h-5 w-5 text-cyan-400" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h12v2H6zM6 10h12v2H6zM6 16h12v2H6z"/></svg>
-        </button>
-
-        <div id="radio-container" class="absolute top-32 right-4 w-[300px] z-50 hidden bg-slate-900/95 border border-cyan-500/30 rounded-2xl p-4 shadow-2xl">
-            <button id="btn-radio-close" class="absolute -top-2 -right-2 bg-slate-800 rounded-full p-1 border border-slate-600">✕</button>
-            <p class="text-[10px] font-black text-cyan-300 uppercase text-center mb-3">Music Player</p>
-            <div class="flex flex-col gap-2">
-                <button id="btn-spotify-login" class="bg-green-600 text-white py-2 rounded text-xs font-bold">Link Spotify</button>
-                <button id="btn-spotify-play" class="bg-green-500 text-white py-2 rounded text-xs font-bold">Play Playlist</button>
-                <div id="local-tracks" class="max-h-24 overflow-y-auto bg-black/40 rounded p-2 text-[10px]"></div>
-                <audio id="local-audio" controls class="w-full h-8 opacity-50"></audio>
-                <p id="local-status" class="text-[9px] text-center text-slate-400 mt-1">Ready</p>
-            </div>
-        </div>
-
         <!-- CHAT -->
         <div id="chat-toasts" class="absolute bottom-48 left-4 right-4 flex flex-col gap-2 pointer-events-none z-30"></div>
         <button id="btn-chat-toggle" class="absolute bottom-6 right-6 w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center shadow-lg z-40"><svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg></button>
@@ -145,7 +128,7 @@
         <div id="chat-container" class="absolute inset-x-4 bottom-4 top-1/2 bg-slate-900 border border-slate-700 rounded-3xl z-50 flex flex-col hidden overflow-hidden shadow-2xl">
             <div class="flex items-center justify-between px-4 py-3 bg-slate-800/50 border-b border-slate-700">
                 <span class="text-xs font-black text-cyan-400 uppercase">Global Chat</span>
-                <button id="btn-chat-close" class="text-slate-400">✕</button>
+                <button id="btn-chat-close" class="text-slate-400 hover:text-white">✕</button>
             </div>
             <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
             <form id="form-chat" class="p-3 bg-slate-950 flex gap-2">
@@ -160,10 +143,19 @@
         <div class="flex-1 w-full max-w-md mx-auto flex flex-col px-5 py-8">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-3xl font-black text-white italic">TOP STREAKS</h2>
-                <button id="btn-close-leaderboard" class="text-slate-400 text-2xl">✕</button>
+                <button id="btn-close-leaderboard" class="text-slate-400 text-2xl hover:text-white transition-colors">✕</button>
             </div>
-            <div class="flex-1 overflow-y-auto mb-4">
-                <table class="w-full border-separate border-spacing-y-2"><tbody id="lb-body"></tbody></table>
+            <div class="flex-1 overflow-y-auto mb-4 no-scrollbar">
+                <table class="w-full border-separate border-spacing-y-2">
+                    <thead>
+                        <tr class="text-slate-500 text-[10px] uppercase tracking-widest text-left">
+                            <th class="p-2 w-16">Rank</th>
+                            <th class="p-2">Player</th>
+                            <th class="p-2 text-right">Streak</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lb-body"></tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -176,7 +168,7 @@
         </div>
     </div>
 
-<script type="module">
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, addDoc, collection, query, orderBy, getDocs, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -216,8 +208,7 @@
             heroImg: document.getElementById('hero-img'),
             guessInput: document.getElementById('guess-input'),
             feedback: document.getElementById('feedback'),
-            chatMsgs: document.getElementById('chat-messages'),
-            status: document.getElementById('local-status')
+            chatMsgs: document.getElementById('chat-messages')
         };
 
         // Core Functions
@@ -254,7 +245,7 @@
                 
                 startServerListeners(); nextHero(); initChat();
             } catch (err) {
-                document.getElementById('login-msg').innerText = "Login Error";
+                document.getElementById('login-msg').innerText = "Login Error. Check ID/Zone.";
                 document.getElementById('btn-login').disabled = false;
             }
         }
@@ -333,92 +324,6 @@
             });
         }
 
-// --- SPOTIFY INTEGRATION S256 PKCE (DIRECT TO SPOTIFY) ---
-        const spotifyClientId = '2670466b08474c9898b7627a096248bc'; 
-        const spotifyRedirectUri = window.location.origin + window.location.pathname;
-        
-        // Use Official Spotify Token URL instead of your proxy
-        const spotifyTokenEndpoint = 'https://accounts.spotify.com/api/token';
-
-        // Cryptography functions for S256 PKCE
-        const generateRandomString = (length) => {
-            const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-            const values = crypto.getRandomValues(new Uint8Array(length));
-            return values.reduce((acc, x) => acc + possible[x % possible.length], "");
-        };
-
-        const sha256 = async (plain) => {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(plain);
-            return window.crypto.subtle.digest('SHA-256', data);
-        };
-
-        const base64encode = (input) => {
-            return btoa(String.fromCharCode(...new Uint8Array(input)))
-                .replace(/=/g, '')
-                .replace(/\+/g, '-')
-                .replace(/\//g, '_');
-        };
-
-        async function loginSpotify(e) {
-            e.preventDefault();
-            const codeVerifier = generateRandomString(64);
-            localStorage.setItem('spotify_code_verifier', codeVerifier);
-            
-            const hashed = await sha256(codeVerifier);
-            const codeChallenge = base64encode(hashed);
-
-            const scope = 'streaming user-read-private user-read-email user-read-playback-state user-modify-playback-state user-read-currently-playing';
-            
-            const authUrl = new URL("https://accounts.spotify.com/authorize");
-            authUrl.searchParams.append("client_id", spotifyClientId);
-            authUrl.searchParams.append("response_type", "code");
-            authUrl.searchParams.append("redirect_uri", spotifyRedirectUri);
-            authUrl.searchParams.append("scope", scope);
-            authUrl.searchParams.append("code_challenge_method", "S256"); 
-            authUrl.searchParams.append("code_challenge", codeChallenge);
-
-            window.location.href = authUrl.toString();
-        }
-
-        async function handleSpotifyCallback() {
-            const params = new URLSearchParams(window.location.search);
-            const code = params.get('code');
-            if (!code) return;
-
-            els.status.innerText = "Connecting Spotify...";
-            try {
-                const codeVerifier = localStorage.getItem('spotify_code_verifier');
-                
-                // Spotify requires Form URL-Encoded data, NOT JSON.
-                const payload = new URLSearchParams({
-                    client_id: spotifyClientId,
-                    grant_type: 'authorization_code',
-                    code: code,
-                    redirect_uri: spotifyRedirectUri,
-                    code_verifier: codeVerifier
-                });
-
-                const response = await fetch(spotifyTokenEndpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: payload
-                });
-
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.error_description || data.error || "Failed");
-
-                localStorage.setItem('spotify_token', data.access_token);
-                if (data.refresh_token) localStorage.setItem('spotify_refresh_token', data.refresh_token);
-                
-                els.status.innerText = "Spotify Linked!";
-                window.history.replaceState({}, document.title, spotifyRedirectUri);
-            } catch (err) {
-                console.error(err);
-                els.status.innerText = `Spotify Error: ${err.message}`;
-            }
-        }
-
         // --- CHAT SYSTEM ---
         function initChat() {
             const q = query(collection(db, "messages"), orderBy("timestamp", "desc"), limit(20));
@@ -443,121 +348,64 @@
         }
 
         // Event Listeners
-        document.getElementById('btn-spotify-play').addEventListener('click', playSpotifyPlaylist);
         document.getElementById('form-login').addEventListener('submit', handleLogin);
         document.getElementById('form-guess').addEventListener('submit', checkGuess);
         document.getElementById('form-chat').addEventListener('submit', sendChat);
-        document.getElementById('btn-spotify-login').addEventListener('click', loginSpotify);
-        document.getElementById('btn-radio-toggle').addEventListener('click', () => document.getElementById('radio-container').classList.toggle('hidden'));
-        document.getElementById('btn-radio-close').addEventListener('click', () => document.getElementById('radio-container').classList.add('hidden'));
         document.getElementById('btn-chat-toggle').addEventListener('click', () => document.getElementById('chat-container').classList.toggle('hidden'));
         document.getElementById('btn-chat-close').addEventListener('click', () => document.getElementById('chat-container').classList.add('hidden'));
 
         document.getElementById('btn-show-leaderboard').addEventListener('click', async () => {
             const tbody = document.getElementById('lb-body');
-            tbody.innerHTML = "Loading...";
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-slate-400 text-sm font-bold">Loading...</td></tr>`;
             els.screenLB.classList.remove('hidden'); els.screenLB.classList.add('flex');
-            const q = query(collection(db, "players"), orderBy("score", "desc"), limit(50));
-            const snap = await getDocs(q);
-            tbody.innerHTML = "";
-            let r = 1;
-            snap.forEach(d => {
-                const p = d.data();
-                tbody.innerHTML += `<tr class="bg-slate-900/50 rounded-lg"><td class="p-3 text-cyan-400 font-bold">#${r++}</td><td class="p-3">${p.ign}</td><td class="p-3 text-right font-black">${p.score}</td></tr>`;
-            });
+            
+            try {
+                const q = query(collection(db, "players"), orderBy("score", "desc"), limit(50));
+                const snap = await getDocs(q);
+                tbody.innerHTML = "";
+                
+                if (snap.empty) {
+                    tbody.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-slate-400 text-sm font-bold">No scores yet!</td></tr>`;
+                    return;
+                }
+
+                let r = 1;
+                snap.forEach(d => {
+                    const p = d.data();
+                    let rankStyle = "text-slate-400";
+                    if(r === 1) rankStyle = "text-yellow-400 text-lg";
+                    if(r === 2) rankStyle = "text-slate-300 text-base";
+                    if(r === 3) rankStyle = "text-amber-600 text-base";
+
+                    tbody.innerHTML += `
+                    <tr class="bg-slate-800/50 shadow-sm hover:bg-slate-800 transition-colors">
+                        <td class="p-3 font-black rounded-l-xl ${rankStyle}">#${r++}</td>
+                        <td class="p-3 font-bold text-white truncate max-w-[120px]">${p.ign}</td>
+                        <td class="p-3 text-right font-black text-cyan-400 rounded-r-xl">${p.score}</td>
+                    </tr>`;
+                });
+            } catch (err) {
+                console.error("Leaderboard Error:", err);
+                tbody.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-rose-500 text-sm font-bold">Failed to load leaderboard.</td></tr>`;
+            }
         });
 
         document.getElementById('btn-close-leaderboard').addEventListener('click', () => {
             els.screenLB.classList.add('hidden');
         });
 
-        // Auto Login
+        // Auto Login / Connect
         window.addEventListener('load', () => {
             const sid = localStorage.getItem('mlbb_id');
             const szone = localStorage.getItem('mlbb_zone');
             if (sid && szone) {
                 document.getElementById('login-id').value = sid;
                 document.getElementById('login-zone').value = szone;
+                // Automatically click connect button to save user time
+                document.getElementById('btn-login').click();
             }
-            handleSpotifyCallback();
         });
-async function playSpotifyPlaylist(e) {
-            e.preventDefault();
-            const token = localStorage.getItem('spotify_token');
-            
-            if (!token) {
-                els.status.innerText = "Please link Spotify first.";
-                return;
-            }
 
-            els.status.innerText = "Finding Spotify device...";
-
-            try {
-                // 1. Get available Spotify devices
-                const devicesRes = await fetch('https://api.spotify.com/v1/me/player/devices', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (devicesRes.status === 401) throw new Error("Token expired. Relink Spotify.");
-                
-                // Safely parse devices response
-                const devicesText = await devicesRes.text();
-                let devicesData;
-                try {
-                    devicesData = JSON.parse(devicesText);
-                } catch(err) {
-                    throw new Error(devicesText.substring(0, 40)); // Catch plain text errors here
-                }
-
-                const devices = devicesData.devices || [];
-
-                if (devices.length === 0) {
-                    els.status.innerText = "Open Spotify app first to wake it up!";
-                    return;
-                }
-
-                // 2. Find the active device
-                const targetDevice = devices.find(d => d.is_active) || devices[0];
-                els.status.innerText = `Starting on ${targetDevice.name}...`;
-
-                // 3. Send the Play Command
-                const playRes = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${targetDevice.id}`, {
-                    method: 'PUT',
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        context_uri: 'spotify:playlist:37i9dQZF1DXcBWIGoYBM5M' 
-                    })
-                });
-
-                if (playRes.ok || playRes.status === 204) {
-                    els.status.innerText = `🎶 Playing on ${targetDevice.name}`;
-                    return;
-                }
-
-                // Safely parse playback errors
-                const playText = await playRes.text();
-                let errData;
-                try {
-                    errData = JSON.parse(playText);
-                } catch (err) {
-                    // If Spotify returns plain text like "Active premium required"
-                    throw new Error(playText.substring(0, 40)); 
-                }
-
-                if (errData.error && errData.error.reason === "PREMIUM_REQUIRED") {
-                    throw new Error("Spotify Premium is required!");
-                } else {
-                    throw new Error(errData.error?.message || "Playback failed");
-                }
-                
-            } catch (err) {
-                console.error("Spotify Error:", err);
-                // Display the error text in the UI neatly
-                els.status.innerText = `Error: ${err.message}`;
-            }
-        }    </script>
-    </body>
+    </script>
+</body>
 </html>
