@@ -6,10 +6,60 @@ import os
 import traceback
 import requests
 import re
+import base64
+from flask import Flask, request, jsonify
 from pytubefix.cipher import Cipher
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
+
+SPOTIFY_CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID', '').strip()
+SPOTIFY_CLIENT_SECRET = os.getenv('SPOTIFY_CLIENT_SECRET', '').strip()
+
+def _spotify_basic_auth_header():
+    creds = f"{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}".encode('utf-8')
+    return {
+        'Authorization': 'Basic ' + base64.b64encode(creds).decode('utf-8'),
+        'Content-Type': 'application/x-www-form-urlencoded'
+    }
+
+@app.route('/spotify/token', methods=['POST'])
+def spotify_token_proxy():
+    if not SPOTIFY_CLIENT_ID or not SPOTIFY_CLIENT_SECRET:
+        return jsonify({'error': 'Spotify client ID/secret not configured'}), 500
+
+    data = request.get_json() or request.form
+    grant_type = data.get('grant_type')
+
+    if grant_type not in ('authorization_code', 'refresh_token'):
+        return jsonify({'error': 'Invalid grant_type'}), 400
+
+    payload = {
+        'grant_type': grant_type,
+        'client_id': SPOTIFY_CLIENT_ID
+    }
+
+    if grant_type == 'authorization_code':
+        payload['code'] = data.get('code')
+        payload['redirect_uri'] = data.get('redirect_uri')
+        payload['code_verifier'] = data.get('code_verifier')
+    else:
+        payload['refresh_token'] = data.get('refresh_token')
+
+    if not payload.get('code' if grant_type == 'authorization_code' else 'refresh_token'):
+        return jsonify({'error': 'Required field missing'}), 400
+
+    response = requests.post('https://accounts.spotify.com/api/token', data=payload, headers=_spotify_basic_auth_header())
+
+    try:
+        body = response.json()
+    except ValueError:
+        return jsonify({'error': 'Invalid response from Spotify token endpoint'}), 502
+
+    if not response.ok:
+        return jsonify({'error': body.get('error_description') or body.get('error') or 'Token exchange failed', 'detail': body}), response.status_code
+
+    return jsonify(body)
 
 # === AUTO AUTH ===
 if os.path.exists('headers_auth.json'):
