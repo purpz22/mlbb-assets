@@ -493,14 +493,22 @@ async function playSpotifyPlaylist(e) {
             els.status.innerText = "Finding Spotify device...";
 
             try {
-                // 1. Get available Spotify devices (Spotify App must be open somewhere)
+                // 1. Get available Spotify devices
                 const devicesRes = await fetch('https://api.spotify.com/v1/me/player/devices', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
                 if (devicesRes.status === 401) throw new Error("Token expired. Relink Spotify.");
                 
-                const devicesData = await devicesRes.json();
+                // Safely parse devices response
+                const devicesText = await devicesRes.text();
+                let devicesData;
+                try {
+                    devicesData = JSON.parse(devicesText);
+                } catch(err) {
+                    throw new Error(devicesText.substring(0, 40)); // Catch plain text errors here
+                }
+
                 const devices = devicesData.devices || [];
 
                 if (devices.length === 0) {
@@ -508,7 +516,7 @@ async function playSpotifyPlaylist(e) {
                     return;
                 }
 
-                // 2. Find the active device, or fallback to the first available one
+                // 2. Find the active device
                 const targetDevice = devices.find(d => d.is_active) || devices[0];
                 els.status.innerText = `Starting on ${targetDevice.name}...`;
 
@@ -520,26 +528,36 @@ async function playSpotifyPlaylist(e) {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        // You can change this URI to any Spotify Playlist URI
                         context_uri: 'spotify:playlist:37i9dQZF1DXcBWIGoYBM5M' 
                     })
                 });
 
                 if (playRes.ok || playRes.status === 204) {
                     els.status.innerText = `🎶 Playing on ${targetDevice.name}`;
-                } else {
-                    const errData = await playRes.json();
-                    if (errData.error && errData.error.reason === "PREMIUM_REQUIRED") {
-                        els.status.innerText = "Error: Spotify Premium is required!";
-                    } else {
-                        throw new Error(errData.error.message || "Playback failed");
-                    }
+                    return;
                 }
+
+                // Safely parse playback errors
+                const playText = await playRes.text();
+                let errData;
+                try {
+                    errData = JSON.parse(playText);
+                } catch (err) {
+                    // If Spotify returns plain text like "Active premium required"
+                    throw new Error(playText.substring(0, 40)); 
+                }
+
+                if (errData.error && errData.error.reason === "PREMIUM_REQUIRED") {
+                    throw new Error("Spotify Premium is required!");
+                } else {
+                    throw new Error(errData.error?.message || "Playback failed");
+                }
+                
             } catch (err) {
-                console.error(err);
-                els.status.innerText = err.message;
+                console.error("Spotify Error:", err);
+                // Display the error text in the UI neatly
+                els.status.innerText = `Error: ${err.message}`;
             }
-        }
-    </script>
+        }    </script>
     </body>
 </html>
