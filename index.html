@@ -480,8 +480,8 @@
                 document.getElementById('login-zone').value = szone;
             }
             handleSpotifyCallback();
-        });
-async function playSpotifyPlaylist(e) {
+
+            async function playSpotifyPlaylist(e) {
             e.preventDefault();
             const token = localStorage.getItem('spotify_token');
             
@@ -540,6 +540,8 @@ async function playSpotifyPlaylist(e) {
                 els.status.innerText = err.message;
             }
         }
+        });
+
     </script>
     </body>
 </html>
