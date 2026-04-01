@@ -824,8 +824,6 @@
         const spotifyPlaylistUri = 'spotify:playlist:37i9dQZF1DXcBWIGoYBM5M'; // example playlist URI
 
         const spotifyHostedEndpoint = 'https://purpleeez.site/spotify/token'; // <--- replace this with your deployed app URL (HTTPS)
-        const spotifyLocalEndpoint = 'http://127.0.0.1:5000/spotify/token';
-
         const spotifyTokenEndpoint = (window.location.hostname.includes('github.io') || window.location.hostname.includes('vercel.app'))
             ? spotifyHostedEndpoint
             : spotifyLocalEndpoint;
