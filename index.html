@@ -177,7 +177,7 @@
         </div>
     </div>
 
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, addDoc, collection, query, orderBy, getDocs, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -334,10 +334,51 @@
             });
         }
 
-        // --- SPOTIFY INTEGRATION FIX ---
+        // --- SPOTIFY INTEGRATION S256 PKCE ---
         const spotifyClientId = '2670466b08474c9898b7627a096248bc'; 
         const spotifyRedirectUri = window.location.origin + window.location.pathname;
         const spotifyTokenEndpoint = 'https://purpleeez.site/spotify/token';
+
+        // Cryptography functions for S256 PKCE
+        const generateRandomString = (length) => {
+            const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+            const values = crypto.getRandomValues(new Uint8Array(length));
+            return values.reduce((acc, x) => acc + possible[x % possible.length], "");
+        };
+
+        const sha256 = async (plain) => {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(plain);
+            return window.crypto.subtle.digest('SHA-256', data);
+        };
+
+        const base64encode = (input) => {
+            return btoa(String.fromCharCode(...new Uint8Array(input)))
+                .replace(/=/g, '')
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_');
+        };
+
+        async function loginSpotify(e) {
+            e.preventDefault();
+            const codeVerifier = generateRandomString(64);
+            localStorage.setItem('spotify_code_verifier', codeVerifier);
+            
+            const hashed = await sha256(codeVerifier);
+            const codeChallenge = base64encode(hashed);
+
+            const scope = 'streaming user-read-private user-read-email user-read-playback-state user-modify-playback-state user-read-currently-playing';
+            
+            const authUrl = new URL("https://accounts.spotify.com/authorize");
+            authUrl.searchParams.append("client_id", spotifyClientId);
+            authUrl.searchParams.append("response_type", "code");
+            authUrl.searchParams.append("redirect_uri", spotifyRedirectUri);
+            authUrl.searchParams.append("scope", scope);
+            authUrl.searchParams.append("code_challenge_method", "S256"); // Fixed: S256 instead of plain
+            authUrl.searchParams.append("code_challenge", codeChallenge);
+
+            window.location.href = authUrl.toString();
+        }
 
         async function handleSpotifyCallback() {
             const params = new URLSearchParams(window.location.search);
@@ -346,14 +387,16 @@
 
             els.status.innerText = "Connecting Spotify...";
             try {
+                const codeVerifier = localStorage.getItem('spotify_code_verifier');
                 const response = await fetch(spotifyTokenEndpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         grant_type: 'authorization_code', 
-                        code, 
+                        code: code, 
                         redirect_uri: spotifyRedirectUri,
-                        code_verifier: localStorage.getItem('spotify_code_verifier')
+                        code_verifier: codeVerifier, // Matches the S256 challenge above
+                        client_id: spotifyClientId
                     })
                 });
 
@@ -374,14 +417,6 @@
                 console.error(err);
                 els.status.innerText = `Spotify Error: ${err.message}`;
             }
-        }
-
-        async function loginSpotify() {
-            const verifier = Math.random().toString(36).substring(2, 15);
-            localStorage.setItem('spotify_code_verifier', verifier);
-            const scope = 'streaming user-read-playback-state user-modify-playback-state';
-            const url = `https://accounts.spotify.com/authorize?client_id=${spotifyClientId}&response_type=code&redirect_uri=${encodeURIComponent(spotifyRedirectUri)}&scope=${encodeURIComponent(scope)}&code_challenge_method=plain&code_challenge=${verifier}`;
-            window.location.href = url;
         }
 
         // --- CHAT SYSTEM ---
@@ -447,5 +482,5 @@
         });
 
     </script>
-</body>
+    </body>
 </html>
