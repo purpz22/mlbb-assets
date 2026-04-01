@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#020617">
     <title>MLBB Guess Hero - Survival Streak</title>
     
-    <!-- CSP: Allows Custom YT Music API Streaming -->
+    <!-- CSP: Fixed to allow your backend domain -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self'; 
         script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://www.gstatic.com; 
@@ -14,1085 +14,438 @@
         font-src https://fonts.gstatic.com; 
         img-src 'self' data: https: http: https://*.ytimg.com https://*.ggpht.com; 
         media-src 'self' https: http: data: blob: https://*.googlevideo.com;
-        connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://api.isan.eu.org https://purpleeez.site http://127.0.0.1:5000 http://localhost:5000; frame-src 'self' https://www.tiktok.com;
+        connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://api.isan.eu.org https://purpleeez.site http://127.0.0.1:5000 http://localhost:5000; 
+        frame-src 'self' https://www.tiktok.com;
     ">
 
-    <!-- Elfsight Core Script -->
     <script src="https://elfsightcdn.com/platform.js" async></script>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700;900&display=swap" rel="stylesheet">
-    
     <script src="https://cdn.tailwindcss.com"></script>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5350189369134605" crossorigin="anonymous"></script>
 
     <style>
-        :root {
-            --safe-area-inset-top: env(safe-area-inset-top, 0px);
-            --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
-        }
-
+        :root { --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px); }
         body {
-            font-family: 'Rajdhani', sans-serif;
-            color: #f8fafc;
-            overscroll-behavior-y: none;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            height: 100dvh; 
-            margin: 0;
-            overflow: hidden;
-            padding-top: var(--safe-area-inset-top);
-            padding-bottom: var(--safe-area-inset-bottom);
+            font-family: 'Rajdhani', sans-serif; color: #f8fafc; overscroll-behavior-y: none;
+            user-select: none; -webkit-tap-highlight-color: transparent; height: 100dvh; 
+            margin: 0; overflow: hidden; padding-top: var(--safe-top); padding-bottom: var(--safe-bottom);
             background-color: #020617;
         }
-
-        .ambient-bg {
-            position: fixed;
-            inset: 0;
-            background-image: radial-gradient(circle at 50% 45%, #1e1b4b 0%, #020617 75%);
-            z-index: -40;
-            pointer-events: none;
-        }
-
-        /* Animations */
-        @keyframes error-shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-12px); }
-            40%, 80% { transform: translateX(12px); }
-        }
-        .animate-error {
-            animation: error-shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-            box-shadow: 0 0 60px rgba(225, 29, 72, 0.8), inset 0 0 20px rgba(225, 29, 72, 0.5) !important;
-            border-color: #e11d48 !important;
-            transition: none !important;
-        }
-
-        /* VINE BOOM ANIMATION */
-        @keyframes vine-boom-anim {
-            0% { transform: scale(3); opacity: 0; filter: blur(10px); }
-            10% { transform: scale(1); opacity: 1; filter: blur(0px) brightness(2); box-shadow: 0 0 100px rgba(225,29,72,1); }
-            15% { transform: translate(20px, 15px) rotate(3deg); }
-            20% { transform: translate(-20px, -15px) rotate(-3deg); }
-            25% { transform: translate(15px, -20px) rotate(2deg); }
-            30% { transform: translate(-15px, 20px) rotate(-2deg); }
-            100% { transform: translate(0, 0) scale(1); opacity: 1; }
-        }
-        .animate-boom {
-            animation: vine-boom-anim 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-        }
-
-        /* Chat Animations */
-        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-10px); } }
-        .toast-enter { animation: slideUp 0.3s ease-out forwards; }
-        .toast-exit { animation: fadeOut 0.3s ease-in forwards; }
-        
+        .ambient-bg { position: fixed; inset: 0; background: radial-gradient(circle at 50% 45%, #1e1b4b 0%, #020617 75%); z-index: -40; }
+        @keyframes error-shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-12px); } 40%, 80% { transform: translateX(12px); } }
+        .animate-error { animation: error-shake 0.4s cubic-bezier(.36,.07,.19,.97) both; border-color: #e11d48 !important; }
+        @keyframes vine-boom-anim { 0% { transform: scale(3); opacity: 0; } 10% { transform: scale(1); opacity: 1; filter: brightness(2); } 100% { transform: scale(1); opacity: 1; } }
+        .animate-boom { animation: vine-boom-anim 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        input::placeholder { text-transform: none; letter-spacing: normal; font-weight: 500; }
     </style>
 </head>
-<body class="w-full h-1080 relative">
+<body class="w-full relative">
 
     <div class="ambient-bg"></div>
 
     <!-- LOGIN SCREEN -->
-    <div id="screen-login" class="absolute inset-0 w-full max-w-sm mx-auto px-6 flex flex-col items-center z-10 transition-all duration-300 overflow-y-auto py-10 no-scrollbar gap-8">
-        <!-- Logo -->
-        <div class="flex flex-col items-center justify-center relative w-full shrink-0 pt-6">
-            <div class="absolute inset-0 bg-indigo-500/20 blur-[60px] rounded-full w-32 h-32 mx-auto -z-10 mix-blend-screen pointer-events-none"></div>
-            <h1 class="text-[3.5rem] font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-cyan-400 to-indigo-400 drop-shadow-lg leading-none text-center">GUESS<br><span class="text-3xl tracking-widest text-white">THE HERO</span></h1>
-            <div class="h-1 w-12 bg-indigo-500 rounded-full mt-4 shadow-[0_0_15px_rgba(99,102,241,0.8)]"></div>
+    <div id="screen-login" class="absolute inset-0 w-full max-w-sm mx-auto px-6 flex flex-col items-center z-10 overflow-y-auto py-10 no-scrollbar gap-8">
+        <div class="flex flex-col items-center justify-center relative w-full pt-6">
+            <h1 class="text-[3.5rem] font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-cyan-400 to-indigo-400 leading-none text-center">GUESS<br><span class="text-3xl tracking-widest text-white">THE HERO</span></h1>
             <div class="flex gap-2 mt-4">
-                <p class="text-[10px] font-black text-yellow-400 uppercase tracking-[0.15em] bg-yellow-900/20 px-3 py-1 rounded-full border border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.2)]">🥇 Epic Skin</p>
-                <p class="text-[10px] font-black text-purple-400 uppercase tracking-[0.15em] bg-purple-900/20 px-3 py-1 rounded-full border border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]">🥈 SL Premium</p>
+                <p class="text-[10px] font-black text-yellow-400 uppercase tracking-widest bg-yellow-900/20 px-3 py-1 rounded-full border border-yellow-500/30">🥇 Epic Skin</p>
+                <p class="text-[10px] font-black text-purple-400 uppercase tracking-widest bg-purple-900/20 px-3 py-1 rounded-full border border-purple-500/30">🥈 SL Premium</p>
             </div>
         </div>
 
-        <!-- Login Form -->
-        <div class="w-full bg-slate-900/60 backdrop-blur-xl p-6 rounded-[2rem] border border-slate-700/50 shadow-2xl flex flex-col gap-4 relative shrink-0">
-            <div class="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent"></div>
+        <div class="w-full bg-slate-900/60 backdrop-blur-xl p-6 rounded-[2rem] border border-slate-700/50 shadow-2xl flex flex-col gap-4">
             <form id="form-login" class="w-full flex flex-col gap-5">
                 <div class="flex flex-col gap-1.5 w-full">
-                    <label class="text-[10px] text-indigo-300 font-black uppercase tracking-widest ml-2 opacity-80">MLBB ID</label>
-                    <input type="number" id="login-id" placeholder="ex: 332701234" class="w-full h-14 bg-slate-950/80 border border-slate-700/80 rounded-2xl px-5 text-xl text-center font-bold text-white placeholder-slate-600 focus:outline-none focus:border-indigo-400 transition-all shadow-inner" required>
+                    <label class="text-[10px] text-indigo-300 font-black uppercase tracking-widest ml-2">MLBB ID</label>
+                    <input type="number" id="login-id" inputmode="numeric" placeholder="ex: 332701234" class="w-full h-14 bg-slate-950/80 border border-slate-700/80 rounded-2xl px-5 text-xl text-center font-bold text-white focus:outline-none focus:border-indigo-400 transition-all" required>
                 </div>
                 <div class="flex flex-col gap-1.5 w-full">
-                    <label class="text-[10px] text-indigo-300 font-black uppercase tracking-widest ml-2 opacity-80">Server ID</label>
-                    <input type="number" id="login-zone" placeholder="ex: 1234" class="w-full h-14 bg-slate-950/80 border border-slate-700/80 rounded-2xl px-5 text-xl text-center font-bold text-white placeholder-slate-600 focus:outline-none focus:border-indigo-400 transition-all shadow-inner" required>
+                    <label class="text-[10px] text-indigo-300 font-black uppercase tracking-widest ml-2">Server ID</label>
+                    <input type="number" id="login-zone" inputmode="numeric" placeholder="ex: 1234" class="w-full h-14 bg-slate-950/80 border border-slate-700/80 rounded-2xl px-5 text-xl text-center font-bold text-white focus:outline-none focus:border-indigo-400 transition-all" required>
                 </div>
-                <p id="login-msg" class="text-cyan-400 text-sm h-4 font-bold text-center tracking-wide flex items-center justify-center"></p>
-                <button type="submit" id="btn-login" class="w-full h-14 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 text-white font-black text-xl rounded-2xl shadow-[0_8px_20px_-6px_rgba(99,102,241,0.6)] active:scale-[0.97] transition-all uppercase tracking-widest border border-indigo-400/30">
-                    CONNECT
-                </button>
+                <p id="login-msg" class="text-cyan-400 text-sm h-4 font-bold text-center"></p>
+                <button type="submit" id="btn-login" class="w-full h-14 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white font-black text-xl rounded-2xl shadow-lg active:scale-[0.97] transition-all uppercase tracking-widest border border-indigo-400/30">CONNECT</button>
             </form>
         </div>
 
-        <!-- Embed -->
-        <div class="w-full flex justify-center bg-white/5 rounded-xl overflow-hidden min-h-[300px] border border-white/10 shadow-lg shrink-0">
+        <div class="w-full flex justify-center bg-white/5 rounded-xl overflow-hidden min-h-[300px] border border-white/10">
             <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@znapurple" data-unique-id="znapurple" data-embed-type="creator" style="max-width: 100%; min-width: 288px; margin: 0;"> 
-                <section> <a target="_blank" href="https://www.tiktok.com/@znapurple?refer=creator_embed">@znapurple</a> </section> 
+                <section> <a target="_blank" href="https://www.tiktok.com/@znapurple">@znapurple</a> </section> 
             </blockquote> 
             <script async src="https://www.tiktok.com/embed.js"></script>
         </div>
-        
-        <div class="w-full text-center pb-8 shrink-0"><p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] opacity-60">&copy; Guess The Hero 2026</p></div>
     </div>
 
     <!-- GAME SCREEN -->
-    <div id="screen-game" class="absolute inset-0 w-full max-w-sm mx-auto flex flex-col z-10 hidden gpu-layer">
-        
-        <!-- Header -->
+    <div id="screen-game" class="absolute inset-0 w-full max-w-sm mx-auto flex flex-col z-10 hidden">
         <div class="w-full px-5 pt-6 shrink-0">
-            <div class="flex justify-between items-center bg-slate-900/40 border border-slate-700/50 rounded-2xl px-5 py-3 backdrop-blur-xl shadow-lg relative overflow-hidden">
-                <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-rose-500/10 to-transparent pointer-events-none"></div>
-                
-                <div class="flex flex-col z-10 max-w-[50%]">
-                    <span id="player-ign" class="text-[10px] text-cyan-400 font-black tracking-widest uppercase opacity-90 truncate w-full">Player</span>
-                    <div class="flex items-baseline gap-1 mt-0.5">
-                        <span class="text-[10px] text-indigo-300 font-black uppercase">BEST:</span>
-                        <span id="player-best" class="font-bold text-white text-lg leading-none">0</span>
+            <div class="flex justify-between items-center bg-slate-900/40 border border-slate-700/50 rounded-2xl px-5 py-3 backdrop-blur-xl">
+                <div class="flex flex-col max-w-[50%]">
+                    <span id="player-ign" class="text-[10px] text-cyan-400 font-black tracking-widest uppercase truncate">Player</span>
+                    <div class="flex items-baseline gap-1">
+                        <span class="text-[10px] text-indigo-300 font-black">BEST:</span>
+                        <span id="player-best" class="font-bold text-white text-lg">0</span>
                     </div>
                 </div>
-                
-                <div class="h-8 w-[1px] bg-slate-700/50 z-10"></div>
-                
-                <div class="flex flex-col items-end z-10">
-                    <span class="text-[10px] text-rose-400 font-black tracking-[0.2em] uppercase mb-0.5 opacity-90 animate-pulse drop-shadow-[0_0_5px_rgba(225,29,72,0.5)]">STREAK</span>
-                    <span id="player-streak" class="font-black text-3xl text-white leading-none drop-shadow-[0_0_10px_rgba(225,29,72,0.8)] transition-transform duration-200 ease-out origin-right">0</span>
+                <div class="flex flex-col items-end">
+                    <span class="text-[10px] text-rose-400 font-black tracking-[0.2em] uppercase">STREAK</span>
+                    <span id="player-streak" class="font-black text-3xl text-white transition-transform duration-200">0</span>
                 </div>
             </div>
         </div>
 
-        <!-- Game Area -->
-        <div class="flex-1 flex flex-col items-center justify-center relative w-full pb-2 shrink-0 px-5 min-h-[300px]">
-            <div class="w-full flex justify-between items-end mb-2 px-2">
-                <span class="text-[10px] font-black text-slate-500 tracking-widest uppercase flex items-center gap-1">
-                    <div class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></div> TIME REMAINING
-                </span>
-                <span id="timer-text" class="text-cyan-300 font-black text-lg leading-none tracking-wider">15s</span>
+        <div class="flex-1 flex flex-col items-center justify-center px-5 min-h-[300px]">
+            <div class="w-full flex justify-between items-end mb-2">
+                <span class="text-[10px] font-black text-slate-500 tracking-widest uppercase">TIME REMAINING</span>
+                <span id="timer-text" class="text-cyan-300 font-black text-lg">15s</span>
+            </div>
+            <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden mb-8">
+                <div id="timer-bar" class="h-full bg-cyan-400 w-full origin-left transition-all"></div>
             </div>
             
-            <div class="w-full h-2 bg-slate-900 border border-slate-800 rounded-full overflow-hidden mb-8 shadow-inner relative gpu-layer">
-                <div id="timer-bar" class="h-full bg-cyan-400 rounded-full origin-left w-full shadow-[0_0_12px_rgba(34,211,238,0.8)]"></div>
-            </div>
-            
-            <div class="relative w-56 h-56 flex items-center justify-center mb-6 isolate shrink-0">
-                <div class="absolute inset-0 bg-gradient-to-tr from-cyan-500 to-indigo-500 rounded-full blur-[40px] opacity-30 -z-10 animate-pulse"></div>
-                <div class="hero-box w-[200px] h-[200px] rounded-full p-1.5 bg-gradient-to-b from-slate-700 to-slate-900 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-300 relative flex items-center justify-center" id="hero-box">
-                    <div class="w-full h-full rounded-full overflow-hidden bg-slate-950 flex items-center justify-center relative z-10 border border-slate-800/80">
-                        <img id="hero-img" src="" alt="Hero" class="w-full h-full object-cover scale-[1.02]">
-                    </div>
-                    <div id="debug-msg" class="absolute inset-0 flex items-center justify-center bg-slate-900/95 text-red-500 text-xs font-bold text-center px-4 break-words hidden z-20 rounded-full"></div>
+            <div class="relative w-56 h-56 flex items-center justify-center mb-6">
+                <div id="hero-box" class="w-[200px] h-[200px] rounded-full p-1.5 bg-gradient-to-b from-slate-700 to-slate-900 shadow-2xl relative overflow-hidden">
+                    <img id="hero-img" src="" alt="Hero" class="w-full h-full object-cover rounded-full">
+                    <div id="debug-msg" class="absolute inset-0 flex items-center justify-center bg-slate-900/95 text-red-500 text-xs font-bold text-center px-4 hidden"></div>
                 </div>
             </div>
-            
-            <p id="feedback" class="text-center font-bold text-xl h-7 tracking-wide flex items-center justify-center transition-all duration-300"></p>
+            <p id="feedback" class="text-center font-bold text-xl h-7"></p>
         </div>
 
-        <!-- Controls Area -->
-        <div class="w-full shrink-0 flex flex-col gap-3 pb-4 items-center px-5">
-            <form id="form-guess" class="flex flex-col gap-3 w-full">
-                <input type="text" id="guess-input" placeholder="ENTER HERO" class="w-full h-14 bg-slate-900/80 backdrop-blur-md border-2 border-slate-700 rounded-full px-6 text-2xl text-center font-black text-cyan-300 placeholder-slate-600 uppercase tracking-[0.15em] focus:outline-none focus:border-indigo-500 focus:bg-slate-800 transition-all shadow-inner" autocomplete="off" autocorrect="off" spellcheck="false">
-                <button type="submit" id="btn-submit" class="w-full h-14 bg-white text-slate-950 font-black text-xl rounded-full uppercase tracking-[0.2em] shadow-[0_8px_20px_rgba(255,255,255,0.2)] active:scale-[0.97] transition-all flex items-center justify-center">
-                    SUBMIT
-                </button>
+        <div class="w-full shrink-0 flex flex-col gap-3 pb-6 px-5 items-center">
+            <form id="form-guess" class="w-full flex flex-col gap-3">
+                <input type="text" id="guess-input" placeholder="ENTER HERO" class="w-full h-14 bg-slate-900/80 border-2 border-slate-700 rounded-full px-6 text-2xl text-center font-black text-cyan-300 uppercase focus:outline-none focus:border-indigo-500 transition-all" autocomplete="off">
+                <button type="submit" id="btn-submit" class="w-full h-14 bg-white text-slate-950 font-black text-xl rounded-full uppercase tracking-widest active:scale-95 transition-all">SUBMIT</button>
             </form>
-
-            <button id="btn-show-leaderboard" class="h-12 w-full flex items-center justify-center bg-slate-800/60 backdrop-blur-sm border border-slate-700/80 rounded-full text-cyan-400 font-bold text-xs uppercase tracking-[0.15em] active:bg-slate-700 transition-all mt-1">
-                Open Leaderboard
-            </button>
-            
-            <button type="button" id="btn-logout" class="h-8 px-4 text-[10px] text-slate-500 font-black uppercase tracking-[0.15em] active:text-rose-500 transition-colors mt-1">
-                Switch Account
-            </button>
+            <button id="btn-show-leaderboard" class="h-10 w-full text-cyan-400 font-bold text-[10px] uppercase tracking-widest">Open Leaderboard</button>
         </div>
 
-        <!-- LOCAL AUDIO PLAYER -->
-        <button id="btn-radio-toggle" class="absolute top-20 right-4 w-10 h-10 bg-slate-900/90 backdrop-blur-md rounded-full shadow-[0_0_15px_rgba(34,211,238,0.3)] z-40 flex items-center justify-center border border-cyan-500/50 active:scale-90 transition-all">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-cyan-400 pointer-events-none" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h12v2H6zM6 10h12v2H6zM6 16h12v2H6z"/></svg>
+        <!-- RADIO PANEL -->
+        <button id="btn-radio-toggle" class="absolute top-20 right-4 w-10 h-10 bg-slate-900 border border-cyan-500/50 rounded-full flex items-center justify-center z-40">
+            <svg class="h-5 w-5 text-cyan-400" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h12v2H6zM6 10h12v2H6zM6 16h12v2H6z"/></svg>
         </button>
 
-        <div id="radio-container" class="absolute top-32 right-4 w-[320px] z-50 hidden transition-all duration-300">
-            <div class="bg-slate-900/95 backdrop-blur-2xl border border-cyan-500/30 rounded-2xl shadow-2xl p-4 relative flex flex-col gap-3">
-                <button id="btn-radio-close" class="absolute -top-3 -right-3 bg-slate-800 text-slate-400 hover:text-white border border-slate-600 rounded-full p-1.5 shadow-md z-10">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-
-                <p class="text-[10px] font-black text-cyan-300 uppercase tracking-[0.2em] text-center">Local Music</p>
-
-                <button id="btn-local-load" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-2 rounded-lg text-xs font-bold">Load default playlist</button>
-                <button id="btn-spotify-login" class="w-full mt-2 bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded-lg text-xs font-bold">Link Spotify</button>
-                <button id="btn-spotify-play" class="w-full mt-2 bg-green-500 hover:bg-green-400 text-white px-3 py-2 rounded-lg text-xs font-bold">Play Spotify Playlist</button>
-
-                <div id="local-tracks" class="h-36 overflow-y-auto border border-slate-800 rounded-lg p-2 bg-slate-950 text-xs"></div>
-
-                <audio id="local-audio" controls class="w-full mt-2 bg-black ring ring-cyan-500/30 rounded-lg" preload="none"></audio>
-
-                <p id="local-status" class="text-[10px] text-cyan-200 text-center mt-1">No token needed.</p>
+        <div id="radio-container" class="absolute top-32 right-4 w-[300px] z-50 hidden bg-slate-900/95 border border-cyan-500/30 rounded-2xl p-4 shadow-2xl">
+            <button id="btn-radio-close" class="absolute -top-2 -right-2 bg-slate-800 rounded-full p-1 border border-slate-600">✕</button>
+            <p class="text-[10px] font-black text-cyan-300 uppercase text-center mb-3">Music Player</p>
+            <div class="flex flex-col gap-2">
+                <button id="btn-spotify-login" class="bg-green-600 text-white py-2 rounded text-xs font-bold">Link Spotify</button>
+                <button id="btn-spotify-play" class="bg-green-500 text-white py-2 rounded text-xs font-bold">Play Playlist</button>
+                <div id="local-tracks" class="max-h-24 overflow-y-auto bg-black/40 rounded p-2 text-[10px]"></div>
+                <audio id="local-audio" controls class="w-full h-8 opacity-50"></audio>
+                <p id="local-status" class="text-[9px] text-center text-slate-400 mt-1">Ready</p>
             </div>
         </div>
 
         <!-- CHAT -->
-        <div id="chat-toasts" class="absolute bottom-[200px] left-4 right-4 flex flex-col items-start gap-2 pointer-events-none z-30"></div>
-        <button id="btn-chat-toggle" class="absolute bottom-6 right-6 w-12 h-12 bg-indigo-600 rounded-full shadow-[0_0_20px_rgba(79,70,229,0.5)] z-40 flex items-center justify-center border border-indigo-400/50 active:scale-90 transition-all hover:bg-indigo-500">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-        </button>
-        <div id="chat-container" class="absolute inset-x-4 bottom-4 top-1/2 bg-slate-900/95 backdrop-blur-2xl border border-slate-700 rounded-3xl shadow-2xl z-50 flex flex-col hidden transition-all duration-300 overflow-hidden">
+        <div id="chat-toasts" class="absolute bottom-48 left-4 right-4 flex flex-col gap-2 pointer-events-none z-30"></div>
+        <button id="btn-chat-toggle" class="absolute bottom-6 right-6 w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center shadow-lg z-40"><svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg></button>
+        
+        <div id="chat-container" class="absolute inset-x-4 bottom-4 top-1/2 bg-slate-900 border border-slate-700 rounded-3xl z-50 flex flex-col hidden overflow-hidden shadow-2xl">
             <div class="flex items-center justify-between px-4 py-3 bg-slate-800/50 border-b border-slate-700">
-                <span class="text-xs font-black text-cyan-400 uppercase tracking-widest">Global Chat</span>
-                <button id="btn-chat-close" class="text-slate-400 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg></button>
+                <span class="text-xs font-black text-cyan-400 uppercase">Global Chat</span>
+                <button id="btn-chat-close" class="text-slate-400">✕</button>
             </div>
-            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 overscroll-contain">
-                <div class="text-center text-[10px] text-slate-500 uppercase tracking-widest py-4">Welcome to Chat</div>
-            </div>
-            <form id="form-chat" class="p-3 bg-slate-950/50 border-t border-slate-800 flex gap-2">
-                <input type="text" id="chat-input" maxlength="50" placeholder="Say something..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" autocomplete="off">
-                <button type="submit" class="bg-indigo-600 text-white p-2 rounded-xl active:scale-95 transition-transform"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg></button>
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+            <form id="form-chat" class="p-3 bg-slate-950 flex gap-2">
+                <input type="text" id="chat-input" placeholder="Say something..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none">
+                <button type="submit" class="bg-indigo-600 text-white p-2 rounded-xl">Send</button>
             </form>
         </div>
     </div>
 
     <!-- LEADERBOARD SCREEN -->
-    <div id="screen-leaderboard" class="fixed inset-0 bg-slate-950/95 backdrop-blur-3xl z-50 hidden flex-col gpu-layer">
-        <div class="flex-1 w-full max-w-md mx-auto flex flex-col h-full px-5 py-6">
-            <div class="flex justify-between items-center mb-4 pt-4 shrink-0">
-                <div class="flex flex-col">
-                    <span class="text-[10px] text-cyan-500 font-black tracking-widest uppercase">Global</span>
-                    <h2 class="text-3xl font-black text-white italic tracking-tighter leading-none mt-1">TOP STREAKS</h2>
-                </div>
-                <button id="btn-close-leaderboard" class="h-10 w-10 bg-slate-800 border border-slate-700 rounded-full flex items-center justify-center text-slate-400 active:scale-90 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
+    <div id="screen-leaderboard" class="fixed inset-0 bg-slate-950/98 z-50 hidden flex-col">
+        <div class="flex-1 w-full max-w-md mx-auto flex flex-col px-5 py-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-black text-white italic">TOP STREAKS</h2>
+                <button id="btn-close-leaderboard" class="text-slate-400 text-2xl">✕</button>
             </div>
-            <div class="flex-1 overflow-y-auto overscroll-contain mb-4 relative pb-4">
-                <table class="w-full text-left border-collapse"><tbody id="lb-body" class="block w-full"></tbody></table>
-            </div>
-            <div class="shrink-0 bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl relative overflow-hidden">
-                <div class="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
-                <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] mb-3 text-center">Find your rank</p>
-                <form id="form-search" class="flex flex-col gap-3">
-                    <input type="number" id="search-id" placeholder="Type here.." class="w-full h-14 bg-slate-950 border border-slate-800 rounded-2xl px-4 text-center font-bold text-white focus:outline-none focus:border-indigo-500 shadow-inner" required>
-                    <button type="submit" class="w-full h-14 bg-indigo-600 text-white font-black text-sm uppercase tracking-widest rounded-2xl active:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-500/30 flex items-center justify-center">FIND</button>
-                </form>
-                <div id="search-result" class="mt-4 bg-slate-950 border border-slate-800 rounded-2xl p-4 hidden flex-col items-center justify-center transition-all">
-                    <p id="search-rank" class="text-4xl font-black text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)] leading-none">#0</p>
-                    <p id="search-details" class="text-sm font-bold text-slate-300 mt-2 tracking-wide">IGN - 0 pts</p>
-                </div>
+            <div class="flex-1 overflow-y-auto mb-4">
+                <table class="w-full border-separate border-spacing-y-2"><tbody id="lb-body"></tbody></table>
             </div>
         </div>
     </div>
 
-    <!-- DRAMATIC BROADCAST OVERLAY -->
-    <div id="screen-broadcast" class="fixed inset-0 z-[100] hidden items-center justify-center pointer-events-none">
-        <div class="absolute inset-0 bg-red-950/80 backdrop-blur-md"></div>
-        <div class="absolute inset-0 bg-gradient-to-t from-red-900/50 to-transparent"></div>
-        <div id="broadcast-box" class="relative z-10 w-[90%] max-w-sm bg-black border-4 border-rose-600 rounded-3xl p-8 flex flex-col items-center text-center shadow-[0_0_50px_rgba(225,29,72,0.8)]">
-            <h1 class="text-3xl font-black italic tracking-[0.2em] text-rose-500 mb-2 drop-shadow-[0_0_10px_rgba(225,29,72,0.8)] uppercase">ADMIN</h1>
-            <div class="w-16 h-1 bg-white mb-6 rounded-full"></div>
-            <p id="broadcast-text" class="text-3xl font-black text-white leading-tight uppercase tracking-widest drop-shadow-md break-words w-full"></p>
+    <!-- BROADCAST -->
+    <div id="screen-broadcast" class="fixed inset-0 z-[100] hidden items-center justify-center pointer-events-none bg-red-950/40 backdrop-blur-sm">
+        <div id="broadcast-box" class="bg-black border-4 border-rose-600 rounded-3xl p-8 flex flex-col items-center text-center shadow-2xl">
+            <h1 class="text-2xl font-black text-rose-500 uppercase mb-4">ADMIN BROADCAST</h1>
+            <p id="broadcast-text" class="text-3xl font-black text-white uppercase"></p>
         </div>
     </div>
 
-    <!-- APP LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, addDoc, collection, query, orderBy, getDocs, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCPSU7YrNL0M9j0EFUBRHDoufpW9bQlUsI",
-            authDomain: "guesshero-e1180.firebaseapp.com",
-            projectId: "guesshero-e1180",
-            databaseURL: "https://guesshero-e1180-default-rtdb.asia-southeast1.firebasedatabase.app",
-        };
-
+        const firebaseConfig = { apiKey: "AIzaSyCPSU7YrNL0M9j0EFUBRHDoufpW9bQlUsI", authDomain: "guesshero-e1180.firebaseapp.com", projectId: "guesshero-e1180" };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- GLOBAL STATES ---
-        let globalEventX2 = false;
-        let globalEventFirstLetter = false;
-        let currentMusic = null;
-        let activeMusicUrl = null; 
-        let isMusicPlaying = false;
-        
-        const vineBoomAudio = new Audio("https://www.myinstants.com/media/sounds/vine-boom.mp3");
-
-        // --- HERO DATA ---
-        const uniqueHeroNames = new Set(["Lunox","Luo Yi","Zhuxin","Chip","Cici","Nolan","Arlott","Novaria","Joy","Fredrinn","Julian","Xavier","Melissa","Yin","Floryn","Edith","Valentina","Aamon","Aulus","Natan","Phoveus","Beatrix","Gloo","Paquito","Mathilda","Yve","Brody","Barats","Khaleed","Benedetta","Atlas","Carmilla","Cecilion","Silvanna","Wanwan","Masha","Baxia","Ling","X.borg","Terizla","Esmeralda","Guinevere","Granger","Khufra","Badang","Faramis","Kadita","Minotaur","Hanzo","Claude","Aldous","Selena","Kaja","Chang'e","Thamuz","Kimmy","Belerick","Leomord","Vale","Hanabi","Uranus","Martis","Valir","Gusion","Angela","Jawhead","Lesley","Pharsa","Helcurt","Zhask","Hylos","Diggie","Lancelot","Odette","Argus","Grock","Irithel","Harley","Gatotkaca","Roger","Vexana","Lapu-Lapu","Aurora","Hilda","Estes","Cyclops","Johnson","Moskov","Yi Sun shin","Ruby","Alpha","Sun","Chou","Kagura","Natalia","Gord","Freya","Hayabusa","Lolita","Layla","Zilong","Eudora","Rafaela","Clint","Bruno","Bane","Franco","Akai","Karina","Alucard","Miya","Saber","Balmond","Nana","Alice"]);
-        const predefinedSeriesSkins = [{name:"Chou",icon_path:"icons/chou-kof1.png"},{name:"Gusion",icon_path:"icons/gusion-KOF2.png"},{name:"Guinevere",icon_path:"icons/guinevere-kof1.png"},{name:"Karina",icon_path:"icons/karina-kof1.png"}];
-        const heroes = [];
-        const normalizeName = (name) => name.toLowerCase().replace(/[' .]/g, '-').replace(/\.+$/, '');
-        uniqueHeroNames.forEach(heroName => {
-            if(heroName==="Fanny")return;
-            const baseName=normalizeName(heroName);
-            heroes.push({name:heroName,icon_path:`icons/${baseName}-ss.webp`});
-            heroes.push({name:heroName,icon_path:`icons/${baseName}-1st.png`});
-            heroes.push({name:heroName,icon_path:`icons/${baseName}-icon.webp`});
-        });
-        predefinedSeriesSkins.forEach(skin=>heroes.push({name:skin.name,icon_path:skin.icon_path}));
-
+        // State
         let currentUser = { id: "", ign: "", currentScore: 0, bestScore: 0, rank: "N/A" };
         let currentHero = null;
         let timerInterval = null;
         let isGameActive = false;
-        let isChatOpen = false;
+        let globalEventX2 = false;
+        let globalEventFirstLetter = false;
 
+        const vineBoomAudio = new Audio("https://www.myinstants.com/media/sounds/vine-boom.mp3");
+
+        // Heroes
+        const uniqueHeroNames = ["Lunox","Luo Yi","Zhuxin","Chip","Cici","Nolan","Arlott","Novaria","Joy","Fredrinn","Julian","Xavier","Melissa","Yin","Floryn","Edith","Valentina","Aamon","Aulus","Natan","Phoveus","Beatrix","Gloo","Paquito","Mathilda","Yve","Brody","Barats","Khaleed","Benedetta","Atlas","Carmilla","Cecilion","Silvanna","Wanwan","Masha","Baxia","Ling","X.borg","Terizla","Esmeralda","Guinevere","Granger","Khufra","Badang","Faramis","Kadita","Minotaur","Hanzo","Claude","Aldous","Selena","Kaja","Chang'e","Thamuz","Kimmy","Belerick","Leomord","Vale","Hanabi","Uranus","Martis","Valir","Gusion","Angela","Jawhead","Lesley","Pharsa","Helcurt","Zhask","Hylos","Diggie","Lancelot","Odette","Argus","Grock","Irithel","Harley","Gatotkaca","Roger","Vexana","Lapu-Lapu","Aurora","Hilda","Estes","Cyclops","Johnson","Moskov","Yi Sun shin","Ruby","Alpha","Sun","Chou","Kagura","Natalia","Gord","Freya","Hayabusa","Lolita","Layla","Zilong","Eudora","Rafaela","Clint","Bruno","Bane","Franco","Akai","Karina","Alucard","Miya","Saber","Balmond","Nana","Alice"];
+        const heroes = [];
+        uniqueHeroNames.forEach(h => {
+            const slug = h.toLowerCase().replace(/[' .]/g, '-').replace(/\.+$/, '');
+            heroes.push({ name: h, icon: `icons/${slug}-ss.webp` });
+            heroes.push({ name: h, icon: `icons/${slug}-icon.webp` });
+        });
+
+        // DOM Elements
         const els = {
             screenLogin: document.getElementById('screen-login'),
             screenGame: document.getElementById('screen-game'),
-            screenLeaderboard: document.getElementById('screen-leaderboard'),
-            loginMsg: document.getElementById('login-msg'),
+            screenLB: document.getElementById('screen-leaderboard'),
             playerIgn: document.getElementById('player-ign'),
             playerStreak: document.getElementById('player-streak'),
             playerBest: document.getElementById('player-best'),
             timerText: document.getElementById('timer-text'),
             timerBar: document.getElementById('timer-bar'),
             heroImg: document.getElementById('hero-img'),
-            debugMsg: document.getElementById('debug-msg'),
-            feedback: document.getElementById('feedback'),
             guessInput: document.getElementById('guess-input'),
-            btnSubmit: document.getElementById('btn-submit'),
-            heroBox: document.getElementById('hero-box'),
-            chatContainer: document.getElementById('chat-container'),
-            chatInput: document.getElementById('chat-input'),
-            chatForm: document.getElementById('form-chat'),
-            chatMessages: document.getElementById('chat-messages'),
-            chatToasts: document.getElementById('chat-toasts'),
+            feedback: document.getElementById('feedback'),
+            chatMsgs: document.getElementById('chat-messages'),
+            status: document.getElementById('local-status')
         };
 
-        // --- CORE LOGIC ---
-        function listenToServerCommands() {
-            onSnapshot(doc(db, "server", "state"), (docSnap) => {
-                if(docSnap.exists()) {
-                    const state = docSnap.data();
-                    
-                    if(state.refreshTrigger) {
-                        const triggerTime = state.refreshTrigger.toMillis ? state.refreshTrigger.toMillis().toString() : "";
-                        if(triggerTime && localStorage.getItem('last_refresh') !== triggerTime) {
-                            localStorage.setItem('last_refresh', triggerTime);
-                            window.location.reload();
-                        }
-                    }
-
-                    globalEventX2 = state.doublePoints === true;
-                    globalEventFirstLetter = state.firstLetter === true;
-                    if(isGameActive && currentHero) {
-                        els.guessInput.placeholder = globalEventFirstLetter ? `Starts with: ${currentHero.name.charAt(0).toUpperCase()}` : "ENTER HERO";
-                    }
-
-                    if(state.broadcastTrigger && state.broadcastTrigger.toMillis) {
-                        const triggerTime = state.broadcastTrigger.toMillis().toString();
-                        if(localStorage.getItem('last_broadcast') !== triggerTime) {
-                            localStorage.setItem('last_broadcast', triggerTime);
-                            vineBoomAudio.currentTime = 0; vineBoomAudio.volume = 1.0; vineBoomAudio.play().catch(e => {});
-                            const overlay = document.getElementById('screen-broadcast');
-                            const box = document.getElementById('broadcast-box');
-                            const text = document.getElementById('broadcast-text');
-                            if(overlay && box && text) {
-                                text.innerText = state.broadcastMsg || "ATTENTION!";
-                                overlay.classList.remove('hidden'); overlay.classList.add('flex');
-                                box.classList.remove('animate-boom'); void box.offsetWidth; box.classList.add('animate-boom');
-                                setTimeout(() => { overlay.classList.add('hidden'); overlay.classList.remove('flex'); }, 6000);
-                            }
-                        }
-                    }
-                }
-            });
-
-            // Player Info Listener
-            if(currentUser.id) {
-                onSnapshot(doc(db, "players", currentUser.id), (docSnap) => {
-                    if(docSnap.exists()) {
-                        const data = docSnap.data();
-                        if(data.isBanned) { alert("BANNED."); localStorage.removeItem('mlbb_id'); window.location.reload(); }
-                        if(data.score !== currentUser.bestScore) { 
-                            currentUser.bestScore = data.score; 
-                            els.playerBest.innerText = currentUser.bestScore; 
-                        }
-                    } else { localStorage.removeItem('mlbb_id'); window.location.reload(); }
-                });
-            }
-        }
-
-        // --- INSTANT AUTO-LOGIN ---
-        window.addEventListener('DOMContentLoaded', () => {
-            const lastId = localStorage.getItem('last_mlbb_id');
-            const lastZone = localStorage.getItem('last_mlbb_zone');
-            if (lastId) document.getElementById('login-id').value = lastId;
-            if (lastZone) document.getElementById('login-zone').value = lastZone;
-
-            const savedId = localStorage.getItem('mlbb_id');
-            const savedZone = localStorage.getItem('mlbb_zone');
-            if (savedId && savedZone) performAutoLogin(savedId, savedZone);
-        });
-
-        async function performAutoLogin(id, zone) {
-            const btn = document.getElementById('btn-login');
-            btn.disabled = true; btn.innerText = "RESTORING...";
-            els.loginMsg.innerText = "Welcome back!";
-
-            try {
-                const userDoc = await getDoc(doc(db, "players", id));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    if (userData.isBanned) { localStorage.clear(); location.reload(); return; }
-                    
-                    currentUser.id = id; 
-                    currentUser.ign = userData.ign; 
-                    currentUser.bestScore = userData.score || 0;
-                    currentUser.currentScore = 0;
-                    
-                    els.screenLogin.classList.add('hidden'); els.screenLogin.classList.remove('flex');
-                    els.screenGame.classList.remove('hidden'); els.screenGame.classList.add('flex');
-                    
-                    els.playerIgn.innerText = currentUser.ign; 
-                    els.playerBest.innerText = currentUser.bestScore;
-                    els.playerStreak.innerText = currentUser.currentScore;
-                    
-                    nextHero(); initChatSystem(); listenToServerCommands();
-                    try {
-                        const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
-                        const snapshot = await getDocs(q);
-                        let rank = 1, found = false;
-                        snapshot.forEach(doc => { if(doc.id === id) found = true; if(!found) rank++; });
-                        currentUser.rank = found ? `#${rank}` : "100+";
-                    } catch(e) { currentUser.rank = "?"; }
-                } else throw new Error("Session expired.");
-            } catch (e) {
-                localStorage.removeItem('mlbb_id'); localStorage.removeItem('mlbb_zone');
-                btn.disabled = false; btn.innerText = "CONNECT"; els.loginMsg.innerText = "";
-            }
-        }
-
+        // Core Functions
         async function handleLogin(e) {
             e.preventDefault();
             const id = document.getElementById('login-id').value.trim();
             const zone = document.getElementById('login-zone').value.trim();
-            if (!/^\d+$/.test(id) || !/^\d+$/.test(zone)) return;
+            if (!id || !zone) return;
 
-            els.loginMsg.innerText = "Connecting..."; document.getElementById('btn-login').disabled = true;
+            document.getElementById('btn-login').disabled = true;
+            document.getElementById('login-msg').innerText = "Connecting...";
 
             try {
                 const res = await fetch(`https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`);
                 const data = await res.json();
-                if (!data.success && !data.name && !data.nickname) throw new Error("Invalid ID");
-                
-                const fetchedIgn = data.name || data.nickname;
+                const ign = data.name || data.nickname || "Player";
+
                 const userRef = doc(db, "players", id);
                 const userDoc = await getDoc(userRef);
 
-                if (userDoc.exists()) {
-                    if (userDoc.data().isBanned) { localStorage.clear(); location.reload(); return; }
-                    currentUser.bestScore = userDoc.data().score || 0;
-                } else {
+                if (!userDoc.exists()) {
+                    await setDoc(userRef, { ign, score: 0, createdAt: serverTimestamp(), isBanned: false });
                     currentUser.bestScore = 0;
-                    await setDoc(userRef, { ign: fetchedIgn, score: 0, createdAt: serverTimestamp(), isBanned: false, zone: zone });
+                } else {
+                    if (userDoc.data().isBanned) throw new Error("Banned");
+                    currentUser.bestScore = userDoc.data().score || 0;
                 }
 
-                currentUser.id = id; 
-                currentUser.ign = fetchedIgn;
-                currentUser.currentScore = 0;
-                
+                currentUser.id = id; currentUser.ign = ign;
                 localStorage.setItem('mlbb_id', id); localStorage.setItem('mlbb_zone', zone);
-                localStorage.setItem('last_mlbb_id', id); localStorage.setItem('last_mlbb_zone', zone);
-
-                els.screenLogin.classList.add('hidden'); els.screenLogin.classList.remove('flex');
-                els.screenGame.classList.remove('hidden'); els.screenGame.classList.add('flex');
                 
-                els.playerIgn.innerText = currentUser.ign; 
-                els.playerBest.innerText = currentUser.bestScore;
-                els.playerStreak.innerText = currentUser.currentScore;
+                els.screenLogin.classList.add('hidden'); els.screenGame.classList.remove('hidden');
+                els.playerIgn.innerText = ign; els.playerBest.innerText = currentUser.bestScore;
                 
-                nextHero(); initChatSystem(); listenToServerCommands();
-                try {
-                    const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
-                    const snapshot = await getDocs(q);
-                    let rank=1, found=false;
-                    snapshot.forEach(doc => { if(doc.id===id) found=true; if(!found) rank++; });
-                    currentUser.rank = found ? `#${rank}` : "100+";
-                } catch(e) { currentUser.rank="?"; }
-            } catch(e) { 
-                els.loginMsg.innerText = "Login Failed"; 
-                localStorage.removeItem('mlbb_id'); localStorage.removeItem('mlbb_zone');
-            } finally { document.getElementById('btn-login').disabled = false; }
+                startServerListeners(); nextHero(); initChat();
+            } catch (err) {
+                document.getElementById('login-msg').innerText = "Login Error";
+                document.getElementById('btn-login').disabled = false;
+            }
         }
 
-        // --- GAMEPLAY LOGIC ---
         function nextHero() {
-            try {
-                els.guessInput.value = ""; els.guessInput.disabled = false; els.btnSubmit.disabled = false;
-                els.feedback.innerText = ""; els.debugMsg.classList.add('hidden'); els.heroImg.style.display = 'block';
-                els.timerBar.style.backgroundColor = "#22d3ee"; 
-
-                currentHero = heroes[Math.floor(Math.random() * heroes.length)];
-                els.heroImg.src = currentHero.icon_path;
-                els.guessInput.placeholder = globalEventFirstLetter ? `Starts with: ${currentHero.name.charAt(0).toUpperCase()}` : "ENTER HERO";
-                
-                setTimeout(() => { if (!els.guessInput.disabled) els.guessInput.focus(); }, 100);
-                startTimer();
-            } catch (err) { setTimeout(nextHero, 1000); }
+            isGameActive = true;
+            els.guessInput.value = ""; els.guessInput.disabled = false;
+            els.feedback.innerText = "";
+            
+            currentHero = heroes[Math.floor(Math.random() * heroes.length)];
+            els.heroImg.src = currentHero.icon;
+            els.guessInput.placeholder = globalEventFirstLetter ? `Starts with: ${currentHero.name[0].toUpperCase()}` : "ENTER HERO";
+            
+            startTimer();
         }
 
         function startTimer() {
             if (timerInterval) clearInterval(timerInterval);
-            isGameActive = true; let timeLeft = 15; els.timerText.innerText = `${timeLeft}s`;
-            
-            els.timerBar.style.transition = 'none'; els.timerBar.style.transform = 'scaleX(1)'; void els.timerBar.offsetWidth; 
-            els.timerBar.style.transition = `transform 15s linear, background-color 0.3s`; els.timerBar.style.transform = 'scaleX(0)';
+            let timeLeft = 15;
+            els.timerBar.style.transition = 'none'; els.timerBar.style.transform = 'scaleX(1)';
+            void els.timerBar.offsetWidth; 
+            els.timerBar.style.transition = 'transform 15s linear'; els.timerBar.style.transform = 'scaleX(0)';
 
             timerInterval = setInterval(() => {
-                if (!isGameActive) { clearInterval(timerInterval); return; }
                 timeLeft--; els.timerText.innerText = `${timeLeft}s`;
-                if (timeLeft <= 5) els.timerBar.style.backgroundColor = "#f43f5e";
-                if (timeLeft <= 0) { clearInterval(timerInterval); timeIsUp(); }
+                if (timeLeft <= 0) { clearInterval(timerInterval); loseStreak("TIME UP!"); }
             }, 1000);
         }
 
-        function timeIsUp() {
-            isGameActive = false;
-            
-            // Streak Lost Logic
-            currentUser.currentScore = 0;
-            els.playerStreak.innerText = currentUser.currentScore;
-            
-            els.playerStreak.classList.add('text-rose-500', 'animate-error');
-            setTimeout(() => els.playerStreak.classList.remove('text-rose-500', 'animate-error'), 500);
-
-            els.feedback.innerText = `TIMEOUT! STREAK LOST! It was ${currentHero.name}`;
-            els.feedback.className = "text-center font-black text-lg h-7 tracking-wide flex items-center justify-center text-rose-500 uppercase drop-shadow-[0_0_8px_rgba(225,29,72,0.8)]";
-            
-            els.heroBox.classList.add('animate-error'); 
-            setTimeout(() => els.heroBox.classList.remove('animate-error'), 400);
-            
-            lockGame(2500);
-        }
-
-        async function checkGuess(e) {
-            e.preventDefault(); if (!isGameActive) return;
+        function checkGuess(e) {
+            e.preventDefault();
+            if (!isGameActive) return;
             const guess = els.guessInput.value.toLowerCase().replace(/[^a-z0-9]/g, '');
             const answer = currentHero.name.toLowerCase().replace(/[^a-z0-9]/g, '');
 
             if (guess === answer) {
-                clearInterval(timerInterval); isGameActive = false; els.timerBar.style.transition = 'none'; 
-                
-                let pts = globalEventX2 ? 2 : 1;
+                clearInterval(timerInterval); isGameActive = false;
+                const pts = globalEventX2 ? 2 : 1;
                 currentUser.currentScore += pts;
                 els.playerStreak.innerText = currentUser.currentScore;
-
-                // Pop Animation on streak
-                els.playerStreak.style.transform = 'scale(1.5)';
-                setTimeout(() => els.playerStreak.style.transform = 'scale(1)', 200);
-
-                // Handle Best Score
+                
                 if (currentUser.currentScore > currentUser.bestScore) {
                     currentUser.bestScore = currentUser.currentScore;
                     els.playerBest.innerText = currentUser.bestScore;
-                    
-                    els.feedback.innerText = globalEventX2 ? "NEW BEST! (+2) 🔥" : "NEW BEST! 🔥";
-                    els.feedback.className = "text-center font-black text-xl h-7 text-yellow-400 tracking-[0.2em] drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] flex items-center justify-center";
-                    saveScore(); 
-                } else {
-                    els.feedback.innerText = globalEventX2 ? "CORRECT! (+2)" : "CORRECT!";
-                    els.feedback.className = "text-center font-black text-xl h-7 text-cyan-400 tracking-[0.2em] drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] flex items-center justify-center";
+                    setDoc(doc(db, "players", currentUser.id), { score: currentUser.bestScore }, { merge: true });
                 }
-
-                fireCustomConfetti(); lockGame(1500); 
-
+                els.feedback.innerText = "CORRECT! 🔥"; els.feedback.className = "text-center text-cyan-400 font-bold text-xl";
+                setTimeout(nextHero, 1000);
             } else {
-                clearInterval(timerInterval); isGameActive = false; els.timerBar.style.transition = 'none'; 
-                
-                // Streak Lost Logic
-                currentUser.currentScore = 0;
-                els.playerStreak.innerText = currentUser.currentScore;
-                
-                els.playerStreak.classList.add('text-rose-500', 'animate-error');
-                setTimeout(() => els.playerStreak.classList.remove('text-rose-500', 'animate-error'), 500);
-
-                els.guessInput.value = ""; 
-                els.feedback.innerText = `STREAK LOST! It was ${currentHero.name}`; 
-                els.feedback.className = "text-center font-black text-lg h-7 tracking-wide flex items-center justify-center text-rose-500 uppercase drop-shadow-[0_0_8px_rgba(225,29,72,0.8)]";
-                
-                els.heroBox.classList.add('animate-error'); 
-                setTimeout(() => els.heroBox.classList.remove('animate-error'), 400);
-                
-                lockGame(2500);
+                loseStreak("WRONG!");
             }
         }
 
-        function lockGame(delay) {
-            els.guessInput.disabled = true; els.btnSubmit.disabled = true;
-            setTimeout(nextHero, delay);
+        function loseStreak(msg) {
+            clearInterval(timerInterval); isGameActive = false;
+            els.playerStreak.innerText = "0"; currentUser.currentScore = 0;
+            els.feedback.innerText = `${msg} It was ${currentHero.name}`;
+            els.feedback.className = "text-center text-rose-500 font-bold text-lg";
+            document.getElementById('hero-box').classList.add('animate-error');
+            setTimeout(() => { document.getElementById('hero-box').classList.remove('animate-error'); nextHero(); }, 2000);
         }
 
-        async function saveScore() {
-            if (!navigator.onLine) return; 
-            try { 
-                await setDoc(doc(db, "players", currentUser.id), { 
-                    ign: currentUser.ign, 
-                    score: currentUser.bestScore, 
-                    updatedAt: new Date() 
-                }, { merge: true }); 
-            } catch (err) {}
+        function startServerListeners() {
+            onSnapshot(doc(db, "server", "state"), (snap) => {
+                if (!snap.exists()) return;
+                const s = snap.data();
+                globalEventX2 = s.doublePoints;
+                globalEventFirstLetter = s.firstLetter;
+                if (s.broadcastTrigger) {
+                    const overlay = document.getElementById('screen-broadcast');
+                    document.getElementById('broadcast-text').innerText = s.broadcastMsg || "ALERT";
+                    overlay.classList.remove('hidden'); overlay.classList.add('flex');
+                    vineBoomAudio.play().catch(()=>{});
+                    setTimeout(() => overlay.classList.add('hidden'), 5000);
+                }
+            });
+        }
+
+        // --- SPOTIFY INTEGRATION FIX ---
+        const spotifyClientId = '2670466b08474c9898b7627a096248bc'; 
+        const spotifyRedirectUri = window.location.origin + window.location.pathname;
+        const spotifyTokenEndpoint = 'https://purpleeez.site/spotify/token';
+
+        async function handleSpotifyCallback() {
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+            if (!code) return;
+
+            els.status.innerText = "Connecting Spotify...";
+            try {
+                const response = await fetch(spotifyTokenEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        grant_type: 'authorization_code', 
+                        code, 
+                        redirect_uri: spotifyRedirectUri,
+                        code_verifier: localStorage.getItem('spotify_code_verifier')
+                    })
+                });
+
+                // Error Handling for "Invalid JSON"
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const text = await response.text();
+                    throw new Error(`Server Error: ${text.substring(0, 50)}`);
+                }
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || "Failed");
+
+                localStorage.setItem('spotify_token', data.access_token);
+                els.status.innerText = "Spotify Linked!";
+                window.history.replaceState({}, document.title, spotifyRedirectUri);
+            } catch (err) {
+                console.error(err);
+                els.status.innerText = `Spotify Error: ${err.message}`;
+            }
+        }
+
+        async function loginSpotify() {
+            const verifier = Math.random().toString(36).substring(2, 15);
+            localStorage.setItem('spotify_code_verifier', verifier);
+            const scope = 'streaming user-read-playback-state user-modify-playback-state';
+            const url = `https://accounts.spotify.com/authorize?client_id=${spotifyClientId}&response_type=code&redirect_uri=${encodeURIComponent(spotifyRedirectUri)}&scope=${encodeURIComponent(scope)}&code_challenge_method=plain&code_challenge=${verifier}`;
+            window.location.href = url;
         }
 
         // --- CHAT SYSTEM ---
-        let isInitialLoad = true;
-        function initChatSystem() {
-            const q = query(collection(db, "messages"), orderBy("timestamp", "desc"), limit(30));
-            onSnapshot(q, (snapshot) => {
-                const newDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).reverse();
-                els.chatMessages.innerHTML = '<div class="text-center text-[10px] text-slate-500 uppercase tracking-widest py-4">Welcome to Global Chat</div>';
-                newDocs.forEach(data => addMessageToUI(data));
-
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === "added" && !isInitialLoad && !isChatOpen) showToast(change.doc.data());
+        function initChat() {
+            const q = query(collection(db, "messages"), orderBy("timestamp", "desc"), limit(20));
+            onSnapshot(q, (snap) => {
+                els.chatMsgs.innerHTML = "";
+                snap.docs.reverse().forEach(d => {
+                    const m = d.data();
+                    const div = document.createElement('div');
+                    div.innerHTML = `<span class="text-[10px] text-indigo-400 font-bold">${m.ign}:</span> <span class="text-sm text-slate-200">${m.text}</span>`;
+                    els.chatMsgs.appendChild(div);
                 });
-                
-                if (isInitialLoad) { setTimeout(() => els.chatMessages.scrollTop = els.chatMessages.scrollHeight, 100); isInitialLoad = false; }
+                els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
             });
         }
 
-        async function sendChatMessage(e) {
-            e.preventDefault(); const text = els.chatInput.value.trim(); if (!text) return;
-            els.chatInput.value = ""; els.chatInput.focus();
-            try { await addDoc(collection(db, "messages"), { ign: currentUser.ign, rank: currentUser.rank || "N/A", text: text, timestamp: serverTimestamp() });
-            } catch (err) { console.error("Chat Error:", err); }
+        async function sendChat(e) {
+            e.preventDefault();
+            const text = document.getElementById('chat-input').value.trim();
+            if (!text) return;
+            document.getElementById('chat-input').value = "";
+            await addDoc(collection(db, "messages"), { ign: currentUser.ign, text, timestamp: serverTimestamp() });
         }
 
-        function addMessageToUI(data) {
-            const div = document.createElement('div'); div.className = "flex flex-col animate-[slideUp_0.3s_ease-out]";
-            div.innerHTML = `<div class="flex items-baseline gap-2"><span class="text-[10px] font-black ${data.rank === "#1" ? "text-cyan-400" : "text-indigo-400"} tracking-wider">${data.rank}</span><span class="text-xs font-bold text-slate-400 truncate max-w-[120px]">${data.ign}</span></div><div class="bg-slate-800/60 rounded-r-xl rounded-bl-xl p-2 text-sm text-slate-200 mt-0.5 break-words border border-slate-700/50">${data.text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`;
-            els.chatMessages.appendChild(div); els.chatMessages.scrollTop = els.chatMessages.scrollHeight; 
-        }
-
-        function showToast(data) {
-            const toast = document.createElement('div'); toast.className = "bg-slate-900/90 backdrop-blur-md border border-slate-700 p-3 rounded-xl shadow-lg flex flex-col gap-1 toast-enter pointer-events-auto max-w-[250px]";
-            toast.innerHTML = `<div class="flex items-center gap-2"><span class="text-[9px] font-black text-indigo-400 bg-indigo-900/30 px-1 rounded">${data.rank}</span><span class="text-[10px] font-bold text-slate-400 truncate">${data.ign}</span></div><span class="text-xs text-white leading-tight break-words">${data.text.replace(/</g, "&lt;")}</span>`;
-            els.chatToasts.appendChild(toast);
-            setTimeout(() => { toast.classList.remove('toast-enter'); toast.classList.add('toast-exit'); setTimeout(() => toast.remove(), 300); }, 4000);
-        }
-
-        function fireCustomConfetti() {
-            const colors = ['#22d3ee', '#818cf8', '#f8fafc', '#facc15'];
-            for (let i = 0; i < 35; i++) {
-                const conf = document.createElement('div'); conf.style.cssText = `position:fixed;width:8px;height:8px;background:${colors[Math.floor(Math.random()*colors.length)]};left:50%;top:50%;z-index:99;pointer-events:none;border-radius:50%`;
-                document.body.appendChild(conf);
-                const angle = Math.random() * Math.PI * 2, velocity = Math.random() * 15 + 5;
-                const vx = Math.cos(angle) * velocity; let vy = Math.sin(angle) * velocity - 8;
-                let x = window.innerWidth/2, y = window.innerHeight/2, op = 1;
-                const animate = () => { x+=vx; vy+=0.5; y+=vy; op-=0.02; conf.style.transform=`translate(${x-window.innerWidth/2}px,${y-window.innerHeight/2}px)`; conf.style.opacity=op; if(op>0)requestAnimationFrame(animate); else conf.remove(); };
-                requestAnimationFrame(animate);
-            }
-        }
-
-        async function openLeaderboard(e) {
-            if(e) e.preventDefault(); history.pushState({ page: 'leaderboard' }, ''); 
-            els.screenGame.classList.add('hidden'); els.screenGame.classList.remove('flex');
-            els.screenLeaderboard.classList.remove('hidden'); els.screenLeaderboard.classList.add('flex');
-            const tbody = document.getElementById('lb-body'); tbody.innerHTML = '<tr class="w-full"><td class="text-center text-slate-500 py-10 font-bold animate-pulse">Loading Ranks...</td></tr>';
-            try {
-                const q = query(collection(db, "players"), orderBy("score", "desc"), limit(100));
-                const snapshot = await getDocs(q); tbody.innerHTML = ""; let rank = 1;
-                snapshot.forEach(doc => {
-                    const p = doc.data(); let rankColor = "text-slate-500", bgClass = "bg-slate-900/60 border-slate-800", prizeBadge = "";
-                    if (rank === 1) { rankColor = "text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"; bgClass = "bg-yellow-950/30 border-yellow-500/30"; prizeBadge = `<div class="text-[9px] text-yellow-300 font-black uppercase tracking-wider bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20 w-fit mt-1 flex items-center gap-1">🏆 Epic Skin</div>`; } 
-                    else if (rank === 2) { rankColor = "text-purple-400 drop-shadow-[0_0_5px_rgba(192,132,252,0.5)]"; bgClass = "bg-purple-950/30 border-purple-500/30"; prizeBadge = `<div class="text-[9px] text-purple-300 font-black uppercase tracking-wider bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20 w-fit mt-1 flex items-center gap-1">🌟 Starlight Prem</div>`; } 
-                    else if (rank === 3) { rankColor = "text-indigo-400"; }
-                    tbody.innerHTML += `<tr class="w-full flex items-center ${bgClass} border rounded-2xl mb-2 px-4 py-3 relative overflow-hidden transition-all hover:scale-[1.01]"><td class="font-black text-2xl w-10 text-center ${rankColor} italic">#${rank}</td><td class="flex flex-col justify-center flex-1 px-3 min-w-0"><span class="font-bold text-white truncate text-base leading-none">${p.ign.replace(/</g, "&lt;")}</span>${prizeBadge}</td><td class="font-black text-white text-right w-16 text-lg tracking-wider">${p.score}</td></tr>`;
-                    rank++;
-                });
-            } catch(e) { tbody.innerHTML = `<tr class="w-full"><td class="text-center text-rose-500 py-10 font-bold">Failed to load rankings.</td></tr>`; }
-        }
-
-        function closeLeaderboard(e) {
-            if(e) e.preventDefault();
-            els.screenLeaderboard.classList.add('hidden'); els.screenLeaderboard.classList.remove('flex');
-            els.screenGame.classList.remove('hidden'); els.screenGame.classList.add('flex');
-        }
-
-        // --- ALL BUTTON EVENT LISTENERS ARE SAFELY ATTACHED HERE ---
-        
+        // Event Listeners
         document.getElementById('form-login').addEventListener('submit', handleLogin);
         document.getElementById('form-guess').addEventListener('submit', checkGuess);
-        els.chatForm.addEventListener('submit', sendChatMessage);
-        
-        document.getElementById('btn-show-leaderboard').addEventListener('click', openLeaderboard);
-        document.getElementById('btn-close-leaderboard').addEventListener('click', closeLeaderboard);
-        els.heroImg.addEventListener('error', () => { els.heroImg.style.display='none'; els.debugMsg.innerText=`Missing: ${els.heroImg.src}`; els.debugMsg.classList.remove('hidden'); });
-        window.addEventListener('popstate', closeLeaderboard);
+        document.getElementById('form-chat').addEventListener('submit', sendChat);
+        document.getElementById('btn-spotify-login').addEventListener('click', loginSpotify);
+        document.getElementById('btn-radio-toggle').addEventListener('click', () => document.getElementById('radio-container').classList.toggle('hidden'));
+        document.getElementById('btn-radio-close').addEventListener('click', () => document.getElementById('radio-container').classList.add('hidden'));
+        document.getElementById('btn-chat-toggle').addEventListener('click', () => document.getElementById('chat-container').classList.toggle('hidden'));
+        document.getElementById('btn-chat-close').addEventListener('click', () => document.getElementById('chat-container').classList.add('hidden'));
 
-        document.getElementById('btn-logout').addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('mlbb_id');
-            localStorage.removeItem('mlbb_zone');
-            location.reload();
+        document.getElementById('btn-show-leaderboard').addEventListener('click', async () => {
+            const tbody = document.getElementById('lb-body');
+            tbody.innerHTML = "Loading...";
+            els.screenLB.classList.remove('hidden'); els.screenLB.classList.add('flex');
+            const q = query(collection(db, "players"), orderBy("score", "desc"), limit(50));
+            const snap = await getDocs(q);
+            tbody.innerHTML = "";
+            let r = 1;
+            snap.forEach(d => {
+                const p = d.data();
+                tbody.innerHTML += `<tr class="bg-slate-900/50 rounded-lg"><td class="p-3 text-cyan-400 font-bold">#${r++}</td><td class="p-3">${p.ign}</td><td class="p-3 text-right font-black">${p.score}</td></tr>`;
+            });
         });
 
-        const chatToggleBtn = document.getElementById('btn-chat-toggle');
-        const chatCloseBtn = document.getElementById('btn-chat-close');
-        
-        chatToggleBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            isChatOpen = true;
-            els.chatContainer.classList.remove('hidden');
-            chatToggleBtn.classList.add('hidden');
-            setTimeout(() => { els.chatMessages.scrollTop = els.chatMessages.scrollHeight; els.chatInput.focus(); }, 100);
-        });
-        
-        chatCloseBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            isChatOpen = false;
-            els.chatContainer.classList.add('hidden');
-            chatToggleBtn.classList.remove('hidden');
+        document.getElementById('btn-close-leaderboard').addEventListener('click', () => {
+            els.screenLB.classList.add('hidden');
         });
 
-        const radioToggleBtn = document.getElementById('btn-radio-toggle');
-        const radioContainer = document.getElementById('radio-container');
-        const radioCloseBtn = document.getElementById('btn-radio-close');
-
-        if(radioToggleBtn && radioContainer && radioCloseBtn) {
-            radioToggleBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                radioContainer.classList.remove('hidden');
-                radioToggleBtn.classList.add('hidden');
-            });
-            radioCloseBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                radioContainer.classList.add('hidden');
-                radioToggleBtn.classList.remove('hidden');
-            });
-        }
-
-        const unlockMusic = () => {
-            if (currentMusic && currentMusic.paused) {
-                currentMusic.play().then(() => { isMusicPlaying = true; }).catch(e => console.log(e));
+        // Auto Login
+        window.addEventListener('load', () => {
+            const sid = localStorage.getItem('mlbb_id');
+            const szone = localStorage.getItem('mlbb_zone');
+            if (sid && szone) {
+                document.getElementById('login-id').value = sid;
+                document.getElementById('login-zone').value = szone;
             }
-        };
-        document.body.addEventListener('click', unlockMusic, { passive: true });
-        document.body.addEventListener('touchstart', unlockMusic, { passive: true });
-
-        // --- LOCAL MUSIC ENGINE LOGIC ---
-        const localLoadBtn = document.getElementById('btn-local-load');
-        const localTracks = document.getElementById('local-tracks');
-        const localAudio = document.getElementById('local-audio');
-        const localStatus = document.getElementById('local-status');
-
-        localAudio.addEventListener('play', () => { currentMusic = localAudio; isMusicPlaying = true; });
-        localAudio.addEventListener('pause', () => { isMusicPlaying = false; });
-        localAudio.addEventListener('ended', () => { isMusicPlaying = false; });
-
-        const playlist = [
-            { title: 'Chill Beat', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
-            { title: 'Jazz Lounge', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
-            { title: 'Ambient Wave', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' }
-        ];
-
-        function renderLocalPlaylist() {
-            localTracks.innerHTML = '';
-            playlist.forEach((track, index) => {
-                const button = document.createElement('button');
-                button.className = 'w-full text-left text-xs px-2 py-1 rounded hover:bg-slate-800/80';
-                button.innerText = `${index + 1}. ${track.title}`;
-                button.addEventListener('click', async () => {
-                    try {
-                        localAudio.src = track.url;
-                        currentMusic = localAudio;
-                        await localAudio.play();
-                        isMusicPlaying = true;
-                        localStatus.innerText = `Playing: ${track.title}`;
-                    } catch (e) {
-                        localStatus.innerText = 'Playback not allowed until user interaction.';
-                        console.error(e);
-                    }
-                });
-                localTracks.appendChild(button);
-            });
-            localStatus.innerText = 'Choose a track to play (from public sample URLs).';
-        }
-
-        if (localLoadBtn) {
-            localLoadBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                renderLocalPlaylist();
-            });
-        }
-
-        // ------ SPOTIFY PLAYBACK SUPPORT (PKCE Authorization Code Flow) ------
-        const spotifyClientId = '2670466b08474c9898b7627a096248bc'; // Replace with your Spotify client ID
-        const spotifyRedirectUri = window.location.origin + window.location.pathname;
-        const spotifyPlaylistUri = 'spotify:playlist:37i9dQZF1DXcBWIGoYBM5M'; // example playlist URI
-
-        const spotifyHostedEndpoint = 'https://purpleeez.site'; // <--- replace this with your deployed app URL (HTTPS)
-        const spotifyTokenEndpoint = (
-            window.location.hostname.includes('github.io') ||
-            window.location.hostname.includes('vercel.app') ||
-            window.location.hostname.includes('purpleeez.site')
-        )
-            ? spotifyHostedEndpoint
-            : spotifyLocalEndpoint;
-
-        console.log('Spotify token endpoint:', spotifyTokenEndpoint);
-
-        const spotifyLoginBtn = document.getElementById('btn-spotify-login');
-        const spotifyPlayBtn = document.getElementById('btn-spotify-play');
-
-        const spotifyKeys = {
-            token: 'spotify_token',
-            refresh: 'spotify_refresh_token',
-            expires: 'spotify_token_expires',
-            state: 'spotify_auth_state',
-            codeVerifier: 'spotify_code_verifier'
-        };
-
-        const toBase64Url = (arrayBuffer) => {
-            const bytes = new Uint8Array(arrayBuffer);
-            let str = '';
-            bytes.forEach((b) => { str += String.fromCharCode(b); });
-            return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-        };
-
-        const sha256 = async (text) => {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(text);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            return toBase64Url(hashBuffer);
-        };
-
-        const randomString = (length) => {
-            const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-            let result = '';
-            const values = crypto.getRandomValues(new Uint8Array(length));
-            values.forEach((v) => result += charset[v % charset.length]);
-            return result;
-        };
-
-        const saveSpotifyTokens = (tokenData) => {
-            localStorage.setItem(spotifyKeys.token, tokenData.access_token);
-            localStorage.setItem(spotifyKeys.refresh, tokenData.refresh_token || '');
-            localStorage.setItem(spotifyKeys.expires, String(Date.now() + (tokenData.expires_in || 3600) * 1000));
-        };
-
-        const getSpotifyToken = () => {
-            const token = localStorage.getItem(spotifyKeys.token);
-            const expires = Number(localStorage.getItem(spotifyKeys.expires) || '0');
-            if (!token || Date.now() >= expires) return null;
-            return token;
-        };
-
-        const getSpotifyRefreshToken = () => localStorage.getItem(spotifyKeys.refresh);
-
-        const clearSpotifyTokens = () => {
-            Object.values(spotifyKeys).forEach((k) => localStorage.removeItem(k));
-        };
-
-        const buildSpotifyAuthUrl = async () => {
-            const state = randomString(16);
-            const codeVerifier = randomString(128);
-            const codeChallenge = await sha256(codeVerifier);
-
-            localStorage.setItem(spotifyKeys.state, state);
-            localStorage.setItem(spotifyKeys.codeVerifier, codeVerifier);
-
-            const scope = [
-                'streaming',
-                'user-read-private',
-                'user-read-email',
-                'user-read-playback-state',
-                'user-modify-playback-state',
-                'user-read-currently-playing'
-            ].join(' ');
-
-            const authorizeUrl = new URL('https://accounts.spotify.com/authorize');
-            authorizeUrl.searchParams.set('client_id', spotifyClientId);
-            authorizeUrl.searchParams.set('response_type', 'code');
-            authorizeUrl.searchParams.set('redirect_uri', spotifyRedirectUri);
-            authorizeUrl.searchParams.set('scope', scope);
-            authorizeUrl.searchParams.set('code_challenge_method', 'S256');
-            authorizeUrl.searchParams.set('code_challenge', codeChallenge);
-            authorizeUrl.searchParams.set('state', state);
-            authorizeUrl.searchParams.set('show_dialog', 'true');
-
-            return authorizeUrl.toString();
-        };
-
-const handleSpotifyCallback = async () => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    const state = params.get('state');
-    const savedState = localStorage.getItem(spotifyKeys.state);
-
-    if (!code || !state || state !== savedState) return;
-
-    const codeVerifier = localStorage.getItem(spotifyKeys.codeVerifier);
-    
-    try {
-        localStatus.innerText = 'Exchanging code for token...';
-        
-        // Try to fetch from your backend
-        const response = await fetch(spotifyTokenEndpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                grant_type: 'authorization_code',
-                code: code,
-                redirect_uri: spotifyRedirectUri,
-                code_verifier: codeVerifier,
-                client_id: spotifyClientId // Backend might need this
-            })
+            handleSpotifyCallback();
         });
 
-        // Debugging: Check if the response is actually JSON
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-            const text = await response.text();
-            console.error("Non-JSON response received:", text);
-            throw new Error(`Server returned non-JSON: ${text.substring(0, 100)}...`);
-        }
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error_description || data.error || 'Token exchange failed');
-        }
-
-        saveSpotifyTokens(data);
-        localStatus.innerText = 'Spotify connected!';
-        renderSpotifyUI(); // Optional: update UI to show logged in state
-    } catch (err) {
-        console.error('Spotify Auth Error:', err);
-        localStatus.innerText = `Auth Failed: ${err.message}`;
-    } finally {
-        localStorage.removeItem(spotifyKeys.state);
-        localStorage.removeItem(spotifyKeys.codeVerifier);
-        window.history.replaceState({}, document.title, spotifyRedirectUri);
-    }
-};
-        const refreshSpotifyToken = async () => {
-            const refreshToken = getSpotifyRefreshToken();
-            if (!refreshToken) {
-                clearSpotifyTokens();
-                return null;
-            }
-
-            try {
-                const tokenUrl = spotifyTokenEndpoint;
-                console.log('Spotify refresh token request', tokenUrl);
-
-                const response = await fetch(tokenUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        grant_type: 'refresh_token',
-                        refresh_token: refreshToken
-                    })
-                });
-                const text = await response.text();
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (parseErr) {
-                    console.error('Spotify refresh token: non-JSON response', text);
-                    throw new Error('Spotify token refresh failed: invalid JSON response');
-                }
-                if (!response.ok) {
-                    throw new Error(data.error_description || data.error || 'Refresh failed');
-                }
-                saveSpotifyTokens({
-                    access_token: data.access_token,
-                    refresh_token: data.refresh_token || refreshToken,
-                    expires_in: data.expires_in || 3600
-                });
-                return data.access_token;
-            } catch (err) {
-                console.error('Spotify refresh error', err);
-                localStatus.innerText = `Spotify refresh failed: ${err.message}. Backend URL: ${spotifyTokenEndpoint}`;
-                if (err.message.includes('Failed to fetch')) {
-                    localStatus.innerText += ' (check backend is running and reachable from this host)';
-                }
-                clearSpotifyTokens();
-                return null;
-            }
-        };
-
-        const startSpotifyPlaylist = async () => {
-            let token = getSpotifyToken();
-            if (!token) {
-                token = await refreshSpotifyToken();
-            }
-            if (!token) {
-                localStatus.innerText = 'Spotify not linked. Click Link Spotify first.';
-                return;
-            }
-
-            try {
-                const devicesResp = await fetch('https://api.spotify.com/v1/me/player/devices', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-
-                const devicesData = await devicesResp.json();
-                const devices = devicesData.devices || [];
-
-                if (!devices.length) {
-                    localStatus.innerText = 'No active Spotify device. Start playback on Spotify first.';
-                    return;
-                }
-
-                const activeDevice = devices.find((d) => d.is_active) || devices[0];
-                if (!activeDevice) {
-                    localStatus.innerText = 'No suitable Spotify device found.';
-                    return;
-                }
-
-                const playResp = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${activeDevice.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ context_uri: spotifyPlaylistUri })
-                });
-
-                if (playResp.ok) {
-                    localStatus.innerText = `Spotify playlist started on ${activeDevice.name}`;
-                } else {
-                    const err = await playResp.json();
-                    localStatus.innerText = `Spotify play error: ${err.error?.message || playResp.statusText}`;
-                }
-            } catch (err) {
-                console.error('Spotify start error', err);
-                localStatus.innerText = 'Spotify playback error. Check console.';
-            }
-        };
-
-        const promptSpotifyLogin = async () => {
-            if (!spotifyClientId || spotifyClientId === 'YOUR_SPOTIFY_CLIENT_ID') {
-                localStatus.innerText = 'Set a valid Spotify Client ID in script first.';
-                return;
-            }
-            const authUrl = await buildSpotifyAuthUrl();
-            window.location.href = authUrl;
-        };
-
-        if (spotifyLoginBtn) {
-            spotifyLoginBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                await promptSpotifyLogin();
-            });
-        }
-
-        if (spotifyPlayBtn) {
-            spotifyPlayBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                await startSpotifyPlaylist();
-            });
-        }
-
-        handleSpotifyCallback().catch((err) => {
-            console.error('Spotify callback handler error', err);
-        });
-
-        
     </script>
 </body>
 </html>
