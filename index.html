@@ -418,7 +418,7 @@
                 els.status.innerText = `Spotify Error: ${err.message}`;
             }
         }
-        
+
         // --- CHAT SYSTEM ---
         function initChat() {
             const q = query(collection(db, "messages"), orderBy("timestamp", "desc"), limit(20));
@@ -443,6 +443,7 @@
         }
 
         // Event Listeners
+        document.getElementById('btn-spotify-play').addEventListener('click', playSpotifyPlaylist);
         document.getElementById('form-login').addEventListener('submit', handleLogin);
         document.getElementById('form-guess').addEventListener('submit', checkGuess);
         document.getElementById('form-chat').addEventListener('submit', sendChat);
@@ -480,7 +481,65 @@
             }
             handleSpotifyCallback();
         });
+async function playSpotifyPlaylist(e) {
+            e.preventDefault();
+            const token = localStorage.getItem('spotify_token');
+            
+            if (!token) {
+                els.status.innerText = "Please link Spotify first.";
+                return;
+            }
 
+            els.status.innerText = "Finding Spotify device...";
+
+            try {
+                // 1. Get available Spotify devices (Spotify App must be open somewhere)
+                const devicesRes = await fetch('https://api.spotify.com/v1/me/player/devices', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (devicesRes.status === 401) throw new Error("Token expired. Relink Spotify.");
+                
+                const devicesData = await devicesRes.json();
+                const devices = devicesData.devices || [];
+
+                if (devices.length === 0) {
+                    els.status.innerText = "Open Spotify app first to wake it up!";
+                    return;
+                }
+
+                // 2. Find the active device, or fallback to the first available one
+                const targetDevice = devices.find(d => d.is_active) || devices[0];
+                els.status.innerText = `Starting on ${targetDevice.name}...`;
+
+                // 3. Send the Play Command
+                const playRes = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${targetDevice.id}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        // You can change this URI to any Spotify Playlist URI
+                        context_uri: 'spotify:playlist:37i9dQZF1DXcBWIGoYBM5M' 
+                    })
+                });
+
+                if (playRes.ok || playRes.status === 204) {
+                    els.status.innerText = `🎶 Playing on ${targetDevice.name}`;
+                } else {
+                    const errData = await playRes.json();
+                    if (errData.error && errData.error.reason === "PREMIUM_REQUIRED") {
+                        els.status.innerText = "Error: Spotify Premium is required!";
+                    } else {
+                        throw new Error(errData.error.message || "Playback failed");
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                els.status.innerText = err.message;
+            }
+        }
     </script>
     </body>
 </html>
