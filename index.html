@@ -823,9 +823,12 @@
         const spotifyRedirectUri = window.location.origin + window.location.pathname;
         const spotifyPlaylistUri = 'spotify:playlist:37i9dQZF1DXcBWIGoYBM5M'; // example playlist URI
 
+        const spotifyHostedEndpoint = 'https://purpleeez.site/spotify/token'; // <--- replace this with your deployed app URL (HTTPS)
+        const spotifyLocalEndpoint = 'http://127.0.0.1:5000/spotify/token';
+
         const spotifyTokenEndpoint = (window.location.hostname.includes('github.io') || window.location.hostname.includes('vercel.app'))
-            ? 'https://your-backend-host.example.com/spotify/token'  // Replace with deployed backend
-            : 'http://127.0.0.1:5000/spotify/token';
+            ? spotifyHostedEndpoint
+            : spotifyLocalEndpoint;
 
         console.log('Spotify token endpoint:', spotifyTokenEndpoint);
 
@@ -963,7 +966,10 @@
                 localStatus.innerText = 'Spotify connected successfully.';
             } catch (err) {
                 console.error('Spotify token exchange error', err);
-                localStatus.innerText = `Spotify token exchange failed: ${err.message}`;
+                localStatus.innerText = `Spotify token exchange failed: ${err.message}. Backend URL: ${spotifyTokenEndpoint}`;
+                if (err.message.includes('Failed to fetch')) {
+                    localStatus.innerText += ' (check backend is running and reachable from this host)';
+                }
                 clearSpotifyTokens();
             } finally {
                 localStorage.removeItem(spotifyKeys.state);
@@ -1010,6 +1016,10 @@
                 return data.access_token;
             } catch (err) {
                 console.error('Spotify refresh error', err);
+                localStatus.innerText = `Spotify refresh failed: ${err.message}. Backend URL: ${spotifyTokenEndpoint}`;
+                if (err.message.includes('Failed to fetch')) {
+                    localStatus.innerText += ' (check backend is running and reachable from this host)';
+                }
                 clearSpotifyTokens();
                 return null;
             }
