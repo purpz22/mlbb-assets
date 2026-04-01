@@ -14,7 +14,7 @@
         font-src https://fonts.gstatic.com; 
         img-src 'self' data: https: http: https://*.ytimg.com https://*.ggpht.com; 
         media-src 'self' https: http: data: blob: https://*.googlevideo.com;
-        connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://api.isan.eu.org http://127.0.0.1:5000 http://localhost:5000; frame-src 'self' https://www.tiktok.com;
+        connect-src 'self' https://firestore.googleapis.com https://*.firebasedatabase.app wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://api.isan.eu.org https://purpleeez.site http://127.0.0.1:5000 http://localhost:5000; frame-src 'self' https://www.tiktok.com;
     ">
 
     <!-- Elfsight Core Script -->
@@ -823,7 +823,7 @@
         const spotifyRedirectUri = window.location.origin + window.location.pathname;
         const spotifyPlaylistUri = 'spotify:playlist:37i9dQZF1DXcBWIGoYBM5M'; // example playlist URI
 
-        const spotifyHostedEndpoint = 'https://purpleeez.site/spotify/token'; // <--- replace this with your deployed app URL (HTTPS)
+        const spotifyHostedEndpoint = 'https://purpleeez.site'; // <--- replace this with your deployed app URL (HTTPS)
         const spotifyTokenEndpoint = (
             window.location.hostname.includes('github.io') ||
             window.location.hostname.includes('vercel.app') ||
@@ -916,70 +916,58 @@
             return authorizeUrl.toString();
         };
 
-        const handleSpotifyCallback = async () => {
-            const params = new URLSearchParams(window.location.search);
-            const code = params.get('code');
-            const state = params.get('state');
-            const error = params.get('error');
-            const savedState = localStorage.getItem(spotifyKeys.state);
+const handleSpotifyCallback = async () => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    const savedState = localStorage.getItem(spotifyKeys.state);
 
-            if (error) {
-                localStatus.innerText = `Spotify auth error: ${error}`;
-                return;
-            }
+    if (!code || !state || state !== savedState) return;
 
-            if (!code || !state || state !== savedState) return;
+    const codeVerifier = localStorage.getItem(spotifyKeys.codeVerifier);
+    
+    try {
+        localStatus.innerText = 'Exchanging code for token...';
+        
+        // Try to fetch from your backend
+        const response = await fetch(spotifyTokenEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                grant_type: 'authorization_code',
+                code: code,
+                redirect_uri: spotifyRedirectUri,
+                code_verifier: codeVerifier,
+                client_id: spotifyClientId // Backend might need this
+            })
+        });
 
-            const codeVerifier = localStorage.getItem(spotifyKeys.codeVerifier);
-            if (!codeVerifier) {
-                localStatus.innerText = 'Missing code verifier. Reconnect Spotify.';
-                return;
-            }
+        // Debugging: Check if the response is actually JSON
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            const text = await response.text();
+            console.error("Non-JSON response received:", text);
+            throw new Error(`Server returned non-JSON: ${text.substring(0, 100)}...`);
+        }
 
-            try {
-                const tokenUrl = spotifyTokenEndpoint;
-                console.log('Spotify token exchange request', tokenUrl);
+        const data = await response.json();
 
-                const tokenResponse = await fetch(tokenUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        grant_type: 'authorization_code',
-                        code,
-                        redirect_uri: spotifyRedirectUri,
-                        code_verifier: codeVerifier
-                    })
-                });
+        if (!response.ok) {
+            throw new Error(data.error_description || data.error || 'Token exchange failed');
+        }
 
-                const text = await tokenResponse.text();
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (parseErr) {
-                    console.error('Spotify token exchange: non-JSON response', text);
-                    throw new Error('Spotify token exchange failed: invalid JSON response');
-                }
-
-                if (!tokenResponse.ok) {
-                    throw new Error(data.error_description || data.error || 'Token exchange failed');
-                }
-
-                saveSpotifyTokens(data);
-                localStatus.innerText = 'Spotify connected successfully.';
-            } catch (err) {
-                console.error('Spotify token exchange error', err);
-                localStatus.innerText = `Spotify token exchange failed: ${err.message}. Backend URL: ${spotifyTokenEndpoint}`;
-                if (err.message.includes('Failed to fetch')) {
-                    localStatus.innerText += ' (check backend is running and reachable from this host)';
-                }
-                clearSpotifyTokens();
-            } finally {
-                localStorage.removeItem(spotifyKeys.state);
-                localStorage.removeItem(spotifyKeys.codeVerifier);
-                window.history.replaceState({}, document.title, spotifyRedirectUri);
-            }
-        };
-
+        saveSpotifyTokens(data);
+        localStatus.innerText = 'Spotify connected!';
+        renderSpotifyUI(); // Optional: update UI to show logged in state
+    } catch (err) {
+        console.error('Spotify Auth Error:', err);
+        localStatus.innerText = `Auth Failed: ${err.message}`;
+    } finally {
+        localStorage.removeItem(spotifyKeys.state);
+        localStorage.removeItem(spotifyKeys.codeVerifier);
+        window.history.replaceState({}, document.title, spotifyRedirectUri);
+    }
+};
         const refreshSpotifyToken = async () => {
             const refreshToken = getSpotifyRefreshToken();
             if (!refreshToken) {
