@@ -329,29 +329,55 @@
             });
         }
 
-        // --- CHAT SYSTEM ---
+// --- CHAT SYSTEM ---
         function initChat() {
             const q = query(collection(db, "messages"), orderBy("timestamp", "desc"), limit(20));
             onSnapshot(q, (snap) => {
                 els.chatMsgs.innerHTML = "";
-                snap.docs.reverse().forEach(d => {
-                    const m = d.data();
+                
+                // Safely extract data into an array first
+                const messages = [];
+                snap.forEach(d => messages.push(d.data()));
+                
+                // Reverse and display so newest is at the bottom
+                messages.reverse().forEach(m => {
                     const div = document.createElement('div');
                     div.innerHTML = `<span class="text-[10px] text-indigo-400 font-bold">${m.ign}:</span> <span class="text-sm text-slate-200">${m.text}</span>`;
                     els.chatMsgs.appendChild(div);
                 });
+                
+                // Auto-scroll to the bottom
                 els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
+            }, (error) => {
+                // If it fails (like due to rules), show it in the chat box
+                console.error("Chat Listener Error:", error);
+                els.chatMsgs.innerHTML = `<div class="text-rose-500 text-xs font-bold text-center mt-4">Error loading chat. Check Firebase Security Rules.</div>`;
             });
         }
 
         async function sendChat(e) {
             e.preventDefault();
-            const text = document.getElementById('chat-input').value.trim();
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
             if (!text) return;
-            document.getElementById('chat-input').value = "";
-            await addDoc(collection(db, "messages"), { ign: currentUser.ign, text, timestamp: serverTimestamp() });
+            
+            // Clear input immediately for a smooth user experience
+            input.value = ""; 
+            
+            try {
+                // Fix: Swapped serverTimestamp() with Date.now() to prevent local cache glitches
+                await addDoc(collection(db, "messages"), { 
+                    ign: currentUser.ign, 
+                    text: text, 
+                    timestamp: Date.now() 
+                });
+            } catch (error) {
+                // If the message fails to send, log it and alert the user
+                console.error("Failed to send message:", error);
+                alert("Message failed to send! Please check your Firebase Database Rules.");
+            }
         }
-
+        
         // Event Listeners
         document.getElementById('btn-close-broadcast').addEventListener('click', () => {
         document.getElementById('screen-broadcast').classList.add('hidden');
