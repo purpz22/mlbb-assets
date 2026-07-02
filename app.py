@@ -10,7 +10,7 @@ import base64
 from flask import Flask, request, jsonify
 from pytubefix.cipher import Cipher
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='.', static_url_path='')
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 SPOTIFY_CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID', '').strip()
@@ -64,13 +64,17 @@ def spotify_token_proxy():
 # === AUTO AUTH ===
 if os.path.exists('headers_auth.json'):
     yt = YTMusic('headers_auth.json')
-    print("✅ Using headers_auth.json (best method)")
+    print("[OK] Using headers_auth.json (best method)")
 elif os.path.exists('oauth.json'):
     yt = YTMusic('oauth.json')
-    print("✅ Using oauth.json")
+    print("[OK] Using oauth.json")
 else:
     yt = YTMusic()
-    print("⚠️  No auth file — public mode (streams will fail)")
+    print("[WARN] No auth file - public mode (streams will fail)")
+
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
 
 @app.route('/search')
 def search():
@@ -198,5 +202,5 @@ def get_stream(videoId):
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    print("🚀 YouTube Music Backend running at http://127.0.0.1:5000")
+    print("YouTube Music Backend running at http://127.0.0.1:5000")
     app.run(host='127.0.0.1', port=5000, debug=True)
