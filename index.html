@@ -617,8 +617,8 @@
 
     <!-- GAME OVER SCREEN -->
     <div id="screen-game-over" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex-col items-center justify-center p-5">
-        <div class="w-full max-w-sm gradient-border-card p-8 flex flex-col items-center text-center shadow-[0_0_80px_rgba(225,29,72,0.3)]">
-            <h2 class="text-5xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-rose-400 to-rose-600 mb-2 drop-shadow-lg">GAME OVER</h2>
+        <div class="w-full max-w-sm gradient-border-card p-8 flex flex-col items-center text-center shadow-[0_0_80px_rgba(34,211,238,0.3)]">
+            <h2 class="text-4xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-cyan-400 to-indigo-500 mb-2 drop-shadow-lg">CONGRATULATIONS!</h2>
             
             <div id="go-new-record" class="hidden bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 animate-pulse">
                 🏆 New Record!
@@ -626,7 +626,7 @@
             <div class="h-6 mb-6" id="go-new-record-spacer"></div>
 
             <div class="flex flex-col items-center mb-8 w-full bg-slate-900/50 rounded-2xl p-4 border border-slate-700/50">
-                <span class="text-[10px] text-slate-400 font-black tracking-[0.2em] uppercase mb-1">Final Score</span>
+                <span class="text-[10px] text-slate-400 font-black tracking-[0.2em] uppercase mb-1">Your final score is</span>
                 <span id="go-score" class="font-black text-6xl text-white mb-4">0</span>
                 
                 <div class="flex items-center gap-2">
@@ -1309,14 +1309,44 @@
         }
 
 // --- CHAT SYSTEM ---
+        let isFirstChatLoad = true;
+
+        function showChatToast(ign, text) {
+            const container = document.getElementById('chat-toasts');
+            if (!container) return;
+            
+            const toast = document.createElement('div');
+            toast.className = "bg-slate-950/80 backdrop-blur-md border border-slate-800 text-white px-3 py-2 rounded-2xl shadow-lg flex flex-col max-w-[80%] pointer-events-auto transform translate-y-4 opacity-0 transition-all duration-300 self-start mb-2";
+            
+            toast.innerHTML = `
+                <span class="text-[9px] text-indigo-300 font-black tracking-widest uppercase mb-0.5">${ign}</span>
+                <span class="text-xs text-slate-200">${text}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Trigger animation
+            void toast.offsetWidth;
+            toast.classList.remove('translate-y-4', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            // Remove after 4 seconds
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-10px]', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
         function initChat() {
             const q = query(collection(db, "messages"), orderBy("timestamp", "desc"), limit(20));
             onSnapshot(q, (snap) => {
                 els.chatMsgs.innerHTML = "";
                 const messages = [];
                 snap.forEach(d => messages.push(d.data()));
+                messages.reverse();
                 
-                messages.reverse().forEach(m => {
+                messages.forEach(m => {
                     const isMe = m.ign === currentUser.ign;
                     const div = document.createElement('div');
                     div.className = `flex flex-col w-fit max-w-[85%] ${isMe ? 'self-end items-end' : 'self-start items-start'}`;
@@ -1335,6 +1365,17 @@
                     els.chatMsgs.appendChild(div);
                 });
                 els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
+
+                // Show floating chat toast if minimized
+                const chatContainer = document.getElementById('chat-container');
+                const isMinimized = chatContainer && chatContainer.classList.contains('translate-y-[calc(100%-60px)]');
+                if (!isFirstChatLoad && isMinimized && messages.length > 0) {
+                    const latest = messages[messages.length - 1];
+                    if (latest.ign !== currentUser.ign) {
+                        showChatToast(latest.ign, latest.text);
+                    }
+                }
+                isFirstChatLoad = false;
             }, (error) => {
                 console.error("Chat Listener Error:", error);
                 els.chatMsgs.innerHTML = `<div class="text-rose-500 text-xs font-bold text-center mt-4">Error loading chat. Check Firebase Security Rules.</div>`;
@@ -1757,6 +1798,84 @@
                     btnToggleTop3.innerText = "➖";
                 }
             });
+
+            // Make Top 3 window draggable
+            makeElementDraggable(floatingTop3);
+        }
+
+        function makeElementDraggable(elm) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            const header = elm.firstElementChild; // gets the header div with the title & minimize button
+            
+            if (header) {
+                header.style.cursor = 'move';
+                header.addEventListener('mousedown', dragMouseDown);
+                header.addEventListener('touchstart', dragTouchStart, { passive: false });
+            } else {
+                elm.style.cursor = 'move';
+                elm.addEventListener('mousedown', dragMouseDown);
+                elm.addEventListener('touchstart', dragTouchStart, { passive: false });
+            }
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                if (e.button !== 0) return; // only left click
+                if (e.target.id === 'btn-toggle-top3') return; // don't drag if clicking minimize
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.addEventListener('mouseup', closeDragElement);
+                document.addEventListener('mousemove', elementDrag);
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                
+                const newTop = elm.offsetTop - pos2;
+                const newLeft = elm.offsetLeft - pos1;
+                
+                elm.style.top = `${Math.max(10, Math.min(window.innerHeight - elm.offsetHeight - 10, newTop))}px`;
+                elm.style.left = `${Math.max(10, Math.min(window.innerWidth - elm.offsetWidth - 10, newLeft))}px`;
+                elm.style.right = 'auto';
+            }
+
+            function closeDragElement() {
+                document.removeEventListener('mouseup', closeDragElement);
+                document.removeEventListener('mousemove', elementDrag);
+            }
+            
+            function dragTouchStart(e) {
+                if (e.target.id === 'btn-toggle-top3') return;
+                pos3 = e.touches[0].clientX;
+                pos4 = e.touches[0].clientY;
+                document.addEventListener('touchend', closeTouchDragElement);
+                document.addEventListener('touchmove', elementTouchDrag, { passive: false });
+            }
+            
+            function elementTouchDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.touches[0].clientX;
+                pos2 = pos4 - e.touches[0].clientY;
+                pos3 = e.touches[0].clientX;
+                pos4 = e.touches[0].clientY;
+                
+                const newTop = elm.offsetTop - pos2;
+                const newLeft = elm.offsetLeft - pos1;
+                
+                elm.style.top = `${Math.max(10, Math.min(window.innerHeight - elm.offsetHeight - 10, newTop))}px`;
+                elm.style.left = `${Math.max(10, Math.min(window.innerWidth - elm.offsetWidth - 10, newLeft))}px`;
+                elm.style.right = 'auto';
+            }
+            
+            function closeTouchDragElement() {
+                document.removeEventListener('touchend', closeTouchDragElement);
+                document.removeEventListener('touchmove', elementTouchDrag);
+            }
         }
 
         // --- GUESS INPUT AUTO-SUBMIT LOGIC ---
