@@ -385,7 +385,7 @@
     <!-- GAME SCREEN -->
     <div id="screen-game" class="absolute inset-0 w-full max-w-sm mx-auto flex flex-col z-10 hidden">
         <!-- Floating Top 3 Leaderboard Card -->
-        <div id="floating-top3" class="absolute right-3 top-32 z-30 w-36 bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-300">
+        <div id="floating-top3" class="fixed right-3 md:right-[calc(50%-180px)] top-32 z-30 w-36 bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-300">
             <!-- Header with Minimize Button -->
             <div class="flex items-center justify-between border-b border-slate-800/60 pb-1 mb-1 shrink-0">
                 <span class="text-[9px] font-black text-cyan-400 uppercase tracking-widest">🏆 Top 3 Players</span>
@@ -461,25 +461,29 @@
         <!-- CHAT -->
         <div id="chat-toasts" class="absolute bottom-24 left-4 right-4 flex flex-col gap-2 pointer-events-none z-30"></div>
         
-        <!-- Persistent Chat Bar & Panel -->
-        <div id="chat-container" class="w-full shrink-0 flex flex-col relative z-40 bg-slate-900/60 backdrop-blur-xl border-t border-slate-700/50 transition-transform duration-300 transform translate-y-[calc(100%-60px)]" style="height: 40vh; max-height: 350px;">
-            <!-- Toggle Handle -->
-            <button id="btn-chat-toggle" class="absolute -top-4 left-1/2 -translate-x-1/2 w-12 h-6 bg-slate-800/80 backdrop-blur-md rounded-t-xl border-t border-l border-r border-slate-600/50 flex items-center justify-center hover:bg-slate-700/80 transition-colors z-50">
-                <div class="w-4 h-1 bg-slate-400 rounded-full"></div>
-            </button>
-            
-            <div class="flex items-center justify-between px-4 py-2 bg-slate-800/30 border-b border-slate-700/50 shrink-0">
+        <!-- Floating Chat Bubble Trigger -->
+        <button id="btn-floating-chat-toggle" class="fixed bottom-24 left-4 z-40 w-12 h-12 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-[0_4px_20px_rgba(99,102,241,0.4)] transition-all transform hover:scale-105 active:scale-95 border border-indigo-400/30 hidden">
+            <span class="text-xl">💬</span>
+            <!-- Badge for new messages -->
+            <span id="chat-badge" class="absolute -top-1 -right-1 bg-rose-500 text-[8px] font-black text-white px-1.5 py-0.5 rounded-full border border-slate-900 hidden animate-bounce">0</span>
+        </button>
+
+        <!-- Floating Chat Window -->
+        <div id="floating-chat-window" class="fixed left-4 right-4 md:left-[calc(50%-180px)] md:right-auto md:w-80 h-[300px] z-40 flex flex-col rounded-2xl bg-slate-950/85 backdrop-blur-xl border border-slate-800 shadow-[0_10px_40px_rgba(0,0,0,0.6)] overflow-hidden hidden transition-all duration-300" style="bottom: 9.5rem;">
+            <!-- Chat Header -->
+            <div class="flex items-center justify-between px-4 py-2.5 bg-slate-900/60 border-b border-slate-800/80 shrink-0">
                 <span class="text-[10px] font-black text-cyan-400 uppercase tracking-widest">Global Chat</span>
+                <button id="btn-close-chat-window" class="text-slate-400 hover:text-white text-xs font-bold focus:outline-none">✕</button>
             </div>
             
-            <!-- Message History -->
+            <!-- Chat Messages -->
             <div id="chat-messages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 no-scrollbar pb-2"></div>
             
-            <!-- Persistent Input Bar -->
-            <form id="form-chat" class="px-4 bg-slate-950/50 border-t border-slate-800/50 flex gap-3 shrink-0 h-[60px] items-center">
-                <input type="text" id="chat-input" placeholder="Tap to chat..." class="flex-1 bg-slate-900/80 border border-slate-700/80 rounded-full px-4 h-10 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-500 font-bold" autocomplete="off">
-                <button type="submit" class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 transition-all transform hover:scale-105 shrink-0">
-                    <svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+            <!-- Chat Input -->
+            <form id="form-chat" class="px-3 py-2 bg-slate-950/60 border-t border-slate-850 flex gap-2 shrink-0 items-center">
+                <input type="text" id="chat-input" placeholder="Type a message..." class="flex-1 bg-slate-900/80 border border-slate-700/60 rounded-full px-4 h-9 text-xs text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-500 font-bold" autocomplete="off">
+                <button type="submit" class="w-9 h-9 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-indigo-500 transition-all shrink-0">
+                    <svg class="w-3.5 h-3.5 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                 </button>
             </form>
         </div>
@@ -1035,6 +1039,9 @@
             els.guessInput.disabled = false;
             els.guessInput.value = "";
             els.feedback.innerText = "";
+
+            const floatChatBtn = document.getElementById('btn-floating-chat-toggle');
+            if (floatChatBtn) floatChatBtn.classList.remove('hidden');
             
             nextHero();
             startTimer();
@@ -1309,6 +1316,8 @@
 
 // --- CHAT SYSTEM ---
         let isFirstChatLoad = true;
+        let isChatOpen = false;
+        let unreadCount = 0;
 
         function showChatToast(ign, text) {
             const container = document.getElementById('chat-toasts');
@@ -1366,12 +1375,18 @@
                 els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
 
                 // Show floating chat toast if minimized
-                const chatContainer = document.getElementById('chat-container');
-                const isMinimized = chatContainer && chatContainer.classList.contains('translate-y-[calc(100%-60px)]');
+                const isMinimized = !isChatOpen;
                 if (!isFirstChatLoad && isMinimized && messages.length > 0) {
                     const latest = messages[messages.length - 1];
                     if (latest.ign !== currentUser.ign) {
                         showChatToast(latest.ign, latest.text);
+                        // Increment badge count
+                        unreadCount++;
+                        const chatBadge = document.getElementById('chat-badge');
+                        if (chatBadge) {
+                            chatBadge.innerText = unreadCount;
+                            chatBadge.classList.remove('hidden');
+                        }
                     }
                 }
                 isFirstChatLoad = false;
@@ -1551,6 +1566,11 @@
             
             document.getElementById('login-msg').innerText = "";
 
+            const floatChatBtn = document.getElementById('btn-floating-chat-toggle');
+            if (floatChatBtn) floatChatBtn.classList.add('hidden');
+            const floatChatWindow = document.getElementById('floating-chat-window');
+            if (floatChatWindow) floatChatWindow.classList.add('hidden');
+
             els.screenGame.classList.add('hidden');
             els.screenLogin.classList.remove('hidden');
         }
@@ -1564,15 +1584,48 @@
         document.getElementById('form-guess').addEventListener('submit', checkGuess);
         document.getElementById('form-chat').addEventListener('submit', sendChat);
         
-        const chatContainer = document.getElementById('chat-container');
-        document.getElementById('btn-chat-toggle').addEventListener('click', () => {
-            chatContainer.classList.toggle('translate-y-[calc(100%-60px)]');
-            chatContainer.classList.toggle('translate-y-0');
-        });
-        document.getElementById('chat-input').addEventListener('focus', () => {
-            chatContainer.classList.remove('translate-y-[calc(100%-60px)]');
-            chatContainer.classList.add('translate-y-0');
-        });
+        const floatChatBtn = document.getElementById('btn-floating-chat-toggle');
+        const floatChatWindow = document.getElementById('floating-chat-window');
+        const chatBadge = document.getElementById('chat-badge');
+
+        if (floatChatBtn && floatChatWindow) {
+            floatChatBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleChatWindow();
+            });
+            
+            document.getElementById('btn-close-chat-window').addEventListener('click', () => {
+                closeChatWindow();
+            });
+            
+            // Auto close window if clicking outside
+            document.addEventListener('click', (e) => {
+                if (isChatOpen && !floatChatWindow.contains(e.target) && e.target !== floatChatBtn && !floatChatBtn.contains(e.target)) {
+                    closeChatWindow();
+                }
+            });
+        }
+
+        function toggleChatWindow() {
+            isChatOpen = !isChatOpen;
+            if (isChatOpen) {
+                floatChatWindow.classList.remove('hidden');
+                floatChatWindow.classList.add('flex');
+                document.getElementById('chat-input').focus();
+                unreadCount = 0;
+                chatBadge.innerText = "0";
+                chatBadge.classList.add('hidden');
+            } else {
+                floatChatWindow.classList.add('hidden');
+                floatChatWindow.classList.remove('flex');
+            }
+        }
+
+        function closeChatWindow() {
+            isChatOpen = false;
+            floatChatWindow.classList.add('hidden');
+            floatChatWindow.classList.remove('flex');
+        }
 
         document.getElementById('btn-hint').addEventListener('click', handleHint);
         document.getElementById('btn-logout').addEventListener('click', handleLogout);
@@ -1835,11 +1888,12 @@
                 pos3 = e.clientX;
                 pos4 = e.clientY;
                 
-                const newTop = elm.offsetTop - pos2;
-                const newLeft = elm.offsetLeft - pos1;
+                const rect = elm.getBoundingClientRect();
+                const newTop = rect.top - pos2;
+                const newLeft = rect.left - pos1;
                 
-                elm.style.top = `${Math.max(10, Math.min(window.innerHeight - elm.offsetHeight - 10, newTop))}px`;
-                elm.style.left = `${Math.max(10, Math.min(window.innerWidth - elm.offsetWidth - 10, newLeft))}px`;
+                elm.style.top = `${Math.max(10, Math.min(window.innerHeight - rect.height - 10, newTop))}px`;
+                elm.style.left = `${Math.max(10, Math.min(window.innerWidth - rect.width - 10, newLeft))}px`;
                 elm.style.right = 'auto';
             }
 
@@ -1863,11 +1917,12 @@
                 pos3 = e.touches[0].clientX;
                 pos4 = e.touches[0].clientY;
                 
-                const newTop = elm.offsetTop - pos2;
-                const newLeft = elm.offsetLeft - pos1;
+                const rect = elm.getBoundingClientRect();
+                const newTop = rect.top - pos2;
+                const newLeft = rect.left - pos1;
                 
-                elm.style.top = `${Math.max(10, Math.min(window.innerHeight - elm.offsetHeight - 10, newTop))}px`;
-                elm.style.left = `${Math.max(10, Math.min(window.innerWidth - elm.offsetWidth - 10, newLeft))}px`;
+                elm.style.top = `${Math.max(10, Math.min(window.innerHeight - rect.height - 10, newTop))}px`;
+                elm.style.left = `${Math.max(10, Math.min(window.innerWidth - rect.width - 10, newLeft))}px`;
                 elm.style.right = 'auto';
             }
             
