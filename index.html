@@ -329,13 +329,7 @@
                         required>
                 </div>
 
-                <!-- NICKNAME / IGN INPUT (Only shown for new players) -->
-                <div id="container-nickname" class="flex flex-col gap-1.5 w-full hidden">
-                    <label class="text-[10px] text-cyan-300 font-black uppercase tracking-widest ml-2 input-label-glow">👤 In-Game Nickname</label>
-                    <input type="text" id="login-nickname" placeholder="Enter your nickname"
-                        class="w-full h-14 bg-slate-950/80 border border-cyan-700/50 rounded-2xl px-5 text-xl text-center font-bold text-cyan-200 focus:outline-none transition-all"
-                        style="letter-spacing: 0.05em;">
-                </div>
+
 
                 <!-- Status message -->
                 <p id="login-msg" class="text-cyan-400 text-sm h-4 font-bold text-center"></p>
@@ -811,48 +805,37 @@
             btnLogin.disabled = true;
             btnLogin.classList.add('btn-charging');
             btnLogin.innerHTML = 'CONNECTING<span class="connecting-dots"><span>.</span><span>.</span><span>.</span></span>';
-            document.getElementById('login-msg').innerText = "Connecting...";
+            document.getElementById('login-msg').innerText = "Verifying MLBB Account...";
 
             try {
-                const nicknameContainer = document.getElementById('container-nickname');
-                const isNewPlayerMode = !nicknameContainer.classList.contains('hidden');
-
                 const userRef = doc(db, "players", id);
                 const userDoc = await getDoc(userRef);
 
                 let ign = "";
                 let avatar = "";
 
-                if (isNewPlayerMode) {
-                    // Step 2: Register the new player
-                    const nicknameInput = document.getElementById('login-nickname').value.trim();
-                    ign = nicknameInput || `Player_${id}`;
-                    avatar = "";
-
-                    await setDoc(userRef, { ign, avatar, score: 0, duration: 0, createdAt: serverTimestamp(), isBanned: false });
-                    currentUser.bestScore = 0;
-                    currentUser.bestDuration = 0;
+                if (userDoc.exists()) {
+                    if (userDoc.data().isBanned) throw new Error("This profile is banned.");
+                    ign = userDoc.data().ign || `Player_${id}`;
+                    avatar = userDoc.data().avatar || "";
+                    currentUser.bestScore = userDoc.data().score || 0;
+                    currentUser.bestDuration = userDoc.data().duration || 0;
+                    currentUser.gamesPlayed = userDoc.data().gamesPlayed || 0;
                 } else {
-                    // Step 1: Check if player exists
-                    if (userDoc.exists()) {
-                        if (userDoc.data().isBanned) throw new Error("Banned");
-                        ign = userDoc.data().ign || `Player_${id}`;
-                        avatar = userDoc.data().avatar || "";
-                        currentUser.bestScore = userDoc.data().score || 0;
-                        currentUser.bestDuration = userDoc.data().duration || 0;
-                        currentUser.gamesPlayed = userDoc.data().gamesPlayed || 0;
+                    // Fetch from MLBB nickname API
+                    const res = await fetch(`https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`);
+                    if (!res.ok) throw new Error("MLBB Verification Service is currently down. Please try again later.");
+                    
+                    const data = await res.json();
+                    if (data.success || data.name || data.nickname) {
+                        ign = data.name || data.nickname;
+                        avatar = "";
+                        await setDoc(userRef, { ign, avatar, score: 0, duration: 0, gamesPlayed: 0, createdAt: serverTimestamp(), isBanned: false });
+                        currentUser.bestScore = 0;
+                        currentUser.bestDuration = 0;
+                        currentUser.gamesPlayed = 0;
                     } else {
-                        // User does not exist, ask for nickname
-                        nicknameContainer.classList.remove('hidden');
-                        document.getElementById('login-nickname').value = `Player_${id}`;
-                        document.getElementById('login-nickname').focus();
-
-                        // Reset button for step 2 click
-                        btnLogin.disabled = false;
-                        btnLogin.classList.remove('btn-charging');
-                        btnLogin.innerHTML = '🚀 CREATE PROFILE & PLAY';
-                        document.getElementById('login-msg').innerText = "Register a nickname to start!";
-                        return;
+                        throw new Error("Invalid MLBB Game ID or Zone ID.");
                     }
                 }
 
@@ -1359,12 +1342,7 @@
             
             document.getElementById('login-id').value = "";
             document.getElementById('login-zone').value = "";
-            
-            const nicknameInput = document.getElementById('login-nickname');
-            if (nicknameInput) nicknameInput.value = "";
-            
-            const nicknameContainer = document.getElementById('container-nickname');
-            if (nicknameContainer) nicknameContainer.classList.add('hidden');
+            // Nickname container is no longer used due to automatic verification
             
             const btnLogin = document.getElementById('btn-login');
             if (btnLogin) {
