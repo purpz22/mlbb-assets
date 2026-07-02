@@ -201,6 +201,24 @@ def get_stream(videoId):
         print(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
+@app.route('/upload-bgm', methods=['POST'])
+def upload_bgm():
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "No file uploaded"}), 400
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "Empty filename"}), 400
+        
+        # Save as bgm.mp3 in the current directory
+        file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'bgm.mp3')
+        file.save(file_path)
+        print(f"[OK] BGM uploaded successfully and saved to {file_path}")
+        return jsonify({"success": True, "msg": "BGM uploaded successfully"})
+    except Exception as e:
+        print("BGM UPLOAD ERROR:", traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     print("YouTube Music Backend running at http://127.0.0.1:5000")
     app.run(host='127.0.0.1', port=5000, debug=True)

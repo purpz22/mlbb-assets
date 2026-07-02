@@ -138,13 +138,28 @@
                 </div>
             </div>
 
-            <!-- Music Player -->
-            <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
-                <h2 class="text-xl font-bold mb-4 text-indigo-400 border-b border-slate-700 pb-2">Broadcast Music</h2>
-                <input type="text" id="music-url" placeholder="Direct MP3 URL" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white mb-3">
-                <div class="flex gap-2">
-                    <button id="btn-play-music" class="flex-1 bg-indigo-600 hover:bg-indigo-500 py-2 rounded-xl font-bold uppercase transition-all">Play</button>
-                    <button id="btn-stop-music" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-xl font-bold uppercase transition-all">Stop</button>
+            <!-- Music & Chat Settings -->
+            <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-indigo-400 border-b border-slate-700 pb-2">BGM & Chat Settings</h2>
+                </div>
+                
+                <!-- BGM Upload Section -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-xs text-slate-400 font-bold uppercase tracking-wider">Upload Background Music (MP3)</label>
+                    <input type="file" id="bgm-file-input" accept="audio/mp3, audio/*" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-indigo-500/10 file:text-indigo-400 file:cursor-pointer hover:file:bg-indigo-500/20">
+                    <button id="btn-upload-bgm" class="w-full bg-indigo-600 hover:bg-indigo-500 py-2.5 rounded-xl font-bold uppercase transition-all text-xs">
+                        Upload BGM File
+                    </button>
+                    <div id="bgm-upload-status" class="text-[10px] font-bold text-center mt-1"></div>
+                </div>
+
+                <!-- Chat Settings -->
+                <div class="border-t border-slate-800 pt-3">
+                    <label class="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-2">Chat Management</label>
+                    <button id="btn-clear-chat" class="w-full bg-red-950/40 hover:bg-red-800 text-red-400 hover:text-white border border-red-500/30 py-2.5 rounded-xl font-bold uppercase transition-all text-xs">
+                        Clear Chat Messages
+                    </button>
                 </div>
             </div>
 
@@ -272,7 +287,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, deleteDoc, collection, query, onSnapshot, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, deleteDoc, collection, query, onSnapshot, serverTimestamp, updateDoc, arrayUnion, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // CONFIG
         const firebaseConfig = {
@@ -714,28 +729,84 @@
             }
         });
 
-        // 5. Music
-        document.getElementById('btn-play-music').addEventListener('click', async () => {
-            const url = document.getElementById('music-url').value.trim();
-            if(!url) return showToast("Enter MP3 URL first", "warning");
-            try {
-                await setDoc(doc(db, "server", "state"), { musicUrl: url, musicTrigger: serverTimestamp() }, { merge: true });
-                showToast("Playing broadcast music...");
-                logActivity(`Started broadcast music: ${url}`);
-            } catch(e) {
-                showToast("Music play failed: " + e.message, "error");
-            }
-        });
-        document.getElementById('btn-stop-music').addEventListener('click', async () => {
-            try {
-                await setDoc(doc(db, "server", "state"), { musicUrl: "" }, { merge: true });
-                document.getElementById('music-url').value = "";
-                showToast("Music stopped.");
-                logActivity("Stopped broadcast music");
-            } catch(e) {
-                showToast("Music stop failed: " + e.message, "error");
-            }
-        });
+        // 5. BGM & Chat Management
+        const btnUploadBgm = document.getElementById('btn-upload-bgm');
+        const bgmFileInput = document.getElementById('bgm-file-input');
+        const bgmUploadStatus = document.getElementById('bgm-upload-status');
+
+        if (btnUploadBgm) {
+            btnUploadBgm.addEventListener('click', async () => {
+                const file = bgmFileInput.files[0];
+                if (!file) {
+                    showToast("Please select an MP3 file first.", "warning");
+                    return;
+                }
+                
+                btnUploadBgm.disabled = true;
+                btnUploadBgm.innerText = "UPLOADING...";
+                bgmUploadStatus.innerText = "Uploading audio file...";
+                bgmUploadStatus.className = "text-[10px] font-bold text-center mt-1 text-slate-400";
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                try {
+                    const resp = await fetch('/upload-bgm', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const res = await resp.json();
+                    if (res.success) {
+                        bgmUploadStatus.innerText = "BGM Uploaded Successfully! Players will hear it on next load/reload.";
+                        bgmUploadStatus.className = "text-[10px] font-bold text-center mt-1 text-green-400";
+                        showToast("BGM uploaded successfully!");
+                        logActivity("Uploaded new background music file");
+                    } else {
+                        throw new Error(res.error || "Upload failed");
+                    }
+                } catch (e) {
+                    console.error("Upload error:", e);
+                    bgmUploadStatus.innerText = "Upload failed: " + e.message;
+                    bgmUploadStatus.className = "text-[10px] font-bold text-center mt-1 text-rose-500";
+                    showToast("BGM upload failed: " + e.message, "error");
+                } finally {
+                    btnUploadBgm.disabled = false;
+                    btnUploadBgm.innerText = "Upload BGM File";
+                }
+            });
+        }
+
+        const btnClearChat = document.getElementById('btn-clear-chat');
+        if (btnClearChat) {
+            btnClearChat.addEventListener('click', () => {
+                showConfirm(
+                    "Clear Chat History?",
+                    "Are you sure you want to permanently delete all messages from global chat?",
+                    async () => {
+                        try {
+                            const chatCol = collection(db, "messages");
+                            const chatSnap = await getDocs(chatCol);
+                            
+                            if (chatSnap.empty) {
+                                showToast("No messages to delete", "info");
+                                return;
+                            }
+                            
+                            let deleteCount = 0;
+                            for (const d of chatSnap.docs) {
+                                await deleteDoc(doc(db, "messages", d.id));
+                                deleteCount++;
+                            }
+                            
+                            showToast(`Cleared ${deleteCount} messages successfully!`);
+                            logActivity(`Cleared chat database (${deleteCount} messages deleted)`);
+                        } catch (e) {
+                            showToast("Clear chat failed: " + e.message, "error");
+                        }
+                    }
+                );
+            });
+        }
 
         // --- PLAYER ACTIONS ---
         window.resetPlayer = (id) => { 
@@ -1035,8 +1106,6 @@
                     }
                 }
             );
-        };
-
         };
 
     </script>

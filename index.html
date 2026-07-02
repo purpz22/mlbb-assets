@@ -279,6 +279,9 @@
             cursor: pointer;
             top: 6.5rem !important; /* Move it slightly up when minimized to clear gameplay elements */
         }
+        #floating-top3 {
+            transition: opacity 0.3s ease, transform 0.3s ease, border-radius 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, width 0.3s ease, height 0.3s ease;
+        }
         #floating-top3.minimized * {
             display: none !important;
         }
@@ -290,6 +293,12 @@
     </style>
 </head>
 <body class="w-full relative overflow-hidden">
+
+    <!-- Global BGM Toggle Button -->
+    <button id="btn-bgm-toggle" class="fixed top-5 right-5 z-[60] w-10 h-10 rounded-full bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 flex items-center justify-center text-white cursor-pointer hover:bg-slate-800/80 transition-all scale-100 hover:scale-105 active:scale-95 shadow-[0_0_10px_rgba(99,102,241,0.5)] focus:outline-none">
+        🔊
+    </button>
+    <audio id="bgm-player" src="bgm.mp3" loop></audio>
 
     <div class="ambient-bg"></div>
     <!-- Hero silhouette floating background -->
@@ -385,7 +394,7 @@
     <!-- GAME SCREEN -->
     <div id="screen-game" class="absolute inset-0 w-full max-w-sm mx-auto flex flex-col z-10 hidden">
         <!-- Floating Top 3 Leaderboard Card -->
-        <div id="floating-top3" class="fixed right-3 md:right-[calc(50%-180px)] top-32 z-30 w-36 bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-300">
+        <div id="floating-top3" class="fixed right-3 md:right-[calc(50%-180px)] top-32 z-30 w-36 bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
             <!-- Header with Minimize Button -->
             <div class="flex items-center justify-between border-b border-slate-800/60 pb-1 mb-1 shrink-0">
                 <span class="text-[9px] font-black text-cyan-400 uppercase tracking-widest">🏆 Top 3 Players</span>
@@ -1943,6 +1952,48 @@
                     checkGuess(dummyEvent);
                 }
             });
+        }
+
+        // --- BACKGROUND MUSIC (BGM) MANAGER ---
+        const bgm = document.getElementById('bgm-player');
+        const btnBgm = document.getElementById('btn-bgm-toggle');
+        let bgmMuted = localStorage.getItem('mlbb_bgm_muted') === 'true';
+
+        function updateBgmUI() {
+            if (bgmMuted) {
+                btnBgm.innerHTML = '🔇';
+                btnBgm.classList.remove('shadow-[0_0_10px_rgba(99,102,241,0.5)]');
+            } else {
+                btnBgm.innerHTML = '🔊';
+                btnBgm.classList.add('shadow-[0_0_10px_rgba(99,102,241,0.5)]');
+            }
+        }
+
+        if (btnBgm && bgm) {
+            updateBgmUI();
+            
+            btnBgm.addEventListener('click', (e) => {
+                e.stopPropagation();
+                bgmMuted = !bgmMuted;
+                localStorage.setItem('mlbb_bgm_muted', bgmMuted);
+                updateBgmUI();
+                if (bgmMuted) {
+                    bgm.pause();
+                } else {
+                    bgm.play().catch(()=>{});
+                }
+            });
+            
+            // Play BGM on first mouse/keyboard interaction to unlock audio
+            const playOnInteraction = () => {
+                if (!bgmMuted) {
+                    bgm.play().catch(()=>{});
+                }
+                document.removeEventListener('click', playOnInteraction);
+                document.removeEventListener('keydown', playOnInteraction);
+            };
+            document.addEventListener('click', playOnInteraction);
+            document.addEventListener('keydown', playOnInteraction);
         }
 
         // Auto Login / Connect
