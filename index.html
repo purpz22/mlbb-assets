@@ -768,6 +768,8 @@
         let jwtToken = "";
         let globalEventX2 = false;
         let globalEventFirstLetter = false;
+        let unsubUser = null;
+        let sessionStart = Date.now();
 
         const vineBoomAudio = new Audio("https://www.myinstants.com/media/sounds/vine-boom.mp3");
 
@@ -879,6 +881,7 @@
                 els.playerBest.innerText = currentUser.bestScore;
                 
                 startServerListeners(); 
+                startUserListener(id);
                 initChat(); 
                 startGame();
             } catch (err) {
@@ -1132,6 +1135,38 @@
             });
         }
 
+        function startUserListener(id) {
+            if (unsubUser) unsubUser();
+            sessionStart = Date.now();
+            unsubUser = onSnapshot(doc(db, "players", id), (docSnap) => {
+                if (!docSnap.exists()) {
+                    handleLogout();
+                    return;
+                }
+                const data = docSnap.data();
+                if (data.isBanned) {
+                    alert("Your profile has been banned.");
+                    handleLogout();
+                    return;
+                }
+                if (data.kickedAt) {
+                    const kickedTime = data.kickedAt.toMillis ? data.kickedAt.toMillis() : new Date(data.kickedAt).getTime();
+                    if (kickedTime > sessionStart) {
+                        alert("You have been kicked by the administrator.");
+                        handleLogout();
+                        return;
+                    }
+                }
+                if (data.score !== undefined) {
+                    currentUser.bestScore = data.score;
+                    els.playerBest.innerText = data.score;
+                }
+                if (data.gamesPlayed !== undefined) {
+                    currentUser.gamesPlayed = data.gamesPlayed;
+                }
+            });
+        }
+
 // --- CHAT SYSTEM ---
         function initChat() {
             const q = query(collection(db, "messages"), orderBy("timestamp", "desc"), limit(20));
@@ -1294,6 +1329,7 @@
                 els.playerBest.innerText = currentUser.bestScore;
 
                 startServerListeners(); 
+                startUserListener(id);
                 initChat(); 
                 startGame();
             } catch (err) {
@@ -1307,6 +1343,10 @@
         }
 
         function handleLogout() {
+            if (unsubUser) {
+                unsubUser();
+                unsubUser = null;
+            }
             localStorage.removeItem('mlbb_jwt');
             localStorage.removeItem('mlbb_id');
             localStorage.removeItem('mlbb_zone');

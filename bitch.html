@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Rajdhani', sans-serif; background-color: #020617; color: white; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="p-6">
@@ -16,12 +17,29 @@
     <div id="admin-login" class="fixed inset-0 bg-slate-950 z-50 flex flex-col items-center justify-center gap-4">
         <h1 class="text-3xl font-black text-cyan-400">ADMIN ACCESS</h1>
         <div class="flex flex-col gap-3 w-80">
-            <!-- Added Email Input -->
+            <!-- Email Input -->
             <input type="email" id="admin-email" placeholder="Admin Email" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500">
-            <input type="password" id="admin-pass" placeholder="Enter Password" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500">
-            <!-- Added Error Message Display -->
+            
+            <div class="relative">
+                <input type="password" id="admin-pass" placeholder="Enter Password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 pr-10 text-white focus:outline-none focus:border-indigo-500">
+                <button id="btn-toggle-password" class="absolute right-3 top-3.5 text-slate-400 hover:text-white transition-colors">
+                    <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Error Message Display -->
             <p id="login-error" class="text-rose-500 text-sm text-center hidden font-bold"></p>
-            <button id="btn-login" class="bg-indigo-600 px-8 py-3 rounded-xl font-bold uppercase hover:bg-indigo-500 mt-2">Secure Login</button>
+            
+            <button id="btn-login" class="flex items-center justify-center gap-2 bg-indigo-600 px-8 py-3 rounded-xl font-bold uppercase hover:bg-indigo-500 mt-2 transition-all">
+                <span id="login-btn-text">Secure Login</span>
+                <svg id="login-spinner" class="hidden animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </button>
         </div>
     </div>
 
@@ -35,18 +53,46 @@
                 <p class="text-slate-400 text-sm tracking-widest uppercase">MLBB Guess Hero Backend</p>
             </div>
             <div class="flex gap-4 items-center">
-                <div class="bg-slate-900 px-4 py-2 rounded-lg border border-slate-800 text-center">
-                    <span class="block text-xs text-slate-500 uppercase">Online Players (last 5m)</span>
-                    <span id="stat-online" class="text-2xl font-black text-green-400">0</span>
-                </div>
-                <div class="bg-slate-900 px-4 py-2 rounded-lg border border-slate-800 text-center">
-                    <span class="block text-xs text-slate-500 uppercase">Total Players</span>
-                    <span id="stat-total" class="text-2xl font-black text-cyan-400">0</span>
-                </div>
-                <!-- Added Logout Button -->
+                <!-- Logout Button -->
                 <button id="btn-logout" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-3 rounded-xl text-xs font-bold text-rose-400 uppercase tracking-widest ml-2 transition-all">
                     Logout
                 </button>
+            </div>
+        </div>
+
+        <!-- Premium Stats Bar -->
+        <div class="col-span-full grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+            <div class="bg-slate-900/50 backdrop-blur-md px-5 py-3 rounded-2xl border border-slate-800/80 shadow-lg relative overflow-hidden group">
+                <div class="absolute inset-0 bg-green-500/5 pointer-events-none"></div>
+                <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Online Players</span>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <span id="stat-online" class="text-3xl font-black text-green-400">0</span>
+                    <span class="text-xs text-green-500 font-bold">active (5m)</span>
+                </div>
+            </div>
+            <div class="bg-slate-900/50 backdrop-blur-md px-5 py-3 rounded-2xl border border-slate-800/80 shadow-lg relative overflow-hidden group">
+                <div class="absolute inset-0 bg-cyan-500/5 pointer-events-none"></div>
+                <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Connected</span>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <span id="stat-total" class="text-3xl font-black text-cyan-400">0</span>
+                    <span class="text-xs text-cyan-500 font-bold">profiles</span>
+                </div>
+            </div>
+            <div class="bg-slate-900/50 backdrop-blur-md px-5 py-3 rounded-2xl border border-slate-800/80 shadow-lg relative overflow-hidden group">
+                <div class="absolute inset-0 bg-amber-500/5 pointer-events-none"></div>
+                <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Top Scorer</span>
+                <div class="flex items-baseline gap-2 mt-1 truncate">
+                    <span id="stat-top-scorer-score" class="text-3xl font-black text-amber-400">0</span>
+                    <span id="stat-top-scorer-ign" class="text-xs text-amber-500 font-bold truncate max-w-[100px]">None</span>
+                </div>
+            </div>
+            <div class="bg-slate-900/50 backdrop-blur-md px-5 py-3 rounded-2xl border border-slate-800/80 shadow-lg relative overflow-hidden group">
+                <div class="absolute inset-0 bg-indigo-500/5 pointer-events-none"></div>
+                <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Games</span>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <span id="stat-games" class="text-3xl font-black text-indigo-400">0</span>
+                    <span class="text-xs text-indigo-500 font-bold">played</span>
+                </div>
             </div>
         </div>
 
@@ -56,10 +102,15 @@
             <!-- Global Commands -->
             <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
                 <h2 class="text-xl font-bold mb-4 text-rose-400 border-b border-slate-700 pb-2">Global Commands</h2>
-                <button id="btn-refresh" class="w-full bg-rose-600 hover:bg-rose-500 py-3 rounded-xl font-bold uppercase tracking-widest transition-all">
-                    Force Refresh All Users
-                </button>
-                <p class="text-xs text-slate-500 mt-2 text-center">Instantly reloads the page for everyone.</p>
+                <div class="flex flex-col gap-3">
+                    <button id="btn-refresh" class="w-full bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/30 py-3 rounded-xl font-bold uppercase tracking-widest transition-all">
+                        Force Refresh All Users
+                    </button>
+                    <button id="btn-reset-all" class="w-full bg-red-950/40 hover:bg-red-800 text-red-400 hover:text-white border border-red-500/30 py-3 rounded-xl font-bold uppercase tracking-widest transition-all">
+                        Reset All Scores
+                    </button>
+                </div>
+                <p class="text-xs text-slate-500 mt-2 text-center">Instantly controls game sessions.</p>
             </div>
 
             <!-- DRAMATIC BROADCAST -->
@@ -97,37 +148,72 @@
                 </div>
             </div>
 
+            <!-- Live Activity Log -->
+            <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col h-[280px]">
+                <h2 class="text-xl font-bold mb-2 text-indigo-400 border-b border-slate-700 pb-2">Live Activity Log</h2>
+                <div id="activity-log-feed" class="flex-1 overflow-y-auto pr-1 flex flex-col gap-2 no-scrollbar text-xs">
+                    <div class="text-slate-500 text-center py-4">No recent activity</div>
+                </div>
+            </div>
+
         </div>
 
         <!-- Player Management -->
-        <div class="col-span-1 md:col-span-2 bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col h-[800px]">
-            <h2 class="text-xl font-bold mb-4 text-cyan-400 border-b border-slate-700 pb-2">Player Management</h2>
-            <input type="text" id="search-player" placeholder="Search IGN or ID..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white mb-4 focus:border-cyan-500 focus:outline-none">
-            
-            <div class="flex-1 overflow-y-auto pr-2">
-                <table class="w-full text-left">
-                    <thead class="text-xs uppercase text-slate-500 sticky top-0 bg-slate-900 z-10">
-                        <tr>
-                            <th class="py-2">ID</th>
-                            <th class="py-2">IGN</th>
-                            <th class="py-2">Score</th>
-                            <th class="py-2 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="player-list" class="divide-y divide-slate-800/50">
-                        <!-- Players injected here -->
-                    </tbody>
-                </table>
+        <div class="col-span-1 md:col-span-2 bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col h-[900px] justify-between">
+            <div class="flex flex-col flex-1 overflow-hidden">
+                <h2 class="text-xl font-bold mb-4 text-cyan-400 border-b border-slate-700 pb-2">Player Management</h2>
+                <input type="text" id="search-player" placeholder="Search IGN or ID..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white mb-4 focus:border-cyan-500 focus:outline-none">
+                
+                <div class="flex-1 overflow-y-auto pr-2">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="text-xs uppercase text-slate-500 sticky top-0 bg-slate-900 z-10">
+                            <tr class="border-b border-slate-800">
+                                <th class="py-2 w-10">Live</th>
+                                <th class="py-2">ID</th>
+                                <th class="py-2">IGN</th>
+                                <th class="py-2 text-center">Games</th>
+                                <th class="py-2 text-center">Score</th>
+                                <th class="py-2 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="player-list" class="divide-y divide-slate-800/50">
+                            <!-- Players injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div class="flex items-center justify-between border-t border-slate-800/80 pt-4 mt-4 shrink-0">
+                <span class="text-xs text-slate-500">Showing <span id="pagination-range" class="text-slate-400 font-bold">0-0</span> of <span id="pagination-total" class="text-slate-400 font-bold">0</span> players</span>
+                <div class="flex gap-2">
+                    <button id="btn-prev-page" class="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-30 disabled:pointer-events-none">PREV</button>
+                    <button id="btn-next-page" class="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-30 disabled:pointer-events-none">NEXT</button>
+                </div>
             </div>
         </div>
 
     </div>
 
+    <!-- Custom Confirmation Modal -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl transform transition-transform scale-95 duration-200" id="confirm-box">
+            <h3 id="confirm-title" class="text-lg font-black text-white uppercase tracking-wider mb-2">Confirmation Required</h3>
+            <p id="confirm-message" class="text-slate-400 text-sm mb-6"></p>
+            <div class="flex gap-3">
+                <button id="btn-confirm-cancel" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-xl transition-all">Cancel</button>
+                <button id="btn-confirm-action" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2 rounded-xl transition-all">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[100] flex flex-col gap-2 pointer-events-none"></div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        // Import Auth modules
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, deleteDoc, collection, query, onSnapshot, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, deleteDoc, collection, query, onSnapshot, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // CONFIG
         const firebaseConfig = {
@@ -141,24 +227,26 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Variables to hold listener references to prevent duplicates on re-login
+        // Variables
         let unsubPlayers = null;
         let unsubServer = null;
         let serverState = { doublePoints: false, firstLetter: false };
 
+        let currentPage = 1;
+        const playersPerPage = 20;
+        let allPlayers = [];
+        let filteredPlayers = [];
+
         // --- AUTHENTICATION STATE OBSERVER ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Logged in
                 document.getElementById('admin-login').classList.add('hidden');
                 document.getElementById('admin-dashboard').classList.remove('hidden');
                 initAdmin();
             } else {
-                // Logged out
                 document.getElementById('admin-login').classList.remove('hidden');
                 document.getElementById('admin-dashboard').classList.add('hidden');
                 
-                // Stop listening to database if logged out
                 if(unsubPlayers) unsubPlayers();
                 if(unsubServer) unsubServer();
             }
@@ -166,11 +254,14 @@
 
         // --- LOGIN ACTION ---
         document.getElementById('btn-login').addEventListener('click', () => {
-            const email = document.getElementById('admin-email').value;
-            const pass = document.getElementById('admin-pass').value;
+            const email = document.getElementById('admin-email').value.trim();
+            const pass = document.getElementById('admin-pass').value.trim();
             const errorText = document.getElementById('login-error');
+            const spinner = document.getElementById('login-spinner');
+            const btnText = document.getElementById('login-btn-text');
+            const btn = document.getElementById('btn-login');
 
-            errorText.classList.add('hidden'); // Reset error message
+            errorText.classList.add('hidden');
 
             if(!email || !pass) {
                 errorText.innerText = "Please enter both Email and Password";
@@ -178,14 +269,22 @@
                 return;
             }
 
-            // Secure Firebase Authentication Call
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+            btnText.innerText = "Authenticating...";
+
             signInWithEmailAndPassword(auth, email, pass)
-                .then((userCredential) => {
-                    // Success is automatically handled by onAuthStateChanged
-                    document.getElementById('admin-pass').value = ''; // clear password input securely
+                .then(() => {
+                    document.getElementById('admin-pass').value = '';
+                    btn.disabled = false;
+                    spinner.classList.add('hidden');
+                    btnText.innerText = "Secure Login";
                 })
                 .catch((error) => {
-                    // Custom user-friendly error messages
+                    btn.disabled = false;
+                    spinner.classList.add('hidden');
+                    btnText.innerText = "Secure Login";
+                    
                     if(error.code === 'auth/invalid-credential') {
                         errorText.innerText = "Incorrect Email or Password.";
                     } else {
@@ -195,18 +294,116 @@
                 });
         });
 
+        // Password Show/Hide Toggle
+        document.getElementById('btn-toggle-password').addEventListener('click', () => {
+            const passInput = document.getElementById('admin-pass');
+            const eyeIcon = document.getElementById('eye-icon');
+            if (passInput.type === "password") {
+                passInput.type = "text";
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.024 10.024 0 014.504-4.825M9 9a3 3 0 005.122 2.122m0 0A3 3 0 109 9" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
+                `;
+            } else {
+                passInput.type = "password";
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                `;
+            }
+        });
+
         // --- LOGOUT ACTION ---
         document.getElementById('btn-logout').addEventListener('click', () => {
             signOut(auth);
         });
+
+        // --- CONFIRM MODAL HELPER ---
+        function showConfirm(title, message, onConfirm, actionText = "Confirm", isDanger = true) {
+            const modal = document.getElementById('confirm-modal');
+            const box = document.getElementById('confirm-box');
+            
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-message').innerText = message;
+            
+            const btnAction = document.getElementById('btn-confirm-action');
+            btnAction.innerText = actionText;
+            if (isDanger) {
+                btnAction.className = "flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2 rounded-xl transition-all";
+            } else {
+                btnAction.className = "flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-xl transition-all";
+            }
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => box.classList.remove('scale-95'), 10);
+            
+            btnAction.onclick = () => {
+                onConfirm();
+                closeConfirm();
+            };
+        }
+        
+        function closeConfirm() {
+            const modal = document.getElementById('confirm-modal');
+            const box = document.getElementById('confirm-box');
+            box.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 150);
+        }
+        
+        document.getElementById('btn-confirm-cancel').addEventListener('click', closeConfirm);
+
+        // --- TOAST NOTIFICATION HELPER ---
+        function showToast(message, type = "success") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `px-4 py-3 rounded-xl border font-bold text-sm shadow-xl flex items-center gap-2 transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto`;
+            
+            let icon = "";
+            if (type === "success") {
+                toast.className += " bg-emerald-950/80 border-emerald-500/30 text-emerald-400";
+                icon = "✅";
+            } else if (type === "error") {
+                toast.className += " bg-rose-950/80 border-rose-500/30 text-rose-400";
+                icon = "❌";
+            } else {
+                toast.className += " bg-amber-950/80 border-amber-500/30 text-amber-400";
+                icon = "⚠️";
+            }
+            
+            toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+            container.appendChild(toast);
+            
+            void toast.offsetWidth;
+            toast.classList.remove('translate-y-2', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- ACTIVITY LOG HELPER ---
+        async function logActivity(actionText) {
+            try {
+                const docRef = doc(db, "server", "state");
+                const currentLogs = serverState.activityLog || [];
+                const updatedLogs = [{ text: actionText, timestamp: Date.now() }, ...currentLogs].slice(0, 20);
+                await updateDoc(docRef, { activityLog: updatedLogs });
+            } catch(e) {
+                console.error("Error writing to activity log:", e);
+            }
+        }
 
         // --- DATABASE LISTENERS ---
         function initAdmin() {
             // Listen to Players
             const q = query(collection(db, "players"));
             unsubPlayers = onSnapshot(q, (snapshot) => {
-                const list = document.getElementById('player-list');
-                list.innerHTML = "";
+                allPlayers = [];
                 let total = 0;
                 let online = 0;
                 const fiveMinsAgo = Date.now() - (5 * 60 * 1000);
@@ -215,101 +412,344 @@
                     const data = docSnap.data();
                     const id = docSnap.id;
                     total++;
-                    if(data.updatedAt && data.updatedAt.toMillis() > fiveMinsAgo) online++;
+                    const isOnline = data.updatedAt && data.updatedAt.toMillis() > fiveMinsAgo;
+                    if(isOnline) online++;
                     const isBanned = data.isBanned ? true : false;
-
-                    list.innerHTML += `
-                        <tr class="hover:bg-slate-800/50 transition-colors ${isBanned ? 'opacity-50' : ''}">
-                            <td class="py-3 text-xs text-slate-400">${id}</td>
-                            <td class="py-3 font-bold text-white">${data.ign} ${isBanned ? '<span class="text-red-500 text-[10px] ml-1">BANNED</span>' : ''}</td>
-                            <td class="py-3 text-cyan-400 font-black">${data.score}</td>
-                            <td class="py-3 flex gap-2 justify-end">
-                                <button onclick="window.resetPlayer('${id}')" class="bg-amber-600/20 text-amber-500 px-3 py-1 rounded text-xs hover:bg-amber-600/40">0 Pts</button>
-                                ${isBanned 
-                                    ? `<button onclick="window.banPlayer('${id}', false)" class="bg-green-600/20 text-green-500 px-3 py-1 rounded text-xs hover:bg-green-600/40">Unban</button>`
-                                    : `<button onclick="window.banPlayer('${id}', true)" class="bg-rose-600/20 text-rose-500 px-3 py-1 rounded text-xs hover:bg-rose-600/40">Ban</button>`
-                                }
-                                <button onclick="window.deletePlayer('${id}')" class="bg-red-900 text-white px-3 py-1 rounded text-xs hover:bg-red-800">Del</button>
-                            </td>
-                        </tr>
-                    `;
+                    
+                    allPlayers.push({
+                        id,
+                        ign: data.ign || `Player_${id}`,
+                        score: data.score || 0,
+                        gamesPlayed: data.gamesPlayed || 0,
+                        isBanned,
+                        isOnline,
+                        updatedAt: data.updatedAt
+                    });
                 });
-                document.getElementById('stat-total').innerText = total;
-                document.getElementById('stat-online').innerText = online;
+                
+                // Sort by score desc
+                allPlayers.sort((a, b) => b.score - a.score);
+                
+                // Update live top scorer stats
+                if (allPlayers.length > 0) {
+                    const topPlayer = allPlayers[0];
+                    document.getElementById('stat-top-scorer-score').innerText = topPlayer.score;
+                    document.getElementById('stat-top-scorer-ign').innerText = topPlayer.ign;
+                } else {
+                    document.getElementById('stat-top-scorer-score').innerText = "0";
+                    document.getElementById('stat-top-scorer-ign').innerText = "None";
+                }
+                
+                // Update total games played stats
+                const totalGames = allPlayers.reduce((acc, curr) => acc + (curr.gamesPlayed || 0), 0);
+                document.getElementById('stat-games').innerText = totalGames;
+
+                applySearchAndRender();
             });
 
             // Listen to Server State
             unsubServer = onSnapshot(doc(db, "server", "state"), (docSnap) => {
                 if(docSnap.exists()) {
                     serverState = docSnap.data();
+                    
+                    // Render Mini Event states
                     const btnX2 = document.getElementById('toggle-x2');
                     btnX2.innerText = serverState.doublePoints ? "ON" : "OFF";
-                    btnX2.className = serverState.doublePoints ? "px-4 py-1 rounded font-bold text-sm bg-green-500 text-white" : "px-4 py-1 rounded font-bold text-sm bg-slate-600";
+                    btnX2.className = serverState.doublePoints ? "px-4 py-1 rounded font-bold text-sm bg-green-500 text-white transition-all shadow-[0_0_10px_rgba(34,197,94,0.4)]" : "px-4 py-1 rounded font-bold text-sm bg-slate-600 transition-all";
+                    
                     const btnLetter = document.getElementById('toggle-letter');
                     btnLetter.innerText = serverState.firstLetter ? "ON" : "OFF";
-                    btnLetter.className = serverState.firstLetter ? "px-4 py-1 rounded font-bold text-sm bg-green-500 text-white" : "px-4 py-1 rounded font-bold text-sm bg-slate-600";
+                    btnLetter.className = serverState.firstLetter ? "px-4 py-1 rounded font-bold text-sm bg-green-500 text-white transition-all shadow-[0_0_10px_rgba(34,197,94,0.4)]" : "px-4 py-1 rounded font-bold text-sm bg-slate-600 transition-all";
+
+                    // Render Activity Logs
+                    const logsFeed = document.getElementById('activity-log-feed');
+                    logsFeed.innerHTML = "";
+                    const logs = serverState.activityLog || [];
+                    const sortedLogs = [...logs].sort((a,b) => b.timestamp - a.timestamp).slice(0, 20);
+                    
+                    if (sortedLogs.length === 0) {
+                        logsFeed.innerHTML = `<div class="text-slate-500 text-center py-4">No recent activity</div>`;
+                    } else {
+                        sortedLogs.forEach(l => {
+                            const timeStr = new Date(l.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                            const item = document.createElement('div');
+                            item.className = "flex justify-between items-start gap-2 bg-slate-950/40 border border-slate-800/40 p-2 rounded-lg";
+                            item.innerHTML = `
+                                <span class="text-slate-300">${l.text}</span>
+                                <span class="text-[9px] text-slate-500 font-mono shrink-0">${timeStr}</span>
+                            `;
+                            logsFeed.appendChild(item);
+                        });
+                    }
                 }
             });
         }
+
+        // --- RENDER TABLE & SEARCH & PAGINATION ---
+        function applySearchAndRender() {
+            const filter = document.getElementById('search-player').value.toLowerCase();
+            filteredPlayers = allPlayers.filter(p => 
+                p.id.toLowerCase().includes(filter) || 
+                p.ign.toLowerCase().includes(filter)
+            );
+            
+            // Adjust current page if out of bounds
+            const maxPage = Math.max(1, Math.ceil(filteredPlayers.length / playersPerPage));
+            if (currentPage > maxPage) currentPage = maxPage;
+            
+            const startIdx = (currentPage - 1) * playersPerPage;
+            const endIdx = Math.min(startIdx + playersPerPage, filteredPlayers.length);
+            const pagePlayers = filteredPlayers.slice(startIdx, endIdx);
+            
+            const list = document.getElementById('player-list');
+            list.innerHTML = "";
+            
+            pagePlayers.forEach(p => {
+                list.innerHTML += `
+                    <tr class="hover:bg-slate-800/50 transition-colors ${p.isBanned ? 'opacity-50' : ''}">
+                        <td class="py-3 pl-2">
+                            <span class="inline-block w-2.5 h-2.5 rounded-full ${p.isOnline ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]' : 'bg-slate-600'}"></span>
+                        </td>
+                        <td class="py-3 text-xs text-slate-400">${p.id}</td>
+                        <td class="py-3 font-bold text-white">${p.ign} ${p.isBanned ? '<span class="text-red-500 text-[10px] ml-1">BANNED</span>' : ''}</td>
+                        <td class="py-3 text-center text-slate-400 font-bold">${p.gamesPlayed}</td>
+                        <td class="py-3 text-center text-cyan-400 font-black">${p.score}</td>
+                        <td class="py-3 flex gap-2 justify-end pr-2">
+                            <button onclick="window.resetPlayer('${p.id}')" class="bg-amber-600/20 text-amber-500 px-3 py-1 rounded text-xs hover:bg-amber-600/40 transition-colors">0 Pts</button>
+                            ${p.isBanned 
+                                ? `<button onclick="window.banPlayer('${p.id}', false)" class="bg-green-600/20 text-green-500 px-3 py-1 rounded text-xs hover:bg-green-600/40 transition-colors">Unban</button>`
+                                : `<button onclick="window.banPlayer('${p.id}', true)" class="bg-rose-600/20 text-rose-500 px-3 py-1 rounded text-xs hover:bg-rose-600/40 transition-colors">Ban</button>`
+                            }
+                            <button onclick="window.kickPlayer('${p.id}')" class="bg-yellow-600/20 text-yellow-500 px-3 py-1 rounded text-xs hover:bg-yellow-600/40 transition-colors">Kick</button>
+                            <button onclick="window.deletePlayer('${p.id}')" class="bg-red-950 text-red-500 border border-red-500/20 px-3 py-1 rounded text-xs hover:bg-red-900 hover:text-white transition-colors">Del</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            const rangeSpan = document.getElementById('pagination-range');
+            const totalSpan = document.getElementById('pagination-total');
+            const btnPrev = document.getElementById('btn-prev-page');
+            const btnNext = document.getElementById('btn-next-page');
+            
+            if (filteredPlayers.length === 0) {
+                rangeSpan.innerText = "0-0";
+                list.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-500">No players found</td></tr>`;
+            } else {
+                rangeSpan.innerText = `${startIdx + 1}-${endIdx}`;
+            }
+            
+            document.getElementById('stat-total').innerText = allPlayers.length;
+            document.getElementById('stat-online').innerText = allPlayers.filter(x => x.isOnline).length;
+            
+            totalSpan.innerText = filteredPlayers.length;
+            btnPrev.disabled = currentPage === 1;
+            btnNext.disabled = currentPage === maxPage;
+        }
+
+        document.getElementById('btn-prev-page').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                applySearchAndRender();
+            }
+        });
+        document.getElementById('btn-next-page').addEventListener('click', () => {
+            const maxPage = Math.ceil(filteredPlayers.length / playersPerPage);
+            if (currentPage < maxPage) {
+                currentPage++;
+                applySearchAndRender();
+            }
+        });
+        
+        document.getElementById('search-player').addEventListener('input', () => {
+            currentPage = 1;
+            applySearchAndRender();
+        });
 
         // --- COMMANDS ---
         
         // 1. Refresh
         document.getElementById('btn-refresh').addEventListener('click', () => {
-            if(confirm("Force refresh all users?")) {
-                setDoc(doc(db, "server", "state"), { refreshTrigger: serverTimestamp() }, { merge: true });
+            showConfirm(
+                "Force Refresh All?",
+                "Are you sure you want to force reload the page for everyone online?",
+                async () => {
+                    try {
+                        await setDoc(doc(db, "server", "state"), { refreshTrigger: serverTimestamp() }, { merge: true });
+                        showToast("Refresh signal sent!");
+                        logActivity("Forced a global page refresh");
+                    } catch(e) {
+                        showToast("Failed to refresh: " + e.message, "error");
+                    }
+                },
+                "Refresh",
+                true
+            );
+        });
+
+        // 2. Reset All Scores
+        document.getElementById('btn-reset-all').addEventListener('click', () => {
+            showConfirm(
+                "Reset All Scores?",
+                "WARNING: This will reset the score of ALL players to 0. This cannot be undone. Are you absolutely sure?",
+                async () => {
+                    showToast("Resetting scores...", "warning");
+                    try {
+                        const batch = [];
+                        allPlayers.forEach(p => {
+                            if (p.score > 0) {
+                                batch.push(updateDoc(doc(db, "players", p.id), { score: 0 }));
+                            }
+                        });
+                        await Promise.all(batch);
+                        showToast(`Reset scores for ${batch.length} players.`);
+                        logActivity(`Reset scores for all ${batch.length} active players`);
+                    } catch(e) {
+                        showToast(`Failed to reset: ${e.message}`, "error");
+                    }
+                }
+            );
+        });
+
+        // 3. Broadcast (BOOM)
+        document.getElementById('btn-broadcast').addEventListener('click', async () => {
+            const msg = document.getElementById('broadcast-msg').value.trim();
+            if(!msg) return showToast("Type a message first!", "warning");
+            
+            try {
+                await setDoc(doc(db, "server", "state"), { 
+                    broadcastMsg: msg, 
+                    broadcastTrigger: serverTimestamp() 
+                }, { merge: true });
+
+                document.getElementById('broadcast-msg').value = "";
+                showToast("Broadcast message sent!");
+                logActivity(`Sent broadcast: "${msg}"`);
+            } catch(e) {
+                showToast("Broadcast failed: " + e.message, "error");
             }
         });
 
-        // 2. Broadcast (BOOM)
-        document.getElementById('btn-broadcast').addEventListener('click', () => {
-            const msg = document.getElementById('broadcast-msg').value.trim();
-            if(!msg) return alert("Type a message first!");
-            
-            setDoc(doc(db, "server", "state"), { 
-                broadcastMsg: msg, 
-                broadcastTrigger: serverTimestamp() 
-            }, { merge: true });
-
-            document.getElementById('broadcast-msg').value = "";
-            
-            const btn = document.getElementById('btn-broadcast');
-            const oldText = btn.innerText;
-            btn.innerText = "SENT!";
-            setTimeout(() => btn.innerText = oldText, 2000);
+        // 4. Mini Events
+        document.getElementById('toggle-x2').addEventListener('click', async () => {
+            try {
+                const nextState = !serverState.doublePoints;
+                await setDoc(doc(db, "server", "state"), { doublePoints: nextState }, { merge: true });
+                showToast(`Double Points turned ${nextState ? 'ON' : 'OFF'}`);
+                logActivity(`Double Points event set to ${nextState ? 'ON' : 'OFF'}`);
+            } catch(e) {
+                showToast("Event toggle failed: " + e.message, "error");
+            }
+        });
+        document.getElementById('toggle-letter').addEventListener('click', async () => {
+            try {
+                const nextState = !serverState.firstLetter;
+                await setDoc(doc(db, "server", "state"), { firstLetter: nextState }, { merge: true });
+                showToast(`Show First Letter turned ${nextState ? 'ON' : 'OFF'}`);
+                logActivity(`Show First Letter event set to ${nextState ? 'ON' : 'OFF'}`);
+            } catch(e) {
+                showToast("Event toggle failed: " + e.message, "error");
+            }
         });
 
-        // 3. Mini Events
-        document.getElementById('toggle-x2').addEventListener('click', () => {
-            setDoc(doc(db, "server", "state"), { doublePoints: !serverState.doublePoints }, { merge: true });
+        // 5. Music
+        document.getElementById('btn-play-music').addEventListener('click', async () => {
+            const url = document.getElementById('music-url').value.trim();
+            if(!url) return showToast("Enter MP3 URL first", "warning");
+            try {
+                await setDoc(doc(db, "server", "state"), { musicUrl: url, musicTrigger: serverTimestamp() }, { merge: true });
+                showToast("Playing broadcast music...");
+                logActivity(`Started broadcast music: ${url}`);
+            } catch(e) {
+                showToast("Music play failed: " + e.message, "error");
+            }
         });
-        document.getElementById('toggle-letter').addEventListener('click', () => {
-            setDoc(doc(db, "server", "state"), { firstLetter: !serverState.firstLetter }, { merge: true });
-        });
-
-        // 4. Music
-        document.getElementById('btn-play-music').addEventListener('click', () => {
-            const url = document.getElementById('music-url').value;
-            if(!url) return alert("Enter MP3 URL first");
-            setDoc(doc(db, "server", "state"), { musicUrl: url, musicTrigger: serverTimestamp() }, { merge: true });
-        });
-        document.getElementById('btn-stop-music').addEventListener('click', () => {
-            setDoc(doc(db, "server", "state"), { musicUrl: "" }, { merge: true });
-            document.getElementById('music-url').value = "";
+        document.getElementById('btn-stop-music').addEventListener('click', async () => {
+            try {
+                await setDoc(doc(db, "server", "state"), { musicUrl: "" }, { merge: true });
+                document.getElementById('music-url').value = "";
+                showToast("Music stopped.");
+                logActivity("Stopped broadcast music");
+            } catch(e) {
+                showToast("Music stop failed: " + e.message, "error");
+            }
         });
 
         // --- PLAYER ACTIONS ---
-        window.resetPlayer = (id) => { if(confirm("Reset score to 0?")) updateDoc(doc(db, "players", id), { score: 0 }); }
-        window.banPlayer = (id, status) => { updateDoc(doc(db, "players", id), { isBanned: status }); }
-        window.deletePlayer = (id) => { if(confirm("Permanently delete player?")) deleteDoc(doc(db, "players", id)); }
+        window.resetPlayer = (id) => { 
+            const p = allPlayers.find(x => x.id === id);
+            const ign = p ? p.ign : id;
+            showConfirm(
+                "Reset Score?", 
+                `Are you sure you want to reset ${ign}'s score to 0?`, 
+                async () => {
+                    try {
+                        await updateDoc(doc(db, "players", id), { score: 0 });
+                        showToast(`Reset score for ${ign}`);
+                        logActivity(`Reset score for ${ign}`);
+                    } catch(e) {
+                        showToast(`Failed to reset: ${e.message}`, "error");
+                    }
+                }
+            );
+        };
+        
+        window.banPlayer = (id, status) => {
+            const p = allPlayers.find(x => x.id === id);
+            const ign = p ? p.ign : id;
+            const action = status ? "ban" : "unban";
+            showConfirm(
+                `${status ? "Ban" : "Unban"} Player?`, 
+                `Are you sure you want to ${action} ${ign}?`, 
+                async () => {
+                    try {
+                        await updateDoc(doc(db, "players", id), { isBanned: status });
+                        showToast(`Successfully ${action}ned ${ign}`);
+                        logActivity(`${status ? "Banned" : "Unbanned"} ${ign}`);
+                    } catch(e) {
+                        showToast(`Failed to ${action}: ${e.message}`, "error");
+                    }
+                },
+                status ? "Ban" : "Unban",
+                status
+            );
+        };
 
-        // Search Filter
-        document.getElementById('search-player').addEventListener('input', (e) => {
-            const filter = e.target.value.toLowerCase();
-            document.querySelectorAll('#player-list tr').forEach(row => {
-                row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none';
-            });
-        });
+        window.kickPlayer = (id) => {
+            const p = allPlayers.find(x => x.id === id);
+            const ign = p ? p.ign : id;
+            showConfirm(
+                "Kick Player?", 
+                `Are you sure you want to kick ${ign}? they will be logged out.`, 
+                async () => {
+                    try {
+                        await updateDoc(doc(db, "players", id), { kickedAt: serverTimestamp() });
+                        showToast(`Kicked ${ign}`);
+                        logActivity(`Kicked ${ign}`);
+                    } catch(e) {
+                        showToast(`Failed to kick: ${e.message}`, "error");
+                    }
+                }
+            );
+        };
+        
+        window.deletePlayer = (id) => { 
+            const p = allPlayers.find(x => x.id === id);
+            const ign = p ? p.ign : id;
+            showConfirm(
+                "Delete Player?", 
+                `Are you sure you want to PERMANENTLY delete ${ign}? This action is irreversible.`, 
+                async () => {
+                    try {
+                        await deleteDoc(doc(db, "players", id));
+                        showToast(`Deleted player ${ign}`);
+                        logActivity(`Deleted player ${ign}`);
+                    } catch(e) {
+                        showToast(`Failed to delete: ${e.message}`, "error");
+                    }
+                }
+            );
+        };
 
     </script>
 </body>
