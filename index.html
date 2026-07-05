@@ -1761,6 +1761,19 @@
                 setTimeout(nextHero, 1000);
             } else {
                 // Wrong guess!
+                const wrongGuessText = els.guessInput.value.trim();
+                
+                if (is1v1Mode || isBRMode) {
+                    const heroImg = currentHero.head || currentHero.squarehead || "";
+                    const textToSend = `guessed <strong class="text-rose-400 font-extrabold uppercase">${wrongGuessText || '[Nothing]'}</strong> for <img src="${heroImg}" class="w-6 h-6 inline-block rounded-full align-middle mx-1 border border-cyan-400/30 object-cover"> (${currentHero.name})!`;
+                    
+                    addDoc(collection(db, "messages"), { 
+                        ign: currentUser.ign, 
+                        text: textToSend, 
+                        timestamp: Date.now() 
+                    }).catch(err => console.error("Failed to send guess notification:", err));
+                }
+
                 if (isBRMode) {
                     els.feedback.innerText = "WRONG! TRY AGAIN!";
                     els.feedback.className = "text-center text-rose-500 font-bold text-lg";
@@ -2232,6 +2245,11 @@
         document.getElementById('btn-play-again').addEventListener('click', startGame);
         document.getElementById('form-login').addEventListener('submit', handleLogin);
         document.getElementById('form-guess').addEventListener('submit', checkGuess);
+        document.getElementById('guess-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && (is1v1Mode || isBRMode)) {
+                e.preventDefault();
+            }
+        });
         document.getElementById('form-chat').addEventListener('submit', sendChat);
         
         const floatChatBtn = document.getElementById('btn-floating-chat-toggle');
