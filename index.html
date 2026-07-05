@@ -291,13 +291,47 @@
             font-size: 1.2rem;
             display: block;
         }
+        
+        /* Morphing Hamburger Menu Styles */
+        #btn-side-menu-toggle.active .line-1 {
+            transform: translateY(8px) rotate(45deg);
+        }
+        #btn-side-menu-toggle.active .line-2 {
+            opacity: 0;
+            transform: scale(0);
+        }
+        #btn-side-menu-toggle.active .line-3 {
+            transform: translateY(-8px) rotate(-45deg);
+        }
     </style>
 </head>
 <body class="w-full relative overflow-hidden">
 
-    <!-- Global BGM Toggle Button -->
-    <button id="btn-bgm-toggle" class="fixed top-5 right-5 z-[60] w-10 h-10 rounded-full bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 flex items-center justify-center text-white cursor-pointer hover:bg-slate-800/80 transition-all scale-100 hover:scale-105 active:scale-95 shadow-[0_0_10px_rgba(99,102,241,0.5)] focus:outline-none">
-        🔊
+    <!-- Global Actions Menu (Top Right) -->
+    <div id="side-menu-container" class="fixed right-5 top-5 z-[60] flex flex-col items-end gap-2">
+        <!-- Hamburger Trigger Button -->
+        <button id="btn-side-menu-toggle" class="w-10 h-10 rounded-full bg-slate-950/80 backdrop-blur-xl border border-slate-800/80 flex flex-col items-center justify-center gap-1 text-white cursor-pointer hover:bg-slate-800/80 transition-all scale-100 hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(0,0,0,0.3)] focus:outline-none z-10">
+            <span class="w-5 h-0.5 bg-slate-200 rounded transition-all duration-300 origin-center line-1"></span>
+            <span class="w-5 h-0.5 bg-slate-200 rounded transition-all duration-300 line-2"></span>
+            <span class="w-5 h-0.5 bg-slate-200 rounded transition-all duration-300 origin-center line-3"></span>
+        </button>
+        
+        <!-- Expanded Actions Panel -->
+        <div id="side-menu-panel" class="flex flex-col gap-2 p-2 bg-slate-950/85 backdrop-blur-xl border border-slate-800/80 rounded-2xl shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all duration-300 opacity-0 scale-95 origin-top-right pointer-events-none h-0 overflow-hidden w-24">
+            <!-- Global BGM Toggle Button -->
+            <button id="btn-bgm-toggle" class="w-full h-10 rounded-xl flex items-center justify-center transition-all scale-100 hover:scale-105 active:scale-95 shadow-inner focus:outline-none text-[10px] font-black uppercase tracking-wider text-white">
+                BGM
+            </button>
+            <!-- Global Logout Button -->
+            <button id="btn-logout" class="w-full h-10 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 border border-rose-500/30 flex items-center justify-center transition-all scale-100 hover:scale-105 active:scale-95 shadow-inner focus:outline-none text-[10px] font-black uppercase tracking-wider hidden">
+                Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Back to Menu Button (Top Left Corner) -->
+    <button id="btn-exit-game" class="fixed top-5 left-5 z-[60] h-10 px-4 bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-full text-slate-300 font-bold uppercase tracking-widest hover:bg-slate-800 transition-all text-xs shadow-md hidden items-center justify-center focus:outline-none">
+        Back
     </button>
     <audio id="bgm-player" src="bgm.mp3" loop></audio>
 
@@ -439,7 +473,7 @@
                 <!-- Loaded dynamically -->
             </div>
         </div>
-        <div class="w-full px-5 pt-6 shrink-0">
+        <div id="game-header-container" class="w-full pl-5 pr-5 pt-6 shrink-0 transition-all duration-300">
             <div class="flex justify-between items-center px-5 py-3 gradient-border-card">
                 <div id="btn-show-profile" class="flex items-center gap-3 max-w-[50%] cursor-pointer hover:bg-white/5 rounded-xl p-1 -ml-1 transition-colors group">
                     <img id="player-avatar" src="" alt="Avatar" class="w-10 h-10 rounded-full border border-cyan-400/30 object-cover hidden group-hover:border-cyan-300 transition-colors">
@@ -452,15 +486,6 @@
                     </div>
                 </div>
                 
-                <!-- Prominent Centered Buttons -->
-                <div class="flex items-center gap-1.5 shrink-0">
-                    <button id="btn-exit-game" class="text-[10px] bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/50 px-2.5 py-1 rounded-full uppercase tracking-wider transition-all font-black focus:outline-none shadow-md flex items-center gap-0.5 hidden">
-                        <span>⬅️</span><span>Back</span>
-                    </button>
-                    <button id="btn-logout" class="text-[10px] bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 border border-rose-500/40 px-3 py-1 rounded-full uppercase tracking-wider transition-all font-black focus:outline-none shadow-[0_0_10px_rgba(244,63,94,0.15)] flex items-center gap-1">
-                        <span>🚪</span><span>Logout</span>
-                    </button>
-                </div>
 
                 <div class="flex flex-col items-end">
                     <span class="text-[10px] text-rose-400 font-black tracking-[0.2em] uppercase">SCORE</span>
@@ -984,6 +1009,18 @@
             document.getElementById('screen-br-lobby').classList.add('hidden');
             els.screenMatchmaking.classList.add('hidden');
             
+            // Hide Back button on menu
+            const exitBtn = document.getElementById('btn-exit-game');
+            const headerContainer = document.getElementById('game-header-container');
+            if (exitBtn) {
+                exitBtn.classList.add('hidden');
+                exitBtn.classList.remove('flex');
+                if (headerContainer) {
+                    headerContainer.classList.remove('pl-28');
+                    headerContainer.classList.add('pl-5');
+                }
+            }
+            
             // Show mode select
             els.screenModeSelect.classList.remove('hidden');
             
@@ -1095,6 +1132,9 @@
                 } else {
                     els.playerAvatar.classList.add('hidden');
                 }
+
+                const logoutBtn = document.getElementById('btn-logout');
+                if (logoutBtn) logoutBtn.classList.remove('hidden');
 
                 els.screenLogin.classList.add('hidden'); 
                 showModeSelect();
@@ -1521,11 +1561,22 @@
             
             // Toggle Back button (only shown in solo Classic/Death Timer mode)
             const exitBtn = document.getElementById('btn-exit-game');
+            const headerContainer = document.getElementById('game-header-container');
             if (exitBtn) {
                 if (!isBRMode && !is1v1Mode) {
                     exitBtn.classList.remove('hidden');
+                    exitBtn.classList.add('flex');
+                    if (headerContainer) {
+                        headerContainer.classList.remove('pl-5');
+                        headerContainer.classList.add('pl-28');
+                    }
                 } else {
                     exitBtn.classList.add('hidden');
+                    exitBtn.classList.remove('flex');
+                    if (headerContainer) {
+                        headerContainer.classList.remove('pl-28');
+                        headerContainer.classList.add('pl-5');
+                    }
                 }
             }
             
@@ -1837,6 +1888,17 @@
             isGameOver = true;
             if (timerInterval) clearInterval(timerInterval);
             clearHeroReveal();
+            
+            const exitBtn = document.getElementById('btn-exit-game');
+            const headerContainer = document.getElementById('game-header-container');
+            if (exitBtn) {
+                exitBtn.classList.add('hidden');
+                exitBtn.classList.remove('flex');
+                if (headerContainer) {
+                    headerContainer.classList.remove('pl-28');
+                    headerContainer.classList.add('pl-5');
+                }
+            }
             
             els.guessInput.disabled = true;
             els.guessInput.value = "";
@@ -2182,6 +2244,9 @@
                     els.playerAvatar.classList.add('hidden');
                 }
 
+                const logoutBtn = document.getElementById('btn-logout');
+                if (logoutBtn) logoutBtn.classList.remove('hidden');
+
                 els.screenLogin.classList.add('hidden'); 
                 els.playerIgn.innerText = ign; 
                 els.playerBest.innerText = currentUser.bestScore;
@@ -2233,6 +2298,14 @@
             const floatChatWindow = document.getElementById('floating-chat-window');
             if (floatChatWindow) floatChatWindow.classList.add('hidden');
 
+            const logoutBtn = document.getElementById('btn-logout');
+            if (logoutBtn) logoutBtn.classList.add('hidden');
+            const exitBtn = document.getElementById('btn-exit-game');
+            if (exitBtn) {
+                exitBtn.classList.add('hidden');
+                exitBtn.classList.remove('flex');
+            }
+
             els.screenGame.classList.add('hidden');
             els.screenLogin.classList.remove('hidden');
         }
@@ -2269,6 +2342,34 @@
             document.addEventListener('click', (e) => {
                 if (isChatOpen && !floatChatWindow.contains(e.target) && e.target !== floatChatBtn && !floatChatBtn.contains(e.target)) {
                     closeChatWindow();
+                }
+            });
+        }
+
+        // Expandable Side Menu Logic
+        const sideMenuToggle = document.getElementById('btn-side-menu-toggle');
+        const sideMenuPanel = document.getElementById('side-menu-panel');
+        let isSideMenuOpen = false;
+        if (sideMenuToggle && sideMenuPanel) {
+            sideMenuToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                isSideMenuOpen = !isSideMenuOpen;
+                if (isSideMenuOpen) {
+                    sideMenuToggle.classList.add('active');
+                    sideMenuPanel.classList.remove('opacity-0', 'scale-95', 'pointer-events-none', 'h-0', 'overflow-hidden');
+                    sideMenuPanel.classList.add('opacity-100', 'scale-100');
+                } else {
+                    sideMenuToggle.classList.remove('active');
+                    sideMenuPanel.classList.remove('opacity-100', 'scale-100');
+                    sideMenuPanel.classList.add('opacity-0', 'scale-95', 'pointer-events-none', 'h-0', 'overflow-hidden');
+                }
+            });
+            document.addEventListener('click', (e) => {
+                if (isSideMenuOpen && !document.getElementById('side-menu-container').contains(e.target)) {
+                    isSideMenuOpen = false;
+                    sideMenuToggle.classList.remove('active');
+                    sideMenuPanel.classList.remove('opacity-100', 'scale-100');
+                    sideMenuPanel.classList.add('opacity-0', 'scale-95', 'pointer-events-none', 'h-0', 'overflow-hidden');
                 }
             });
         }
@@ -2624,11 +2725,11 @@
 
         function updateBgmUI() {
             if (bgmMuted) {
-                btnBgm.innerHTML = '🔇';
-                btnBgm.classList.remove('shadow-[0_0_10px_rgba(99,102,241,0.5)]');
+                btnBgm.innerText = 'BGM OFF';
+                btnBgm.className = "w-full h-10 rounded-xl bg-rose-600/80 hover:bg-rose-500/80 text-white flex items-center justify-center transition-all scale-100 hover:scale-105 active:scale-95 shadow-inner focus:outline-none text-[10px] font-black uppercase tracking-wider";
             } else {
-                btnBgm.innerHTML = '🔊';
-                btnBgm.classList.add('shadow-[0_0_10px_rgba(99,102,241,0.5)]');
+                btnBgm.innerText = 'BGM ON';
+                btnBgm.className = "w-full h-10 rounded-xl bg-emerald-600/80 hover:bg-emerald-500/80 text-white flex items-center justify-center transition-all scale-100 hover:scale-105 active:scale-95 shadow-inner focus:outline-none text-[10px] font-black uppercase tracking-wider shadow-[0_0_10px_rgba(16,185,129,0.3)]";
             }
         }
 
