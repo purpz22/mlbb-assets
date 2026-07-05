@@ -2183,14 +2183,13 @@
                 }
 
                 els.screenLogin.classList.add('hidden'); 
-                els.screenGame.classList.remove('hidden');
                 els.playerIgn.innerText = ign; 
                 els.playerBest.innerText = currentUser.bestScore;
 
                 startServerListeners(); 
                 startUserListener(id);
                 initChat(); 
-                startGame();
+                showModeSelect();
             } catch (err) {
                 console.warn("Auto login failed:", err.message);
                 localStorage.removeItem('mlbb_jwt');
